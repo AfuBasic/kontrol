@@ -121,6 +121,10 @@ class IntendedDestinationGuard
         }
 
         foreach ($route->gatherMiddleware() as $middleware) {
+            if ($middleware === 'resident.billing') {
+                return $user->contextHasRole(['resident', 'property_owner']);
+            }
+
             if (! is_string($middleware) || ! str_starts_with($middleware, 'role:')) {
                 continue;
             }

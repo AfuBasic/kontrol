@@ -69,6 +69,13 @@ class BillingController extends Controller
         $openInvoices = (clone $invoicesQuery)->where('status', '!=', 'paid')->count();
         $latestInvoice = (clone $invoicesQuery)->latest()->first();
 
+        $bestCoupon = Coupon::query()
+            ->availableTo($user, $estate)
+            ->get()
+            ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
+            ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)
+            ->first();
+
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => $subData,
             'receiptSummary' => [
@@ -82,6 +89,14 @@ class BillingController extends Controller
                     'invoice_number' => $latestInvoice->invoice_number,
                 ] : null,
             ],
+            'autoAppliedCoupon' => $bestCoupon ? [
+                'id' => $bestCoupon->id,
+                'code' => $bestCoupon->code,
+                'campaign_name' => $bestCoupon->campaign_name,
+                'type' => $bestCoupon->type,
+                'value' => $bestCoupon->value,
+                'formatted_value' => $bestCoupon->type === 'percentage' ? "{$bestCoupon->value}%" : '₦'.number_format($bestCoupon->value / 100, 2),
+            ] : null,
         ]);
     }
 
