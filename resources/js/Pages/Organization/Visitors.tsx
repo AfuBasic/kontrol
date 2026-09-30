@@ -3,7 +3,7 @@ import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Search, Users, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
+import { Calendar, Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
@@ -281,20 +281,13 @@ export default function Visitors({ organization, membership, visitors, filters }
                     primaryAction={
                         membership.is_admin ? (
                             <div className="flex items-center gap-2">
-                                <Link
-                                    href="/org/bulk-invites"
-                                    className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-xs transition hover:bg-[#e2edff] active:scale-95"
-                                >
-                                    <Users className="h-3.5 w-3.5" />
-                                    Groups
-                                </Link>
                                 <button
                                     type="button"
                                     onClick={() => setBulkInviteModalOpen(true)}
-                                    className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95"
+                                    className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-xs transition hover:bg-[#e2edff] active:scale-95"
                                 >
-                                    <Plus className="h-3.5 w-3.5 text-slate-500" strokeWidth={2.5} />
-                                    Bulk
+                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                    Bulk Invite
                                 </button>
                                 <button
                                     type="button"

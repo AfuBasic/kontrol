@@ -5,11 +5,11 @@ import AccessTabs from './AccessTabs';
 
 interface Props {
     primaryAction?: ReactNode;
-    activeTab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
+    activeTab: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
     pendingCount?: number;
     activeCount?: number;
     totalAccessMembers?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
+    onTabChange?: (tab: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
 }
 
 export default function AccessHeader({

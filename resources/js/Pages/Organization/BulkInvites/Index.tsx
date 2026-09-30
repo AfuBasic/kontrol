@@ -85,16 +85,16 @@ export default function BulkInvitesIndex({
 
             <div className="mx-auto flex max-w-[540px] flex-col gap-4 px-4 pt-1 pb-24">
                 <AccessHeader
-                    activeTab="visitors"
+                    activeTab="bulk_invites"
                     primaryAction={
                         membership.is_admin ? (
                             <button
                                 type="button"
                                 onClick={() => setModalOpen(true)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-xs transition hover:bg-[#e2edff] active:scale-95"
+                                className="flex items-center gap-1.5 rounded-full border border-[#0b4aa2] bg-[#0b4aa2] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_8px_rgba(11,74,162,0.25)] transition hover:bg-[#0a3d8a] active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                New Bulk Invite
+                                New Group
                             </button>
                         ) : undefined
                     }

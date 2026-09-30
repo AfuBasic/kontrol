@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import AccessHeader from '@/Components/Organization/AccessHeader';
 
 interface AccessCode {
     id: number;
@@ -138,7 +139,9 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
         <OrganizationLayout title="Access - Bulk Invite Details" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - ${bulkInvite.name || 'Bulk Invite'} Details`} />
 
-            <div className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 pt-2 pb-24">
+            <div className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 pt-1 pb-24">
+                <AccessHeader activeTab="bulk_invites" />
+
                 {/* Back navigation */}
                 <div className="flex items-center justify-between">
                     <Link

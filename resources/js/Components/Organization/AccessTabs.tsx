@@ -1,13 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { Clock, History, User, Users } from 'lucide-react';
+import { Clock, History, User, Users, UsersRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React from 'react';
 
 interface Props {
-    activeTab?: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
+    activeTab?: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
     pendingCount?: number;
     activeCount?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
+    onTabChange?: (tab: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
 }
 
 interface AccessTab {
@@ -23,6 +23,7 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
     const tabs: AccessTab[] = [
         { id: 'people', label: 'People', href: '/org/access-list', icon: Users },
         { id: 'visitors', label: 'Visitors', href: '/org/visitors', icon: User },
+        { id: 'bulk_invites', label: 'Groups', href: '/org/bulk-invites', icon: UsersRound },
         {
             id: 'arrivals',
             label: 'Arrivals',
