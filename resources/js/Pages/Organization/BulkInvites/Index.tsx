@@ -206,7 +206,7 @@ export default function BulkInvitesIndex({
                                                 </span>
                                                 <span>·</span>
                                                 <span>
-                                                    Valid {invite.valid_from} – {invite.valid_until}
+                                                    Valid {invite.valid_from ? invite.valid_from.split('T')[0] : ''} - {invite.valid_until ? invite.valid_until.split('T')[0] : ''}
                                                 </span>
                                             </div>
 
