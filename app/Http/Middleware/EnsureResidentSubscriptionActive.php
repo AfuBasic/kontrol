@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Auth\ContextManager;
 use App\Models\Estate;
+use App\Services\OrganizationContextService;
 use App\Services\ResidentSubscriptionService;
 use Closure;
 use Illuminate\Http\Request;
@@ -27,12 +28,23 @@ class EnsureResidentSubscriptionActive
             return $next($request);
         }
 
-        // When called with `resident.active:force` (e.g. on org routes), skip the
-        // estate/charge_type guard and check the subscription directly on the user.
+        // When called with `resident.active:force` (e.g. on org routes), check the
+        // organization's subscription if in org context, otherwise check user's resident subscription.
         if ($mode === 'force') {
-            $subscription = $user->residentSubscription;
+            $org = $request->attributes->get('organization');
+            if (! $org) {
+                try {
+                    $org = app(OrganizationContextService::class)->getOrganization();
+                } catch (\Throwable) {
+                    $org = null;
+                }
+            }
 
-            if (! $subscription || ! $subscription->isActive()) {
+            $hasActiveSub = $org
+                ? $org->hasActiveSubscription($user)
+                : ($user->residentSubscription && $user->residentSubscription->isActive());
+
+            if (! $hasActiveSub) {
                 $message = 'An active subscription is required to perform this action.';
 
                 if ($request->expectsJson()) {

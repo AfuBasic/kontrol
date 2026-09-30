@@ -125,7 +125,7 @@ test('bulk invite enforces 30 days validity cap', function () {
     expect(OrganizationBulkInvite::count())->toBe(0);
 });
 
-test('auto-renew fails if estate does not have active subscription', function () {
+test('auto-renew fails if organization does not have active subscription', function () {
     $this->subscription->update(['status' => 'cancelled']);
 
     $this->actingAs($this->orgAdmin);
@@ -138,6 +138,29 @@ test('auto-renew fails if estate does not have active subscription', function ()
 
     $response->assertSessionHasErrors('auto_renew');
     expect(OrganizationBulkInvite::count())->toBe(0);
+});
+
+test('auto-renew succeeds if organization member has active resident subscription', function () {
+    $this->subscription->update(['status' => 'cancelled']);
+
+    \App\Models\ResidentSubscription::create([
+        'user_id' => $this->orgAdmin->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'active',
+        'current_period_start' => now()->subDay(),
+        'current_period_end' => now()->addMonth(),
+    ]);
+
+    $this->actingAs($this->orgAdmin);
+
+    $response = $this->post(route('org.bulk-invites.store'), [
+        'name' => 'Subscribed Member Auto-renew',
+        'emails' => ['vip@example.com'],
+        'auto_renew' => true,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect(OrganizationBulkInvite::count())->toBe(1);
 });
 
 test('renewal job auto-renews eligible bulk invites idempotently', function () {
