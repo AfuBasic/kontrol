@@ -281,7 +281,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                             <button
                                 type="button"
                                 onClick={() => setInviteModalOpen(true)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#0b4aa2] bg-[#0b4aa2] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_8px_rgba(11,74,162,0.25)] transition hover:bg-[#0a3d8a] active:scale-95"
+                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                                 Invite

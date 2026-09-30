@@ -91,7 +91,7 @@ export default function BulkInvitesIndex({
                             <button
                                 type="button"
                                 onClick={() => setModalOpen(true)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#0b4aa2] bg-[#0b4aa2] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_8px_rgba(11,74,162,0.25)] transition hover:bg-[#0a3d8a] active:scale-95"
+                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                                 New Group
@@ -118,8 +118,8 @@ export default function BulkInvitesIndex({
                                 onClick={() => handleTabChange(tab.id)}
                                 className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                                     isActive
-                                        ? 'bg-slate-900 text-white shadow-xs'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        ? 'bg-[#eef4ff] text-[#1a5dbf] border border-[#dce9ff] shadow-xs'
+                                        : 'text-slate-500 hover:text-slate-700'
                                 }`}
                             >
                                 {tab.label}
@@ -143,10 +143,10 @@ export default function BulkInvitesIndex({
                             <button
                                 type="button"
                                 onClick={() => setModalOpen(true)}
-                                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800"
+                                className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-4 py-2 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
-                                <Plus className="h-3.5 w-3.5" />
-                                Create Bulk Invite
+                                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                New Group
                             </button>
                         )}
                     </div>
