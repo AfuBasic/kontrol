@@ -138,4 +138,15 @@ class AccessMemberService
 
         return $member;
     }
+
+    /**
+     * Delete an access member and all their access passes/codes.
+     */
+    public function deleteMember(OrganizationAccessMember $member): void
+    {
+        DB::transaction(function () use ($member) {
+            $member->accessCodes()->delete();
+            $member->delete();
+        });
+    }
 }
