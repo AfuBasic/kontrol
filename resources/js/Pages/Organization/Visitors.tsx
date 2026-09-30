@@ -8,11 +8,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import Button from '@/Components/UI/Button';
 import TextInput from '@/Components/UI/TextInput';
 import { shareAccessCode } from '@/Utils/share';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface Organization {
     id: number;
@@ -70,6 +72,7 @@ export default function Visitors({ organization, membership, visitors, filters }
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
     const [selectedPass, setSelectedPass] = useState<VisitorPass | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
@@ -91,8 +94,10 @@ export default function Visitors({ organization, membership, visitors, filters }
         }
 
         const params = new URLSearchParams(window.location.search);
-        if (params.get('action') === 'invite_visitor') setInviteModalOpen(true);
-    }, [flash.bulk_passes]);
+        if (params.get('action') === 'invite_visitor') {
+            gated(() => setInviteModalOpen(true))();
+        }
+    }, [flash.bulk_passes, gated]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         visitor_name: '',
@@ -279,7 +284,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                         membership.is_admin ? (
                             <button
                                 type="button"
-                                onClick={() => setInviteModalOpen(true)}
+                                onClick={gated(() => setInviteModalOpen(true))}
                                 className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -710,6 +715,9 @@ export default function Visitors({ organization, membership, visitors, filters }
                         </>
                     )}
                 </ResponsiveSheet>
+
+                {/* Subscription Gate Sheet */}
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );
