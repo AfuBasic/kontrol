@@ -71,7 +71,6 @@ export default function Visitors({ organization, membership, visitors, filters }
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
-    const [bulkInviteModalOpen, setBulkInviteModalOpen] = useState(false);
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
     const [selectedPass, setSelectedPass] = useState<VisitorPass | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
@@ -94,7 +93,6 @@ export default function Visitors({ organization, membership, visitors, filters }
 
         const params = new URLSearchParams(window.location.search);
         if (params.get('action') === 'invite_visitor') setInviteModalOpen(true);
-        if (params.get('action') === 'invite_multiple') setBulkInviteModalOpen(true);
     }, [flash.bulk_passes]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -280,24 +278,14 @@ export default function Visitors({ organization, membership, visitors, filters }
                     activeTab="visitors"
                     primaryAction={
                         membership.is_admin ? (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setBulkInviteModalOpen(true)}
-                                    className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-xs transition hover:bg-[#e2edff] active:scale-95"
-                                >
-                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                    Bulk Invite
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setInviteModalOpen(true)}
-                                    className="flex items-center gap-1.5 rounded-full border border-[#0b4aa2] bg-[#0b4aa2] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_8px_rgba(11,74,162,0.25)] transition hover:bg-[#0a3d8a] active:scale-95"
-                                >
-                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                    Invite
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setInviteModalOpen(true)}
+                                className="flex items-center gap-1.5 rounded-full border border-[#0b4aa2] bg-[#0b4aa2] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_8px_rgba(11,74,162,0.25)] transition hover:bg-[#0a3d8a] active:scale-95"
+                            >
+                                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                Invite
+                            </button>
                         ) : undefined
                     }
                 />
@@ -682,9 +670,6 @@ export default function Visitors({ organization, membership, visitors, filters }
                         </div>
                     </form>
                 </ResponsiveSheet>
-
-                {/* Bulk Invite Modal */}
-                <BulkInviteModal isOpen={bulkInviteModalOpen} onClose={() => setBulkInviteModalOpen(false)} />
 
                 {/* Bulk Summary Modal */}
                 <ResponsiveSheet isOpen={bulkSummaryOpen && !!flash.bulk_passes} onClose={() => setBulkSummaryOpen(false)}>
