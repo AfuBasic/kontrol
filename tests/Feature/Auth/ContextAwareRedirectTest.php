@@ -382,3 +382,30 @@ test('Organization member visiting context picker redirects directly to org dash
 
     $response->assertRedirect(route('org.dashboard'));
 });
+
+test('Organization member redirects to subscription plans page via magic link', function () {
+    $user = User::factory()->create();
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estateA->id,
+        'name' => 'OSBA',
+        'type' => 'business',
+    ]);
+
+    OrganizationMembership::create([
+        'organization_id' => $org->id,
+        'user_id' => $user->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    MagicLoginToken::create([
+        'user_id' => $user->id,
+        'token' => 'org-billing-sub-token',
+        'expires_at' => now()->addMinutes(15),
+        'destination_url' => '/resident/billing/subscription',
+    ]);
+
+    $response = $this->get(URL::signedRoute('auth.magic-login', ['token' => 'org-billing-sub-token']));
+
+    $response->assertRedirect('/resident/billing/subscription');
+});
