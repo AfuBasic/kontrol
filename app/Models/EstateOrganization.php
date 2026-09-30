@@ -189,4 +189,38 @@ class EstateOrganization extends Model
         return $this->confirmation_policy === 'required'
             && $this->arrival_confirmation_minutes !== null;
     }
+
+    /**
+     * Determine if this organization has an active subscription either directly,
+     * through its estate subscription, or through any active member's resident subscription.
+     */
+    public function hasActiveSubscription(?User $user = null): bool
+    {
+        // 1. Check estate-level subscription
+        $estateSub = $this->estate?->subscriptionRecord;
+        if ($estateSub && ($estateSub->isActive() || $estateSub->isOnTrial())) {
+            return true;
+        }
+
+        // 2. Check the specific user's resident subscription if provided
+        if ($user) {
+            $userSub = ResidentSubscription::where('user_id', $user->id)
+                ->where('estate_id', $this->estate_id)
+                ->first();
+
+            if ($userSub && $userSub->isActive()) {
+                return true;
+            }
+        }
+
+        // 3. Check any active organization member's resident subscription
+        $memberUserIds = $this->memberships()
+            ->where('is_active', true)
+            ->pluck('user_id');
+
+        return ResidentSubscription::whereIn('user_id', $memberUserIds)
+            ->where('estate_id', $this->estate_id)
+            ->get()
+            ->contains(fn (ResidentSubscription $sub) => $sub->isActive());
+    }
 }
