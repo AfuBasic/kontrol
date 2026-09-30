@@ -204,7 +204,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                         <div>
                             <span className="text-slate-400">Validity Window</span>
                             <div className="mt-0.5 font-bold text-slate-800">
-                                {bulkInvite.valid_from} – {bulkInvite.valid_until}
+                                {bulkInvite.valid_from ? bulkInvite.valid_from.split('T')[0] : ''} - {bulkInvite.valid_until ? bulkInvite.valid_until.split('T')[0] : ''}
                             </div>
                         </div>
                         <div>
