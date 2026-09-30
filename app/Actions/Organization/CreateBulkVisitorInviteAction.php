@@ -42,16 +42,11 @@ class CreateBulkVisitorInviteAction
 
         $estate = $organization->estate;
 
-        // Verify estate subscription is active or on trial if auto-renew requested
-        if ($autoRenew) {
-            $sub = $estate->subscriptionRecord;
-            $hasActiveSub = $sub && ($sub->isActive() || $sub->isOnTrial());
-
-            if (! $hasActiveSub) {
-                throw ValidationException::withMessages([
-                    'auto_renew' => ['An active estate subscription is required to enable auto-renewal.'],
-                ]);
-            }
+        // Verify subscription is active if auto-renew requested
+        if ($autoRenew && ! $organization->hasActiveSubscription($user)) {
+            throw ValidationException::withMessages([
+                'auto_renew' => ['An active subscription is required to enable auto-renewal.'],
+            ]);
         }
 
         // Validate and normalize emails
