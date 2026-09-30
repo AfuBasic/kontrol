@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
 interface MetricProps {
     currently_inside: number;
@@ -207,6 +208,13 @@ export default function Dashboard({
                         </p>
                     )}
                 </header>
+
+                {/* SUBSCRIPTION STATUS BANNER */}
+                {user.resident_subscription && (
+                    <div className="-mt-1 -mb-1">
+                        <SubscriptionBanner subscription={user.resident_subscription} />
+                    </div>
+                )}
 
                 {/* ACCESS OVERVIEW CARD */}
                 <Link
