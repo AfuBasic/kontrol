@@ -16,7 +16,7 @@ class EnsureResidentSubscriptionActive
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $mode = ''): Response
     {
         $user = $request->user();
         if (! $user) {
@@ -24,6 +24,24 @@ class EnsureResidentSubscriptionActive
         }
 
         if ($user->contextHasRole(['admin', 'property_owner'])) {
+            return $next($request);
+        }
+
+        // When called with `resident.active:force` (e.g. on org routes), skip the
+        // estate/charge_type guard and check the subscription directly on the user.
+        if ($mode === 'force') {
+            $subscription = $user->residentSubscription;
+
+            if (! $subscription || ! $subscription->isActive()) {
+                $message = 'An active subscription is required to perform this action.';
+
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 403);
+                }
+
+                return back()->with('error', $message);
+            }
+
             return $next($request);
         }
 

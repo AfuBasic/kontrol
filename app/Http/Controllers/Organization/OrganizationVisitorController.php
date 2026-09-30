@@ -71,11 +71,6 @@ class OrganizationVisitorController extends Controller
             abort(403, 'Only organization administrators can invite visitors.');
         }
 
-        $subscription = $request->user()->residentSubscription;
-        if (! $subscription || ! $subscription->isActive()) {
-            return back()->with('error', 'An active subscription is required to create visitor passes.');
-        }
-
         $validated = $request->validate([
             'visitor_name' => 'required|string|max:255',
             'visitor_phone' => 'nullable|string|max:50',

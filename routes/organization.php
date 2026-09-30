@@ -24,11 +24,13 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     // 2. Access Hub: People (Access List)
     Route::prefix('access-list')->name('access-list.')->group(function () {
         Route::get('/', [AccessMemberController::class, 'index'])->name('index');
-        Route::post('/', [AccessMemberController::class, 'store'])->name('store');
         Route::patch('/{member}', [AccessMemberController::class, 'update'])->name('update');
         Route::post('/{member}/suspend', [AccessMemberController::class, 'suspend'])->name('suspend');
         Route::post('/{member}/activate', [AccessMemberController::class, 'activate'])->name('activate');
         Route::delete('/{member}', [AccessMemberController::class, 'destroy'])->name('destroy');
+
+        // Requires active subscription
+        Route::post('/', [AccessMemberController::class, 'store'])->name('store')->middleware('resident.active:force');
     });
 
     // Access: Credentials (issue/renew/revoke actions)
@@ -49,21 +51,29 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     // Access: Visitors (Temporary passes)
     Route::prefix('visitors')->name('visitors.')->group(function () {
         Route::get('/', [OrganizationVisitorController::class, 'index'])->name('index');
-        Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
-        Route::post('/bulk', [OrganizationBulkInviteController::class, 'store'])->name('storeBulk');
-        Route::post('/{pass}/extend', [OrganizationVisitorController::class, 'extend'])->name('extend');
         Route::delete('/{pass}', [OrganizationVisitorController::class, 'destroy'])->name('destroy');
+
+        // Requires active subscription
+        Route::middleware('resident.active:force')->group(function () {
+            Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
+            Route::post('/bulk', [OrganizationBulkInviteController::class, 'store'])->name('storeBulk');
+            Route::post('/{pass}/extend', [OrganizationVisitorController::class, 'extend'])->name('extend');
+        });
     });
 
     // Access: Bulk Visitor Invites
     Route::prefix('bulk-invites')->name('bulk-invites.')->group(function () {
         Route::get('/', [OrganizationBulkInviteController::class, 'index'])->name('index');
-        Route::post('/', [OrganizationBulkInviteController::class, 'store'])->name('store');
         Route::get('/{bulkInvite}', [OrganizationBulkInviteController::class, 'show'])->name('show');
         Route::get('/{bulkInvite}/delivery-status', [OrganizationBulkInviteController::class, 'deliveryStatus'])->name('delivery-status');
         Route::post('/{bulkInvite}/retry-failed', [OrganizationBulkInviteController::class, 'retryFailed'])->name('retry-failed');
-        Route::post('/{bulkInvite}/renew', [OrganizationBulkInviteController::class, 'renew'])->name('renew');
         Route::post('/{bulkInvite}/cancel', [OrganizationBulkInviteController::class, 'cancel'])->name('cancel');
+
+        // Requires active subscription
+        Route::middleware('resident.active:force')->group(function () {
+            Route::post('/', [OrganizationBulkInviteController::class, 'store'])->name('store');
+            Route::post('/{bulkInvite}/renew', [OrganizationBulkInviteController::class, 'renew'])->name('renew');
+        });
     });
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)
