@@ -1,4 +1,4 @@
-import { Head, Link, router, WhenVisible } from '@inertiajs/react';
+import { Head, Link, router, usePage, WhenVisible } from '@inertiajs/react';
 import {
     ChevronRight,
     Mail,
@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
 interface Recipient {
     id: number;
@@ -79,6 +80,10 @@ export default function BulkInvitesIndex({
         return () => clearTimeout(timeout);
     }, [search]);
 
+    const page = usePage();
+    const auth = (page.props as any).auth || {};
+    const subscription = auth?.user?.resident_subscription;
+
     return (
         <OrganizationLayout
             title="Access - Bulk Invites"
@@ -103,6 +108,12 @@ export default function BulkInvitesIndex({
                         ) : undefined
                     }
                 />
+
+                {subscription && (
+                    <div className="-mb-2">
+                        <SubscriptionBanner subscription={subscription} />
+                    </div>
+                )}
 
                 {/* Search Bar */}
                 <div className="relative">
