@@ -146,8 +146,8 @@ function FilterSheet({
 
     useEffect(() => {
         if (isOpen) {
-            setLocalCategory(category);
-            setLocalUnreadOnly(unreadOnly);
+            setLocalCategory(category ?? null);
+            setLocalUnreadOnly(unreadOnly ?? false);
         }
     }, [isOpen, category, unreadOnly]);
 
