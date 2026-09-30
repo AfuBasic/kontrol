@@ -21,6 +21,7 @@ import {
     UserCircle,
     UserPlus,
     Users,
+    Trash2,
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
@@ -152,7 +153,7 @@ export default function AccessList({
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [status, setStatus] = useState(filters.status ?? 'all');
 
-    type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | null;
+    type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | 'delete' | null;
     const [confirmAction, setConfirmAction] = useState<ConfirmActionType>(null);
 
     const {
@@ -251,6 +252,13 @@ export default function AccessList({
     const handleRevoke = (member: Member) => {
         if (!member.active_credential) return;
         router.post(`/org/credentials/${member.active_credential.id}/revoke`, {}, { preserveScroll: true, onSuccess: () => setSelectedMember(null) });
+    };
+
+    const handleDeleteMember = (member: Member) => {
+        router.delete(`/org/access-list/${member.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
+        });
     };
 
     const handleIssue = (member: Member) => {
@@ -879,7 +887,20 @@ export default function AccessList({
                                                         </div>
                                                     </div>
                                                 </button>
-                                            )}
+                                             )}
+
+                                            <button
+                                                onClick={() => setConfirmAction('delete')}
+                                                className="flex w-full items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 p-4 transition-colors hover:border-rose-300 hover:bg-rose-100/60"
+                                            >
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <Trash2 className="h-5 w-5 text-rose-600" />
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-rose-900">Delete person & access</p>
+                                                        <p className="text-xs text-rose-700">Permanently delete pass and access</p>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -894,18 +915,20 @@ export default function AccessList({
                         <div className="flex flex-col gap-5 pt-2 pb-4">
                             <div className="flex items-start gap-4">
                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${confirmAction === 'activate' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : confirmAction === 'delete' ? <Trash2 className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-900">
                                         {confirmAction === 'suspend' && 'Suspend Access?'}
                                         {confirmAction === 'activate' && 'Reactivate Access?'}
                                         {confirmAction === 'revoke' && 'Revoke Code?'}
+                                        {confirmAction === 'delete' && 'Delete Person & Access?'}
                                     </h3>
                                     <p className="mt-1.5 text-[15px] leading-snug text-slate-500">
                                         {confirmAction === 'suspend' && `Are you sure you want to suspend access for ${selectedMember.name}? Their code will be temporarily disabled.`}
                                         {confirmAction === 'activate' && `Are you sure you want to reactivate access for ${selectedMember.name}? Their previous code will be valid again.`}
                                         {confirmAction === 'revoke' && 'Are you sure you want to permanently revoke this code? You will need to issue a new code if they need access again.'}
+                                        {confirmAction === 'delete' && `Are you sure you want to permanently delete ${selectedMember.name}? This will remove their record and delete all associated access codes and passes permanently.`}
                                     </p>
                                 </div>
                             </div>
@@ -921,6 +944,7 @@ export default function AccessList({
                                         if (confirmAction === 'suspend') handleSuspend(selectedMember);
                                         if (confirmAction === 'activate') handleActivate(selectedMember);
                                         if (confirmAction === 'revoke') handleRevoke(selectedMember);
+                                        if (confirmAction === 'delete') handleDeleteMember(selectedMember);
                                         setConfirmAction(null);
                                     }}
                                     className={`flex h-12 flex-1 items-center justify-center rounded-2xl text-[15px] font-bold text-white shadow-xs ${confirmAction === 'activate' ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800' : 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800'}`}
@@ -928,6 +952,7 @@ export default function AccessList({
                                     {confirmAction === 'suspend' && 'Yes, Suspend'}
                                     {confirmAction === 'activate' && 'Yes, Reactivate'}
                                     {confirmAction === 'revoke' && 'Yes, Revoke'}
+                                    {confirmAction === 'delete' && 'Yes, Delete'}
                                 </button>
                             </div>
                         </div>
