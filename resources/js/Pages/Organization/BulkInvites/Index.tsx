@@ -11,7 +11,7 @@ import {
 import React, { useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
-import BulkInviteModal from '../BulkInviteModal';
+import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
 
 interface Recipient {
     id: number;
