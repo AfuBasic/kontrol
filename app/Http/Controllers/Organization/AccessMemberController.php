@@ -180,4 +180,19 @@ class AccessMemberController extends Controller
 
         return back()->with('success', 'Access member reactivated successfully.');
     }
+
+    public function destroy(Request $request, OrganizationAccessMember $member): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $member->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $this->memberService->deleteMember($member);
+
+        return back()->with('success', 'Access member and all associated access codes deleted successfully.');
+    }
 }
