@@ -1,15 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Calendar,
     CheckCircle2,
     Clock,
     Copy,
-    ExternalLink,
-    Mail,
     RefreshCw,
-    Shield,
-    Users,
     AlertCircle,
     AlertTriangle,
     XCircle,
