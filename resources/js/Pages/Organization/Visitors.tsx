@@ -566,8 +566,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                             label="Phone Number"
                             icon={Phone}
                             type="tel"
-                            placeholder="+1 234 567 8900"
-                            description="Optional. We'll send the pass to this number via SMS."
+                            placeholder="+234 801 234 5678"
                             value={data.visitor_phone}
                             onChange={(e) => setData('visitor_phone', e.target.value)}
                             error={errors.visitor_phone}
