@@ -1,21 +1,17 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import {
-    Mail,
     Calendar,
     RefreshCw,
-    X,
     AlertCircle,
     CheckCircle2,
     Send,
-    Shield,
-    Users,
-    Clock,
     AlertTriangle,
     Loader2,
     ChevronRight,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import EmailPillInput from '@/Components/Organization/EmailPillInput';
 
 interface Props {
     isOpen: boolean;
@@ -23,26 +19,6 @@ interface Props {
 }
 
 const MAX_RECIPIENTS = 30;
-
-const ROLE_OPTIONS = [
-    'Guest / Visitor',
-    'Contractor',
-    'Vendor / Supplier',
-    'Event Attendee',
-    'Client / Partner',
-    'Temporary Staff',
-    'Other',
-];
-
-const PURPOSE_OPTIONS = [
-    'Meeting / Consultation',
-    'Delivery / Dropoff',
-    'Site Maintenance / Repair',
-    'Audit / Inspection',
-    'Official Corporate Visit',
-    'Social / Event Attendance',
-    'Other',
-];
 
 interface DeliverySummary {
     total: number;
@@ -64,7 +40,6 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
     const defaultEnd = new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const [step, setStep] = useState<'form' | 'confirm' | 'status'>('form');
-    const [emailInput, setEmailInput] = useState('');
     const [activeBulkInviteId, setActiveBulkInviteId] = useState<number | null>(null);
 
     // Delivery polling state
@@ -75,8 +50,6 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
-        purpose: '',
-        role: '',
         emails: [] as string[],
         valid_from: today,
         valid_until: defaultEnd,
@@ -84,45 +57,32 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
         send_immediately: true,
     });
 
-    const parsedEmails = useMemo(() => {
-        if (!emailInput.trim()) return [];
-        const raw = emailInput
-            .split(/[\n,;]+/)
-            .map((e) => e.trim().toLowerCase())
-            .filter(Boolean);
-        return Array.from(new Set(raw));
-    }, [emailInput]);
+    // 30-day date range validation
+    const dateRangeValidation = useMemo(() => {
+        if (!data.valid_from || !data.valid_until) return { valid: false, message: 'Please select valid dates.' };
+        const start = new Date(data.valid_from);
+        const end = new Date(data.valid_until);
+        
+        if (end < start) {
+            return { valid: false, message: 'End date must be on or after start date.' };
+        }
 
-    const isValidEmail = (email: string) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    };
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of start & end day
 
-    const validEmails = useMemo(() => parsedEmails.filter(isValidEmail), [parsedEmails]);
-    const invalidEmails = useMemo(() => parsedEmails.filter((e) => !isValidEmail(e)), [parsedEmails]);
+        if (diffDays > 30) {
+            return { valid: false, message: `Selected range is ${diffDays} days. Pass validity period cannot exceed 30 days.` };
+        }
 
-    const handleApplyEmails = () => {
-        const combined = Array.from(new Set([...data.emails, ...validEmails])).slice(0, MAX_RECIPIENTS);
-        setData('emails', combined);
-        setEmailInput('');
-    };
+        return { valid: true, message: null, days: diffDays };
+    }, [data.valid_from, data.valid_until]);
 
-    const handleRemoveEmail = (emailToRemove: string) => {
-        setData(
-            'emails',
-            data.emails.filter((e) => e !== emailToRemove),
-        );
-    };
-
-    const effectiveEmails = data.emails.length > 0 ? data.emails : validEmails.slice(0, MAX_RECIPIENTS);
-    const currentRecipientsCount = effectiveEmails.length;
+    const currentRecipientsCount = data.emails.length;
     const isOverLimit = currentRecipientsCount > MAX_RECIPIENTS;
 
     const handleProceedToConfirm = (e: React.FormEvent) => {
         e.preventDefault();
-        if (currentRecipientsCount === 0 || isOverLimit) return;
-        if (data.emails.length === 0 && validEmails.length > 0) {
-            setData('emails', validEmails.slice(0, MAX_RECIPIENTS));
-        }
+        if (currentRecipientsCount === 0 || isOverLimit || !dateRangeValidation.valid) return;
         setStep('confirm');
     };
 
@@ -158,7 +118,6 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                     setStatusSummary(result.summary);
                     setRecipientStatuses(result.recipients || []);
 
-                    // Stop polling if all sent/failed or no pending/queued
                     const pendingTotal = (result.summary.queued || 0) + (result.summary.pending || 0);
                     if (pendingTotal === 0 && result.summary.total > 0) {
                         setIsPolling(false);
@@ -204,7 +163,6 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
     const handleCloseAll = () => {
         onClose();
         reset();
-        setEmailInput('');
         setStep('form');
         setActiveBulkInviteId(null);
         setStatusSummary(null);
@@ -226,135 +184,47 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             </p>
 
                             <div className="space-y-6">
-                                {/* Batch Name, Purpose & Role */}
-                                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-                                    <div>
-                                        <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                            Batch / List Name (Optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. Annual Audit Team, Vendor Technicians"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                        />
-                                        {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
-                                    </div>
-
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div>
-                                            <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                                Role / Category
-                                            </label>
-                                            <select
-                                                value={data.role}
-                                                onChange={(e) => setData('role', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                            >
-                                                <option value="">Select visitor role...</option>
-                                                {ROLE_OPTIONS.map((opt) => (
-                                                    <option key={opt} value={opt}>
-                                                        {opt}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            {errors.role && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.role}</p>}
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                                Visit Purpose
-                                            </label>
-                                            <select
-                                                value={data.purpose}
-                                                onChange={(e) => setData('purpose', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                            >
-                                                <option value="">Select purpose...</option>
-                                                {PURPOSE_OPTIONS.map((opt) => (
-                                                    <option key={opt} value={opt}>
-                                                        {opt}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.purpose}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Recipient Emails Area */}
-                                <div>
-                                    <div className="mb-2 flex items-center justify-between">
-                                        <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                            Recipient Emails <span className="text-rose-500">*</span>
-                                        </label>
-                                        <span className={`text-xs font-semibold ${isOverLimit ? 'font-bold text-rose-600' : 'text-slate-500'}`}>
-                                            {currentRecipientsCount} / {MAX_RECIPIENTS} max
-                                        </span>
-                                    </div>
-
-                                    <textarea
-                                        rows={4}
-                                        placeholder="Paste up to 30 recipient emails (one per line, comma or semicolon separated)..."
-                                        value={emailInput}
-                                        onChange={(e) => setEmailInput(e.target.value)}
+                                {/* Batch Name */}
+                                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                        Batch / Group Name (Optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Annual Audit Team, Vendor Technicians"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
-
-                                    {validEmails.length > 0 && emailInput && (
-                                        <div className="mt-2 flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">
-                                                Found {validEmails.length} valid {validEmails.length === 1 ? 'email' : 'emails'}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={handleApplyEmails}
-                                                className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
-                                            >
-                                                Add to list
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {invalidEmails.length > 0 && (
-                                        <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-600">
-                                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                                            <span>
-                                                Invalid email format: {invalidEmails.slice(0, 3).join(', ')}
-                                                {invalidEmails.length > 3 ? '...' : ''}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {data.emails.length > 0 && (
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            {data.emails.map((email) => (
-                                                <span
-                                                    key={email}
-                                                    className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800"
-                                                >
-                                                    {email}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveEmail(email)}
-                                                        className="text-slate-400 hover:text-rose-500"
-                                                    >
-                                                        <X className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {errors.emails && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.emails}</p>}
+                                    {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
                                 </div>
 
-                                {/* Validity Period (1 - 30 days) */}
+                                {/* Recipient Emails Area with EmailPillInput */}
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                        Recipient Emails <span className="text-rose-500">*</span>
+                                    </label>
+                                    <EmailPillInput
+                                        value={data.emails}
+                                        onChange={(emails) => setData('emails', emails)}
+                                        maxEmails={MAX_RECIPIENTS}
+                                        error={errors.emails}
+                                        placeholder="Type or paste emails (press Enter or comma)..."
+                                    />
+                                </div>
+
+                                {/* Validity Period (Max 30 days) */}
                                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-                                    <div className="mb-3 flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-slate-500" />
-                                        <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">Pass Validity Period</h4>
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="h-4 w-4 text-slate-500" />
+                                            <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">Pass Validity Period</h4>
+                                        </div>
+                                        {dateRangeValidation.valid && dateRangeValidation.days && (
+                                            <span className="text-[11px] font-semibold text-[#1a5dbf]">
+                                                {dateRangeValidation.days} {dateRangeValidation.days === 1 ? 'day' : 'days'} duration
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <div>
@@ -376,10 +246,18 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                                 min={data.valid_from}
                                                 value={data.valid_until}
                                                 onChange={(e) => setData('valid_until', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900"
+                                                className={`block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset focus:ring-2 ${
+                                                    !dateRangeValidation.valid ? 'ring-rose-400 focus:ring-rose-500' : 'ring-slate-200 focus:ring-slate-900'
+                                                }`}
                                             />
                                         </div>
                                     </div>
+                                    {!dateRangeValidation.valid && (
+                                        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-500">
+                                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                                            <span>{dateRangeValidation.message}</span>
+                                        </p>
+                                    )}
                                     {errors.valid_until && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.valid_until}</p>}
                                 </div>
 
@@ -416,10 +294,10 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     <div className="space-y-1 pr-4">
                                         <div className="flex items-center gap-2">
                                             <RefreshCw className="h-4 w-4 text-indigo-600" />
-                                            <span className="text-sm font-bold text-slate-900">Auto-renew this list</span>
+                                            <span className="text-sm font-bold text-slate-900">Automatically renew passes on expiry</span>
                                         </div>
                                         <p className="text-xs leading-relaxed text-slate-600">
-                                            Automatically issue and email a new pass to active recipients 24 hours before each cycle expires.
+                                            Passes will automatically be extended for the same duration when they reach expiry. Renewal requires an active subscription.
                                         </p>
                                     </div>
                                     <button
@@ -445,7 +323,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                         <div className="shrink-0 border-t border-slate-100 p-5 sm:px-6">
                             <button
                                 type="submit"
-                                disabled={processing || currentRecipientsCount === 0 || isOverLimit}
+                                disabled={processing || currentRecipientsCount === 0 || isOverLimit || !dateRangeValidation.valid}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
                             >
                                 <span>Continue to Confirmation ({currentRecipientsCount})</span>
@@ -469,7 +347,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
                                 <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
                                     <span className="text-slate-500">Recipients Count:</span>
-                                    <span className="font-bold text-slate-900">{effectiveEmails.length} recipients</span>
+                                    <span className="font-bold text-slate-900">{data.emails.length} recipients</span>
                                 </div>
                                 {data.name && (
                                     <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
@@ -477,22 +355,10 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         <span className="font-bold text-slate-900">{data.name}</span>
                                     </div>
                                 )}
-                                {data.role && (
-                                    <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                        <span className="text-slate-500">Role:</span>
-                                        <span className="font-bold text-slate-900">{data.role}</span>
-                                    </div>
-                                )}
-                                {data.purpose && (
-                                    <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                        <span className="text-slate-500">Purpose:</span>
-                                        <span className="font-bold text-slate-900">{data.purpose}</span>
-                                    </div>
-                                )}
                                 <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
                                     <span className="text-slate-500">Validity Window:</span>
                                     <span className="font-bold text-slate-900">
-                                        {data.valid_from} to {data.valid_until}
+                                        {data.valid_from} to {data.valid_until} ({dateRangeValidation.days} days)
                                     </span>
                                 </div>
                                 <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
@@ -509,9 +375,9 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
                             <div className="mt-5">
                                 <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">Recipients Preview</h4>
-                                <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
+                                <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
                                     <ul className="divide-y divide-slate-100 text-xs text-slate-700">
-                                        {effectiveEmails.map((email, i) => (
+                                        {data.emails.map((email, i) => (
                                             <li key={email} className="py-1.5 flex items-center justify-between">
                                                 <span>{email}</span>
                                                 <span className="text-[10px] text-slate-400">#{i + 1}</span>
@@ -543,7 +409,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         <span>Creating Passes...</span>
                                     </>
                                 ) : (
-                                    <span>Confirm & Create {effectiveEmails.length} Passes</span>
+                                    <span>Confirm & Create {data.emails.length} Passes</span>
                                 )}
                             </button>
                         </div>
