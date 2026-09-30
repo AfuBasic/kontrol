@@ -299,7 +299,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Search visitors..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
