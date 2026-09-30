@@ -41,25 +41,12 @@ export default function Settings({ organization, membership, staff }: Props) {
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
 
-    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'preferences' | 'help' | 'signout' | 'personal' | null>(null);
-
-    const policyForm = useForm({
-        arrival_confirmation_required: organization.arrival_confirmation_required,
-        confirmation_window_minutes: organization.confirmation_window_minutes || 15,
-        confirmation_escalation: organization.confirmation_escalation || 'alert_only',
-    });
+    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'help' | 'signout' | 'personal' | null>(null);
 
     const inviteForm = useForm({
         email: '',
         role: 'member',
     });
-
-    const handleUpdatePolicy = (e: React.FormEvent) => {
-        e.preventDefault();
-        policyForm.patch('/org/settings/confirmation-policy', {
-            onSuccess: () => setActiveModal(null),
-        });
-    };
 
     const handleInviteStaff = (e: React.FormEvent) => {
         e.preventDefault();
@@ -159,17 +146,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <span className="text-sm font-bold text-slate-900">Organization details</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </button>
-
-                        {!organization.is_unrestricted && membership.is_admin && (
-                            <button
-                                type="button"
-                                onClick={() => setActiveModal('preferences')}
-                                className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
-                            >
-                                <span className="text-sm font-bold text-slate-900">Arrival preferences</span>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
-                            </button>
-                        )}
                     </div>
                 </section>
 
@@ -364,84 +340,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
                 </ResponsiveSheet>
 
-                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
-                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
-                <ResponsiveSheet isOpen={activeModal === 'preferences'} onClose={() => setActiveModal(null)}>
-                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-                        <div>
-                            <h3 className="text-base font-semibold text-slate-950">Arrival Preferences</h3>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleUpdatePolicy} className="mt-5 space-y-5">
-                        <label className="flex cursor-pointer items-start gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                            <input
-                                type="checkbox"
-                                checked={policyForm.data.arrival_confirmation_required}
-                                onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                            />
-                            <div>
-                                <span className="block text-sm font-semibold text-slate-900">Confirm visitor arrivals</span>
-                                <p className="mt-1 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
-                            </div>
-                        </label>
-
-                        {policyForm.data.arrival_confirmation_required && (
-                            <div className="space-y-4 pt-2">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        How long should we wait?
-                                    </label>
-                                    <select
-                                        value={policyForm.data.confirmation_window_minutes}
-                                        onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                    >
-                                        <option value={10}>10 minutes</option>
-                                        <option value={15}>15 minutes</option>
-                                        <option value={30}>30 minutes</option>
-                                        <option value={45}>45 minutes</option>
-                                        <option value={60}>1 hour</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        If unconfirmed
-                                    </label>
-                                    <select
-                                        value={policyForm.data.confirmation_escalation}
-                                        onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                    >
-                                        <option value="alert_only">Highlight on dashboard only</option>
-                                        <option value="flag_security">Flag for security gate</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setActiveModal(null)}
-                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={policyForm.processing}
-                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
-                            >
-                                {policyForm.processing ? 'Saving...' : 'Save Preferences'}
-                            </button>
-                        </div>
-                    </form>
-                </ResponsiveSheet>
-
-                {/* FOCUSED MODAL: HELP & SUPPORT */}
                 {/* FOCUSED MODAL: HELP & SUPPORT */}
                 <ResponsiveSheet isOpen={activeModal === 'help'} onClose={() => setActiveModal(null)}>
                     <div className="flex items-start justify-between border-b border-slate-100 pb-4">
