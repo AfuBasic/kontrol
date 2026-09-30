@@ -28,6 +28,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::patch('/{member}', [AccessMemberController::class, 'update'])->name('update');
         Route::post('/{member}/suspend', [AccessMemberController::class, 'suspend'])->name('suspend');
         Route::post('/{member}/activate', [AccessMemberController::class, 'activate'])->name('activate');
+        Route::delete('/{member}', [AccessMemberController::class, 'destroy'])->name('destroy');
     });
 
     // Access: Credentials (issue/renew/revoke actions)
