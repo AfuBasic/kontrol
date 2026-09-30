@@ -24,7 +24,7 @@
             <tr>
                 <td style="padding-bottom: 12px; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Billing Period</td>
                 <td style="padding-bottom: 12px; color: #0f172a; font-weight: 700; text-align: right;">
-                    {{ $invoice->billing_period_start->format('M d, Y') }} – {{ $invoice->billing_period_end->format('M d, Y') }}
+                    {{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}
                 </td>
             </tr>
             <tr>
