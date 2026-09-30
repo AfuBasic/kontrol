@@ -7,8 +7,9 @@ import {
     Users,
     AlertCircle,
     CheckCircle2,
+    Search,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
@@ -49,6 +50,7 @@ interface Props {
     organization: { id: number; name: string };
     membership: { role: string; is_admin: boolean };
     bulkInvites: PaginatedData<BulkInviteItem>;
+    filters?: { search?: string };
     currentStatus?: string;
 }
 
@@ -56,9 +58,24 @@ export default function BulkInvitesIndex({
     organization,
     membership,
     bulkInvites,
-    currentStatus = 'all',
+    filters,
 }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const [search, setSearch] = useState(filters?.search ?? '');
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (search !== (filters?.search ?? '')) {
+                router.get(
+                    '/org/bulk-invites',
+                    { search: search.trim() || undefined },
+                    { preserveState: true, preserveScroll: true, replace: true }
+                );
+            }
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
 
     return (
         <OrganizationLayout
@@ -84,6 +101,21 @@ export default function BulkInvitesIndex({
                         ) : undefined
                     }
                 />
+
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search
+                        className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        strokeWidth={2.5}
+                    />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search groups..."
+                        className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                    />
+                </div>
 
                 {bulkInvites.data.length === 0 ? (
                     <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center shadow-xs">
