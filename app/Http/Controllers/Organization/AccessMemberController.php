@@ -84,6 +84,7 @@ class AccessMemberController extends Controller
                 'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
                 'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
                 'estate_name' => $organization->estate?->name,
+                'visitor_checkout_enabled' => (bool) ($organization->estate?->settings?->visitor_checkout_enabled ?? false),
             ],
             'membership' => [
                 'role' => $membership->role,
