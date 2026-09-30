@@ -23,10 +23,23 @@ return new class extends Migration
             $table->unique(['estate_id', 'id_photo_hash'], 'visitor_profiles_estate_hash_uniq');
             $table->index(['estate_id', 'last_seen_at'], 'visitor_profiles_estate_last_seen_idx');
         });
+
+        Schema::table('access_logs', function (Blueprint $table) {
+            $table->foreignId('visitor_profile_id')
+                ->nullable()
+                ->after('access_code_id')
+                ->constrained('visitor_profiles')
+                ->nullOnDelete();
+        });
     }
 
     public function down(): void
     {
+        Schema::table('access_logs', function (Blueprint $table) {
+            $table->dropForeign(['visitor_profile_id']);
+            $table->dropColumn('visitor_profile_id');
+        });
+
         Schema::dropIfExists('visitor_profiles');
     }
 };
