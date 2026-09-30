@@ -27,9 +27,11 @@ class CreateBulkVisitorInviteAction
         array $emails,
         ?string $name = null,
         ?string $purpose = null,
+        ?string $role = null,
         ?CarbonInterface $validFrom = null,
         ?CarbonInterface $validUntil = null,
         bool $autoRenew = false,
+        bool $sendImmediately = true,
     ): OrganizationBulkInvite {
         if (! $organization->is_active) {
             throw ValidationException::withMessages([
@@ -61,16 +63,18 @@ class CreateBulkVisitorInviteAction
 
         $nextRenewalAt = $autoRenew ? $endDate->subDay()->toDateString() : null;
 
-        return DB::transaction(function () use ($organization, $estate, $user, $uniqueEmails, $name, $purpose, $startDate, $endDate, $autoRenew, $nextRenewalAt) {
+        return DB::transaction(function () use ($organization, $estate, $user, $uniqueEmails, $name, $purpose, $role, $startDate, $endDate, $autoRenew, $sendImmediately, $nextRenewalAt) {
             $bulkInvite = OrganizationBulkInvite::create([
                 'organization_id' => $organization->id,
                 'estate_id' => $estate->id,
                 'created_by' => $user->id,
                 'name' => $name,
                 'purpose' => $purpose ?? "{$organization->name} - Visitor Pass",
+                'role' => $role,
                 'valid_from' => $startDate->toDateString(),
                 'valid_until' => $endDate->toDateString(),
                 'auto_renew' => $autoRenew,
+                'send_immediately' => $sendImmediately,
                 'status' => 'active',
                 'next_renewal_at' => $nextRenewalAt,
             ]);
@@ -82,6 +86,7 @@ class CreateBulkVisitorInviteAction
                     'bulk_invite_id' => $bulkInvite->id,
                     'email' => $email,
                     'status' => 'active',
+                    'delivery_status' => $sendImmediately ? 'queued' : 'pending',
                 ]);
 
                 $pass = AccessCode::create([
@@ -104,17 +109,21 @@ class CreateBulkVisitorInviteAction
                     'last_access_code_id' => $pass->id,
                 ]);
 
-                $dispatches[] = [
-                    'accessCodeId' => $pass->id,
-                    'recipientId' => $recipient->id,
-                ];
+                if ($sendImmediately) {
+                    $dispatches[] = [
+                        'accessCodeId' => $pass->id,
+                        'recipientId' => $recipient->id,
+                    ];
+                }
             }
 
-            DB::afterCommit(function () use ($dispatches) {
-                foreach ($dispatches as $item) {
-                    DeliverBulkVisitorPassJob::dispatch($item['accessCodeId'], $item['recipientId']);
-                }
-            });
+            if (! empty($dispatches)) {
+                DB::afterCommit(function () use ($dispatches) {
+                    foreach ($dispatches as $item) {
+                        DeliverBulkVisitorPassJob::dispatch($item['accessCodeId'], $item['recipientId']);
+                    }
+                });
+            }
 
             return $bulkInvite->load('recipients.lastAccessCode');
         });
