@@ -28,10 +28,26 @@ class OrganizationBulkInviteController extends Controller
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
 
-        $bulkInvites = OrganizationBulkInvite::where('organization_id', $organization->id)
-            ->withCount(['recipients', 'renewals'])
-            ->with(['recipients' => fn ($q) => $q->latest()->limit(5)])
-            ->latest()
+        $status = $request->query('status', 'all');
+
+        $query = OrganizationBulkInvite::where('organization_id', $organization->id)
+            ->withCount([
+                'recipients',
+                'renewals',
+                'recipients as sent_recipients_count' => fn ($q) => $q->where('delivery_status', 'sent'),
+                'recipients as failed_recipients_count' => fn ($q) => $q->where('delivery_status', 'failed'),
+            ])
+            ->with(['recipients' => fn ($q) => $q->latest()->limit(5)]);
+
+        if ($status === 'active') {
+            $query->where('status', 'active');
+        } elseif ($status === 'expired') {
+            $query->where('status', 'expired');
+        } elseif ($status === 'cancelled') {
+            $query->where('status', 'cancelled');
+        }
+
+        $bulkInvites = $query->latest()
             ->paginate(15)
             ->withQueryString();
 
@@ -45,6 +61,7 @@ class OrganizationBulkInviteController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'bulkInvites' => $bulkInvites,
+            'currentStatus' => $status,
         ]);
     }
 
