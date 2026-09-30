@@ -61,7 +61,6 @@ class EstateSettings extends Model
         'access_code_require_confirmation',
         'visitor_checkout_enabled',
         'quick_entry_enabled',
-        'quick_entry_hours_enforcement',
         'entry_point_checkout_enforced',
         'entry_points',
         'charge_type',
