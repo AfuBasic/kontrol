@@ -95,7 +95,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 },
             });
             if (res.ok) {
-                router.reload({ preserveScroll: true });
+                router.reload();
             }
         } catch (err) {
             console.error('Failed to trigger retry', err);
