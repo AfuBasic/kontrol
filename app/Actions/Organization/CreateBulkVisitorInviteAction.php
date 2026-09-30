@@ -5,6 +5,7 @@ namespace App\Actions\Organization;
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
 use App\Jobs\DeliverBulkVisitorPassJob;
+use App\Jobs\NotifyBulkInviteDeliveryReportJob;
 use App\Models\AccessCode;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
@@ -118,10 +119,13 @@ class CreateBulkVisitorInviteAction
             }
 
             if (! empty($dispatches)) {
-                DB::afterCommit(function () use ($dispatches) {
+                DB::afterCommit(function () use ($dispatches, $bulkInvite) {
                     foreach ($dispatches as $item) {
                         DeliverBulkVisitorPassJob::dispatch($item['accessCodeId'], $item['recipientId']);
                     }
+
+                    // Dispatch delivery report check delayed by 2 minutes
+                    NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
                 });
             }
 
