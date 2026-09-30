@@ -185,27 +185,27 @@ export default function Settings({ organization, membership, staff }: Props) {
                             onClick={() => openExternalBilling()}
                             className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
-                            <div className="flex items-center gap-3">
-                                <CreditCard className="h-4 w-4 text-slate-500" />
-                                <div>
+                            <div className="flex min-w-0 flex-1 items-center gap-3 pr-2">
+                                <CreditCard className="h-4 w-4 shrink-0 text-slate-500" />
+                                <div className="min-w-0 flex-1">
                                     <span className="text-sm font-bold text-slate-900">Subscription & Billing</span>
-                                    <p className="text-xs text-slate-400">Manage plan, billing cycle, receipts & payment methods</p>
+                                    <p className="truncate text-xs text-slate-400">Manage plan, billing cycle & receipts</p>
                                 </div>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
                         </button>
                         <Link
                             href="/org/payments"
                             className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
-                            <div className="flex items-center gap-3">
-                                <CreditCard className="h-4 w-4 text-slate-500" />
-                                <div>
+                            <div className="flex min-w-0 flex-1 items-center gap-3 pr-2">
+                                <CreditCard className="h-4 w-4 shrink-0 text-slate-500" />
+                                <div className="min-w-0 flex-1">
                                     <span className="text-sm font-bold text-slate-900">Estate Payments & Dues</span>
-                                    <p className="text-xs text-slate-400">View balances, estate dues & payment history</p>
+                                    <p className="truncate text-xs text-slate-400">View balances, dues & payments</p>
                                 </div>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
                         </Link>
                     </div>
                 </section>
