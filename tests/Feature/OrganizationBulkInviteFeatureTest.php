@@ -97,10 +97,10 @@ test('admin can create bulk visitor invite with email normalization and passes g
     Queue::assertPushed(DeliverBulkVisitorPassJob::class, 2);
 });
 
-test('bulk invite enforces 20 recipients maximum cap', function () {
+test('bulk invite enforces 30 recipients maximum cap', function () {
     $this->actingAs($this->orgAdmin);
 
-    $tooManyEmails = array_map(fn ($i) => "visitor{$i}@example.com", range(1, 21));
+    $tooManyEmails = array_map(fn ($i) => "visitor{$i}@example.com", range(1, 31));
 
     $response = $this->post(route('org.bulk-invites.store'), [
         'name' => 'Too Many Guests',
@@ -218,12 +218,13 @@ test('delivery job sends pass email to recipient', function () {
     $pass = $recipient->lastAccessCode;
 
     $deliveryJob = new DeliverBulkVisitorPassJob($pass->id, $recipient->id);
-    $deliveryJob->handle();
+    app()->call([$deliveryJob, 'handle']);
 
     Mail::assertQueued(BulkVisitorPassMail::class, function ($mail) use ($recipient) {
         return $mail->hasTo($recipient->email);
     });
 
     $recipient->refresh();
-    expect($recipient->last_delivered_at)->not->toBeNull();
+    expect($recipient->last_delivered_at)->not->toBeNull()
+        ->and($recipient->delivery_status)->toBe('sent');
 });
