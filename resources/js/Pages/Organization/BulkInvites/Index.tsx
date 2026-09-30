@@ -1,5 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
-import { Calendar, ChevronRight, Mail, Plus, RefreshCw, Users, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Calendar,
+    ChevronRight,
+    Mail,
+    Plus,
+    RefreshCw,
+    Users,
+    AlertCircle,
+    CheckCircle2,
+    Clock,
+    Send,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
@@ -23,6 +34,8 @@ interface BulkInviteItem {
     status: string;
     recipients_count: number;
     renewals_count: number;
+    sent_recipients_count?: number;
+    failed_recipients_count?: number;
     created_at: string;
     recipients: Recipient[];
 }
@@ -39,13 +52,38 @@ interface Props {
     organization: { id: number; name: string };
     membership: { role: string; is_admin: boolean };
     bulkInvites: PaginatedData<BulkInviteItem>;
+    currentStatus?: string;
 }
 
-export default function BulkInvitesIndex({ organization, membership, bulkInvites }: Props) {
+export default function BulkInvitesIndex({
+    organization,
+    membership,
+    bulkInvites,
+    currentStatus = 'all',
+}: Props) {
     const [modalOpen, setModalOpen] = useState(false);
 
+    const handleTabChange = (status: string) => {
+        router.get(
+            '/org/bulk-invites',
+            { status: status === 'all' ? undefined : status },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const tabs = [
+        { id: 'all', label: 'All' },
+        { id: 'active', label: 'Active' },
+        { id: 'expired', label: 'Expired' },
+        { id: 'cancelled', label: 'Cancelled' },
+    ];
+
     return (
-        <OrganizationLayout title="Access - Bulk Invites" transparentHeader contentClassName="w-full relative min-h-screen">
+        <OrganizationLayout
+            title="Access - Bulk Invites"
+            transparentHeader
+            contentClassName="w-full relative min-h-screen"
+        >
             <Head title={`${organization.name} - Bulk Visitor Invites`} />
 
             <div className="mx-auto flex max-w-[540px] flex-col gap-4 px-4 pt-1 pb-24">
@@ -65,11 +103,32 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                     }
                 />
 
-                <div className="flex items-center justify-between px-1">
-                    <div>
-                        <h2 className="text-[17px] font-bold text-slate-900">Bulk Invite Batches</h2>
-                        <p className="text-xs text-slate-500">Group access passes issued with automatic renewal and delivery tracking.</p>
-                    </div>
+                <div className="flex flex-col gap-1 px-1">
+                    <h2 className="text-[17px] font-bold text-slate-900">Bulk Invite Batches</h2>
+                    <p className="text-xs text-slate-500">
+                        Group access passes issued with automatic renewal and delivery tracking.
+                    </p>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
+                    {tabs.map((tab) => {
+                        const isActive = currentStatus === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => handleTabChange(tab.id)}
+                                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                                    isActive
+                                        ? 'bg-slate-900 text-white shadow-xs'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {bulkInvites.data.length === 0 ? (
@@ -77,11 +136,13 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                             <Users className="h-6 w-6" />
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">No bulk invites yet</h3>
+                        <h3 className="text-sm font-bold text-slate-900">No bulk invites found</h3>
                         <p className="mt-1 text-xs text-slate-500">
-                            Create a bulk visitor invite to generate passes and deliver branded PDF passes to multiple recipients simultaneously.
+                            {currentStatus === 'all'
+                                ? 'Create a bulk visitor invite to generate passes and deliver branded PDF passes to multiple recipients simultaneously.'
+                                : `There are no bulk invites currently with "${currentStatus}" status.`}
                         </p>
-                        {membership.is_admin && (
+                        {membership.is_admin && currentStatus === 'all' && (
                             <button
                                 type="button"
                                 onClick={() => setModalOpen(true)}
@@ -96,6 +157,10 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
                         {bulkInvites.data.map((invite) => {
                             const isActive = invite.status === 'active';
+                            const totalRecipients = invite.recipients_count || 0;
+                            const sentCount = invite.sent_recipients_count ?? 0;
+                            const failedCount = invite.failed_recipients_count ?? 0;
+
                             return (
                                 <Link
                                     key={invite.id}
@@ -104,14 +169,16 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <span className="truncate text-sm font-bold text-slate-900">
-                                                    {invite.name || invite.purpose || `Batch #${invite.id}`}
+                                                    {invite.name || `Batch #${invite.id}`}
                                                 </span>
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                                                         isActive
                                                             ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                            : invite.status === 'cancelled'
+                                                            ? 'border border-rose-200 bg-rose-50 text-rose-700'
                                                             : 'border border-slate-200 bg-slate-100 text-slate-600'
                                                     }`}
                                                 >
@@ -120,17 +187,43 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                                                 {invite.auto_renew && (
                                                     <span className="inline-flex items-center gap-0.5 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
                                                         <RefreshCw className="h-2.5 w-2.5" />
-                                                        Auto-renew
+                                                        Auto-renew on
                                                     </span>
                                                 )}
                                             </div>
 
-                                            <p className="mt-1 text-xs text-slate-500">
-                                                {invite.role && <span className="font-semibold text-slate-700">{invite.role} · </span>}
-                                                <span>{invite.recipients_count} recipients</span>
-                                                <span> · Valid {invite.valid_from} – {invite.valid_until}</span>
-                                            </p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                                                <span className="font-semibold text-slate-700">
+                                                    {totalRecipients} {totalRecipients === 1 ? 'recipient' : 'recipients'}
+                                                </span>
+                                                <span>·</span>
+                                                <span>
+                                                    Valid {invite.valid_from} – {invite.valid_until}
+                                                </span>
+                                            </div>
 
+                                            {/* Delivery Summary Badge Indicators */}
+                                            <div className="mt-2.5 flex items-center gap-3 text-[11px]">
+                                                {sentCount > 0 && (
+                                                    <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
+                                                        <CheckCircle2 className="h-3 w-3" />
+                                                        {sentCount} sent
+                                                    </span>
+                                                )}
+                                                {failedCount > 0 && (
+                                                    <span className="inline-flex items-center gap-1 font-medium text-rose-600">
+                                                        <AlertCircle className="h-3 w-3" />
+                                                        {failedCount} failed
+                                                    </span>
+                                                )}
+                                                {invite.renewals_count > 0 && (
+                                                    <span className="text-slate-400">
+                                                        {invite.renewals_count} {invite.renewals_count === 1 ? 'renewal cycle' : 'renewal cycles'}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Preview pill emails */}
                                             {invite.recipients && invite.recipients.length > 0 && (
                                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                                     {invite.recipients.slice(0, 3).map((r) => (
@@ -142,9 +235,9 @@ export default function BulkInvitesIndex({ organization, membership, bulkInvites
                                                             {r.email}
                                                         </span>
                                                     ))}
-                                                    {invite.recipients_count > 3 && (
-                                                        <span className="text-[11px] font-medium text-slate-400 self-center">
-                                                            +{invite.recipients_count - 3} more
+                                                    {totalRecipients > 3 && (
+                                                        <span className="self-center text-[11px] font-medium text-slate-400">
+                                                            +{totalRecipients - 3} more
                                                         </span>
                                                     )}
                                                 </div>
