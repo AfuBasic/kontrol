@@ -270,7 +270,7 @@ export default function Visitors({ organization, membership, visitors, filters }
         const startFormatted = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const endFormatted = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
-        return `${startFormatted} – ${endFormatted}`;
+        return `${startFormatted} - ${endFormatted}`;
     };
 
     return (
