@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
-import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
+
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface StaffMember {
@@ -85,12 +85,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
                 </div>
 
-                {/* Subscription Banner */}
-                {subscription && (
-                    <div className="-mt-2">
-                        <SubscriptionBanner subscription={subscription} />
-                    </div>
-                )}
+
 
                 {/* 1.5 SUBSCRIPTION CARD (Resident profile dark card style) */}
                 {subscription && (subscription.current_period_end || subscription.trial_ends_at) && (

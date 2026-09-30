@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
-import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
+
 
 interface Recipient {
     id: number;
@@ -109,11 +109,7 @@ export default function BulkInvitesIndex({
                     }
                 />
 
-                {subscription && (
-                    <div className="-mb-2">
-                        <SubscriptionBanner subscription={subscription} />
-                    </div>
-                )}
+
 
                 {/* Search Bar */}
                 <div className="relative">
