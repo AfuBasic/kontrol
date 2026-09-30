@@ -48,7 +48,6 @@ class SettingsController extends Controller
                 'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
                 'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
                 'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
-                'operating_hours' => $organization->operating_hours,
                 'is_unrestricted' => $organization->isUnrestricted(),
             ],
             'membership' => [
