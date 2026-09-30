@@ -1,0 +1,190 @@
+# ORGANIZATION ACCESS — RANDOM ENTRY
+## Kontrol Estate Management
+
+---
+
+## THE PROBLEM
+
+Dele shows up at the gate.
+He is not a resident.
+He has no appointment.
+He has no invitation.
+He has no code.
+He has no app.
+Nobody knows he is coming.
+
+He just arrives. Totally random.
+
+He wants to go to the bar.
+The bar does not know him either.
+
+What happens RIGHT NOW at the gate?
+
+This file covers only this one scenario.
+Everything else (residents, invitations, scheduled visits, codes) already works.
+
+---
+
+## THE SIMPLE ANSWER
+
+The bar decides: walk-ins allowed or not.
+
+  If YES:  Security checks Dele's ID. Logs his entry. Gate opens. 30 seconds.
+  If NO:   Security calls the bar. The bar decides. Done.
+
+That is the entire system.
+No invitation. No appointment. No code. No app.
+Just a name, an ID, and a decision the organization already made.
+
+---
+
+## HOW IT WORKS
+
+### OPEN MODE (bar says "walk-ins allowed")
+
+  Dele arrives. "I want to go to the bar."
+  Security looks at the bar's mode: OPEN.
+  Security asks for Dele's government ID.
+  Security enters Dele's name into the gate system.
+  The system logs: Dele Okafor, Bar, [current time], ID verified.
+  The system issues a short-term pass (valid 4 hours).
+  Gate opens.
+
+  Dele enters. Done.
+  Total time: 30 seconds.
+
+  The bar manager can see who entered later:
+    "Dele Okafor — entered 7:42 PM — walk-in pass — expires 11:42 PM"
+
+### CLOSED MODE (bar says "guest list only")
+
+  Dele arrives. "I want to go to the bar."
+  Security looks at the bar's mode: CLOSED.
+  Security sees Dele has no valid code.
+  Security calls the bar.
+  Bar says: "Yes, let him in" or "No, deny him."
+  If yes: security issues a one-time pass. Gate opens. Entry logged.
+  If no: security tells Dele he cannot enter. No entry.
+
+  The bar manager decides. Security just executes.
+
+---
+
+## WHAT THE ORGANIZATION CONTROLS
+
+  - Toggle: Open or Closed (walk-ins allowed or not)
+  - Operating hours (open mode only works during bar hours)
+  - Age requirement (security confirms age from ID)
+  - Maximum capacity (when full, switch to closed)
+
+The organization sets these in Kontrol.
+Security follows them. No judgment calls at the gate.
+
+---
+
+## WHAT SECURITY DOES
+
+  In open mode:
+    1. Ask for name and ID.
+    2. Log the entry.
+    3. Issue a time-limited pass.
+    4. Open the gate.
+
+  In closed mode:
+    1. Check for a valid code.
+    2. If no code, call the organization.
+    3. Follow their decision.
+
+  Security does NOT decide who enters.
+  The organization decides. Security enforces.
+
+---
+
+## THE DECISION TREE
+
+                    Dele arrives at gate
+                           |
+                  Is bar in OPEN mode?
+                   /                \
+                 YES                 NO
+                  |                   |
+            Check ID,              Does Dele have
+            log entry,             a valid code?
+            issue pass,            /            \
+            open gate             YES           NO
+              (done)               |             |
+                               Open gate     Call bar,
+                               log entry     follow their
+                               (done)        decision
+
+  Every path ends in open gate or deny entry.
+  Simple. Fast. No ambiguity.
+
+---
+
+## WHAT NEEDS TO EXIST
+
+### Already exists:
+  - Organization records
+  - Access logs
+  - Security gate UI
+
+### Needs to be built:
+
+  1. Open/closed mode toggle per organization
+     - Set by the organization in Kontrol
+     - Security sees the mode instantly at the gate
+
+  2. Walk-in pass issuance at the gate
+     - Security enters name, verifies ID
+     - System issues a time-limited pass
+     - Pass linked to the organization's policy
+
+  3. Organization mode visible to security
+     - When Dele says "Bar", security instantly sees:
+       "Bar — Open mode active" or "Bar — Closed mode active"
+     - One-tap action based on mode
+
+  4. Outsider entry log
+     - Name, time, destination, ID verified, mode at time of entry
+     - Organization can review later
+
+---
+
+## EXAMPLES
+
+### Bar is OPEN — Dele enters in 30 seconds
+
+  Dele: "Bar."
+  Security: "ID please." Dele shows driver's license.
+  Security: Enters name. System issues 4-hour pass. Logs entry. Gate opens.
+  Dele enters. Done.
+
+### Bar is CLOSED — Dele needs approval
+
+  Dele: "Bar."
+  Security: "Bar is closed. One moment." Calls the bar.
+  Bar: "Yes, he can come in." Security issues pass. Gate opens. Logs entry.
+  Dele enters. Done.
+
+  If bar says no: "Sorry, the bar cannot accommodate you right now."
+  Dele leaves. No entry.
+
+---
+
+## SUMMARY
+
+The only unsolved problem is: a random person shows up, no code, no invitation, nobody knows them.
+
+The solution:
+  - Organizations set their mode: open or closed.
+  - If open: security checks ID, logs entry, issues pass. 30 seconds.
+  - If closed: security contacts the organization. Organization decides.
+  - Security enforces. Organization decides.
+
+  Residents are NOT involved in any of this.
+  Residents are only involved when someone is visiting THEIR HOME.
+  Everything else is between the organization and security.
+
+No invitations. No appointments. No apps needed from the visitor.
+Just a name, an ID, and a policy the organization already set.
