@@ -4,9 +4,12 @@ namespace App\Jobs;
 
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
+use App\Jobs\DeliverBulkVisitorPassJob;
+use App\Jobs\NotifyBulkInviteDeliveryReportJob;
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRenewal;
+use App\Notifications\BulkInviteRenewedNotification;
 use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -183,10 +186,19 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
                     'updated_at' => now(),
                 ]);
 
-            DB::afterCommit(function () use ($dispatches) {
+            DB::afterCommit(function () use ($dispatches, $bulkInvite, $renewedCount, $blockedCount) {
                 foreach ($dispatches as $item) {
                     DeliverBulkVisitorPassJob::dispatch($item['accessCodeId'], $item['recipientId']);
                 }
+
+                // Notify list creator via mail + database + push
+                $creator = $bulkInvite->createdBy;
+                if ($creator) {
+                    $creator->notify(new BulkInviteRenewedNotification($bulkInvite, $renewedCount, $blockedCount));
+                }
+
+                // Schedule delivery error check delayed by 2 minutes
+                NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
             });
         });
     }
