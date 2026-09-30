@@ -4,145 +4,137 @@ namespace App\Http\Controllers\Security;
 
 use App\Actions\Security\CheckoutQuickEntryAction;
 use App\Actions\Security\RecordQuickEntryAction;
-use App\Actions\Security\ReserveQuickEntryTagsAction;
-use App\Http\Controllers\Controller;
-use App\Models\AccessLog;
-use App\Services\EstateContextService;
+use App\Models\EstateOrganization;
+use App\Models\VisitorProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Throwable;
+use Illuminate\Validation\ValidationException;
 
-class QuickEntryController extends Controller
+class QuickEntryController
 {
     public function __construct(
-        protected ReserveQuickEntryTagsAction $reserveTagsAction,
-        protected RecordQuickEntryAction $recordQuickEntryAction,
-        protected CheckoutQuickEntryAction $checkoutQuickEntryAction,
+        private RecordQuickEntryAction $recordAction,
+        private CheckoutQuickEntryAction $checkoutAction,
     ) {}
 
     /**
-     * Reserve a block of Quick Entry tags for offline/online gate use.
-     */
-    public function reserve(Request $request): JsonResponse
-    {
-        $estate = app(EstateContextService::class)->getEstate();
-        $user = $request->user();
-
-        $count = (int) $request->input('count', 50);
-        $deviceFingerprint = $request->input('device_fingerprint');
-
-        $result = $this->reserveTagsAction->execute(
-            estateId: $estate->id,
-            guard: $user,
-            deviceFingerprint: $deviceFingerprint,
-            count: max(10, min($count, 100)),
-        );
-
-        return response()->json([
-            'success' => true,
-            'data' => $result,
-        ]);
-    }
-
-    /**
-     * Log a Quick Entry arrival in real-time.
+     * Log a quick entry admission.
      */
     public function store(Request $request): JsonResponse
     {
-        $estate = app(EstateContextService::class)->getEstate();
         $user = $request->user();
+        $estateId = $request->attributes->get('estate_id');
 
         $validated = $request->validate([
-            'tag' => ['required', 'string', 'size:4'],
-            'organization_id' => [
-                'required',
-                'integer',
-                Rule::exists('estate_organizations', 'id')->where('estate_id', $estate->id),
-            ],
+            'organization_id' => ['required', 'exists:estate_organizations,id'],
             'visitor_name' => ['nullable', 'string', 'max:255'],
-            'vehicle_plate_number' => ['nullable', 'string', 'max:50'],
+            'id_photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'vehicle_plate_number' => ['nullable', 'string', 'max:20'],
             'vehicle_make' => ['nullable', 'string', 'max:50'],
             'vehicle_model' => ['nullable', 'string', 'max:50'],
-            'allocation_id' => ['nullable', 'integer'],
+            'entry_point' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $log = $this->recordQuickEntryAction->execute(
-            estateId: $estate->id,
-            verifiedBy: $user,
-            data: $validated,
-        );
+        // Ensure the org belongs to this estate
+        $organization = EstateOrganization::where('estate_id', $estateId)
+            ->where('id', $validated['organization_id'])
+            ->firstOrFail();
+
+        if (! $organization->is_active || ! $organization->quick_entry_enabled) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['Quick entry is currently disabled for this organization.'],
+            ]);
+        }
+
+        if (! $organization->isWithinPublicWindow()) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['Quick Entry is not permitted right now. This organization has no active public window at the current time.'],
+            ]);
+        }
+
+        $log = $this->recordAction->execute($estateId, $user, $validated);
+
+        $isReturning = $log->meta['visitor_profile_id'] !== null
+            && VisitorProfile::find($log->meta['visitor_profile_id'])?->visit_count > 1;
 
         return response()->json([
             'success' => true,
-            'message' => 'Quick entry recorded successfully.',
-            'log' => $log,
+            'tag' => $log->meta['tag'],
+            'visitor_name' => $log->meta['visitor_name'],
+            'visitor_profile_id' => $log->meta['visitor_profile_id'],
+            'organization_name' => $organization->name,
+            'entry_type' => $log->meta['entry_type'],
+            'is_returning_visitor' => $isReturning,
+            'verified_at' => $log->verified_at,
+            'entry_point' => $log->entry_point,
         ]);
     }
 
     /**
-     * Sync batched offline Quick Entry logs.
+     * Sync offline quick entry logs.
      */
     public function sync(Request $request): JsonResponse
     {
-        $estate = app(EstateContextService::class)->getEstate();
         $user = $request->user();
+        $estateId = $request->attributes->get('estate_id');
 
-        $request->validate([
-            'logs' => ['required', 'array'],
-            'logs.*.tag' => ['required', 'string'],
-            'logs.*.organization_id' => ['required', 'integer'],
-            'logs.*.verified_at' => ['required', 'string'],
-            'logs.*.visitor_name' => ['nullable', 'string'],
-            'logs.*.vehicle_plate_number' => ['nullable', 'string'],
-            'logs.*.vehicle_make' => ['nullable', 'string'],
-            'logs.*.vehicle_model' => ['nullable', 'string'],
-            'logs.*.allocation_id' => ['nullable', 'integer'],
+        $validated = $request->validate([
+            'logs' => ['required', 'array', 'min:1'],
+            'logs.*.tag' => ['required', 'string', 'max:4'],
+            'logs.*.organization_id' => ['required', 'integer', 'exists:estate_organizations,id'],
+            'logs.*.visitor_name' => ['nullable', 'string', 'max:255'],
+            'logs.*.verified_at' => ['nullable', 'string'],
+            'logs.*.vehicle_plate_number' => ['nullable', 'string', 'max:20'],
+            'logs.*.vehicle_make' => ['nullable', 'string', 'max:50'],
+            'logs.*.vehicle_model' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $logs = $request->input('logs', []);
         $syncedCount = 0;
         $errors = [];
 
-        foreach ($logs as $index => $logData) {
+        foreach ($validated['logs'] as $index => $logData) {
             try {
-                $this->recordQuickEntryAction->execute(
-                    estateId: $estate->id,
-                    verifiedBy: $user,
-                    data: $logData,
-                );
+                $organization = EstateOrganization::where('estate_id', $estateId)
+                    ->where('id', $logData['organization_id'])
+                    ->firstOrFail();
+
+                if (! $organization->is_active || ! $organization->quick_entry_enabled) {
+                    $errors[] = ['index' => $index, 'tag' => $logData['tag'], 'error' => 'Organization not eligible for quick entry.'];
+
+                    continue;
+                }
+
+                $this->recordAction->execute($estateId, $user, $logData);
                 $syncedCount++;
-            } catch (Throwable $e) {
-                $errors[] = [
-                    'index' => $index,
-                    'tag' => $logData['tag'] ?? 'unknown',
-                    'error' => $e->getMessage(),
-                ];
+            } catch (\Throwable $e) {
+                $errors[] = ['index' => $index, 'tag' => $logData['tag'], 'error' => $e->getMessage()];
             }
         }
 
         return response()->json([
-            'success' => true,
+            'success' => $syncedCount > 0,
             'synced_count' => $syncedCount,
             'errors' => $errors,
         ]);
     }
 
     /**
-     * Lookup active quick entry by tag before checkout.
+     * Look up an active quick entry visitor by tag.
      */
     public function lookup(Request $request): JsonResponse
     {
-        $estate = app(EstateContextService::class)->getEstate();
-        $tag = strtoupper(trim((string) $request->input('tag', '')));
+        $estateId = $request->attributes->get('estate_id');
 
-        if (empty($tag)) {
-            return response()->json(['success' => false, 'message' => 'Tag is required.'], 422);
-        }
+        $request->validate([
+            'tag' => ['required', 'string', 'max:4'],
+        ]);
+
+        $tag = strtoupper($request->input('tag'));
 
         $log = AccessLog::withoutGlobalScopes()
-            ->where('estate_id', $estate->id)
+            ->where('estate_id', $estateId)
             ->whereNull('access_code_id')
+            ->where('meta->entry_type', 'quick_entry')
             ->where('meta->tag', $tag)
             ->whereNull('checked_out_at')
             ->latest('verified_at')
@@ -150,47 +142,45 @@ class QuickEntryController extends Controller
 
         if (! $log) {
             return response()->json([
-                'success' => false,
-                'message' => "No active Quick Entry found for tag '{$tag}'.",
-            ], 404);
+                'found' => false,
+                'tag' => $tag,
+            ]);
         }
 
         return response()->json([
-            'success' => true,
-            'log' => [
-                'id' => $log->id,
-                'tag' => $log->meta['tag'] ?? $tag,
-                'visitor_name' => $log->meta['visitor_name'] ?? 'Visitor',
-                'organization_name' => $log->meta['organization_name'] ?? 'Organization',
-                'entry_point' => $log->entry_point,
-                'verified_at' => $log->verified_at->toIso8601String(),
-                'vehicle_plate_number' => $log->vehicle_plate_number,
-            ],
+            'found' => true,
+            'tag' => $log->meta['tag'],
+            'visitor_name' => $log->meta['visitor_name'],
+            'organization_name' => $log->meta['organization_name'] ?? null,
+            'verified_at' => $log->verified_at?->toIso8601String(),
+            'entry_point' => $log->entry_point,
         ]);
     }
 
     /**
-     * Check out a Quick Entry visitor by tag.
+     * Checkout a quick entry visitor by tag.
      */
     public function checkout(Request $request): JsonResponse
     {
-        $estate = app(EstateContextService::class)->getEstate();
         $user = $request->user();
+        $estateId = $request->attributes->get('estate_id');
 
-        $request->validate([
-            'tag' => ['required', 'string'],
+        $validated = $request->validate([
+            'tag' => ['required', 'string', 'max:4'],
         ]);
 
-        $log = $this->checkoutQuickEntryAction->execute(
-            tag: $request->input('tag'),
-            estateId: $estate->id,
-            verifiedBy: $user,
+        $log = $this->checkoutAction->execute(
+            $validated['tag'],
+            $estateId,
+            $user
         );
 
         return response()->json([
             'success' => true,
-            'message' => 'Visitor checked out successfully.',
-            'log' => $log,
+            'tag' => $log->meta['tag'],
+            'visitor_name' => $log->meta['visitor_name'],
+            'checked_out_at' => $log->checked_out_at,
+            'exit_point' => $log->meta['exit_point'] ?? null,
         ]);
     }
 }
