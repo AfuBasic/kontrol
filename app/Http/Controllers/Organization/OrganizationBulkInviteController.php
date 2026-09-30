@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Organization;
 
 use App\Actions\Organization\CreateBulkVisitorInviteAction;
 use App\Http\Controllers\Controller;
+use App\Jobs\DeliverBulkVisitorPassJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
 use App\Services\OrganizationContextService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -59,11 +61,13 @@ class OrganizationBulkInviteController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'purpose' => 'nullable|string|max:255',
-            'emails' => 'required|array|min:1|max:20',
+            'role' => 'nullable|string|max:255',
+            'emails' => 'required|array|min:1|max:30',
             'emails.*' => 'required|email|max:255',
             'valid_from' => 'nullable|date|after_or_equal:today',
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'auto_renew' => 'boolean',
+            'send_immediately' => 'boolean',
         ]);
 
         $validFrom = ! empty($validated['valid_from']) ? Carbon::parse($validated['valid_from']) : null;
@@ -75,12 +79,21 @@ class OrganizationBulkInviteController extends Controller
             emails: $validated['emails'],
             name: $validated['name'] ?? null,
             purpose: $validated['purpose'] ?? null,
+            role: $validated['role'] ?? null,
             validFrom: $validFrom,
             validUntil: $validUntil,
             autoRenew: (bool) ($validated['auto_renew'] ?? false),
+            sendImmediately: (bool) ($validated['send_immediately'] ?? true),
         );
 
-        return back()->with('success', "Bulk visitor invite created successfully with {$bulkInvite->recipients->count()} recipients.");
+        $recipientCount = $bulkInvite->recipients->count();
+
+        return back()
+            ->with('success', "Bulk visitor invite created successfully with {$recipientCount} recipients.")
+            ->with('bulk_invite_created', [
+                'id' => $bulkInvite->id,
+                'total_recipients' => $recipientCount,
+            ]);
     }
 
     public function show(Request $request, OrganizationBulkInvite $bulkInvite): Response
@@ -149,5 +162,67 @@ class OrganizationBulkInviteController extends Controller
         ]);
 
         return back()->with('success', 'Bulk visitor invite cancelled successfully.');
+    }
+
+    public function retryFailed(Request $request, OrganizationBulkInvite $bulkInvite): JsonResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $failedRecipients = $bulkInvite->recipients()
+            ->where('delivery_status', 'failed')
+            ->whereNotNull('last_access_code_id')
+            ->get();
+
+        $count = 0;
+        foreach ($failedRecipients as $recipient) {
+            $recipient->update([
+                'delivery_status' => 'queued',
+                'delivery_error' => null,
+            ]);
+
+            DeliverBulkVisitorPassJob::dispatch($recipient->last_access_code_id, $recipient->id);
+            $count++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'retried_count' => $count,
+            'message' => "Queued {$count} failed invite(s) for re-delivery.",
+        ]);
+    }
+
+    public function deliveryStatus(Request $request, OrganizationBulkInvite $bulkInvite): JsonResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if ($bulkInvite->organization_id !== $organization->id) {
+            abort(404);
+        }
+
+        $recipients = $bulkInvite->recipients()
+            ->select(['id', 'bulk_invite_id', 'email', 'status', 'delivery_status', 'delivery_error', 'last_delivered_at'])
+            ->get();
+
+        $summary = [
+            'total' => $recipients->count(),
+            'pending' => $recipients->where('delivery_status', 'pending')->count(),
+            'queued' => $recipients->where('delivery_status', 'queued')->count(),
+            'sent' => $recipients->where('delivery_status', 'sent')->count(),
+            'failed' => $recipients->where('delivery_status', 'failed')->count(),
+        ];
+
+        return response()->json([
+            'bulk_invite_id' => $bulkInvite->id,
+            'summary' => $summary,
+            'recipients' => $recipients,
+        ]);
     }
 }
