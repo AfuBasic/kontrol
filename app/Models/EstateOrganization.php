@@ -2,52 +2,66 @@
 
 namespace App\Models;
 
-use Carbon\CarbonInterface;
-use Database\Factories\EstateOrganizationFactory;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @extends Model<EstateOrganization>
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|EstateOrganization active()
+ * @method static \Illuminate\Database\Eloquent\Builder|EstateOrganization quickEntryEnabled()
+ *
+ * @property int $id
+ * @property int $estate_id
+ * @property string $name
+ * @property string $type
+ * @property bool $is_active
+ * @property bool $quick_entry_enabled
+ * @property string|null $confirmation_policy
+ * @property int|null $arrival_confirmation_minutes
+ * @property string $access_policy
+ * @property string|null $notes
+ * @property CarbonImmutable $created_at
+ * @property CarbonImmutable $updated_at
+ * @property-read Estate $estate
+ * @property-read Collection<int, OrganizationMembership> $memberships
+ * @property-read Collection<int, OrganizationAccessMember> $accessMembers
+ * @property-read Collection<int, AccessLog> $accessLogs
+ * @property-read Collection<int, OrganizationPublicWindow> $publicWindows
+ * @property-read Collection<int, OrganizationBulkInvite> $bulkInvites
+ *
+ * @mixin \Eloquent
+ */
 class EstateOrganization extends Model
 {
-    /** @use HasFactory<EstateOrganizationFactory> */
     use HasFactory;
 
     protected $fillable = [
         'estate_id',
         'name',
         'type',
-        'access_policy',
-        'operating_hours',
-        'hours_enforcement',
-        'quick_entry_enabled',
-        'arrival_confirmation_required',
-        'confirmation_window_minutes',
-        'confirmation_escalation',
         'is_active',
+        'quick_entry_enabled',
+        'confirmation_policy',
+        'arrival_confirmation_minutes',
+        'access_policy',
+        'notes',
     ];
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'operating_hours' => 'array',
-            'hours_enforcement' => 'string',
-            'quick_entry_enabled' => 'boolean',
-            'arrival_confirmation_required' => 'boolean',
-            'confirmation_window_minutes' => 'integer',
-            'confirmation_escalation' => 'string',
             'is_active' => 'boolean',
+            'quick_entry_enabled' => 'boolean',
+            'arrival_confirmation_minutes' => 'integer',
         ];
     }
 
-    /**
-     * @return BelongsTo<Estate, $this>
-     */
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
@@ -93,133 +107,86 @@ class EstateOrganization extends Model
         return $this->hasMany(AccessLog::class, 'organization_id');
     }
 
-    /**
-     * Resolve effective enforcement level ('off', 'warn', 'block') against estate settings.
-     */
-    public function resolvedEnforcement(?EstateSettings $settings = null): string
+    public function scopeActive($query): Builder
     {
-        $orgEnforcement = $this->hours_enforcement ?: 'inherit';
+        return $query->where('is_active', true);
+    }
 
-        if ($orgEnforcement !== 'inherit') {
-            return $orgEnforcement;
-        }
-
-        if (! $settings) {
-            $settings = EstateSettings::forEstate($this->estate_id);
-        }
-
-        return $settings->quick_entry_hours_enforcement ?: 'warn';
+    public function scopeQuickEntryEnabled($query): Builder
+    {
+        return $query->where('quick_entry_enabled', true);
     }
 
     /**
-     * Check if a given time is within the organization's operating hours.
+     * Check if the organization is within any active public window right now.
      */
-    public function isWithinOperatingHours(?CarbonInterface $at = null): bool
+    public function isWithinPublicWindow(): bool
     {
-        if (empty($this->operating_hours) || ! is_array($this->operating_hours)) {
-            return true;
-        }
-
-        $time = $at ? $at->copy() : now();
-        $dayKey = strtolower($time->format('l')); // e.g. 'monday'
-
-        $hours = $this->operating_hours;
-
-        // 1. Check day-specific configuration
-        if (isset($hours[$dayKey])) {
-            $dayConfig = $hours[$dayKey];
-
-            if (is_array($dayConfig)) {
-                if (isset($dayConfig['closed']) && $dayConfig['closed'] === true) {
-                    return false;
-                }
-
-                $open = $dayConfig['open'] ?? null;
-                $close = $dayConfig['close'] ?? null;
-
-                if ($open && $close) {
-                    $currentTime = $time->format('H:i');
-
-                    return $currentTime >= $open && $currentTime <= $close;
-                }
-            }
-        }
-
-        // 2. Check general open/close configuration
-        if (isset($hours['open']) && isset($hours['close'])) {
-            if (! empty($hours['days']) && is_array($hours['days'])) {
-                $days = array_map('strtolower', $hours['days']);
-                if (! in_array($dayKey, $days, true)) {
-                    return false;
-                }
-            }
-
-            $currentTime = $time->format('H:i');
-
-            return $currentTime >= $hours['open'] && $currentTime <= $hours['close'];
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if a given time is within any active public access window.
-     */
-    public function isWithinPublicWindow(?CarbonInterface $at = null): bool
-    {
-        if ($this->access_policy !== 'public_window') {
-            return false;
-        }
-
-        $time = $at ? $at->copy() : now();
-        $dayOfWeek = $time->dayOfWeek;
+        $now = CarbonImmutable::now();
 
         return $this->publicWindows()
             ->where('is_active', true)
-            ->where('day_of_week', $dayOfWeek)
             ->get()
-            ->contains(fn (OrganizationPublicWindow $window) => $window->isOpenAt($time));
+            ->contains(fn ($window) => $window->isOpenAt($now));
     }
 
-    /**
-     * Check if organization has unrestricted access policy (e.g. Hospital).
-     */
     public function isUnrestricted(): bool
     {
         return $this->access_policy === 'unrestricted';
     }
 
     /**
-     * Check if organization requires arrival confirmation.
+     * Resolve the effective hours enforcement mode for this organization.
+     *
+     * Since hours_enforcement was removed from estate_organizations,
+     * enforcement is now estate-level only via EstateSettings::quick_entry_hours_enforcement.
      */
-    public function requiresArrivalConfirmation(): bool
+    public function resolvedEnforcement(EstateSettings $settings): string
     {
-        if ($this->isUnrestricted()) {
-            return false;
+        return $settings->quick_entry_hours_enforcement ?: 'warn';
+    }
+
+    /**
+     * Check if this organization has any configured public windows.
+     */
+    public function hasPublicWindows(): bool
+    {
+        return $this->publicWindows()->active()->exists();
+    }
+
+    /**
+     * Check if the organization is outside its operating hours
+     * (has windows but none are currently active).
+     */
+    public function isOutsideOperatingHours(): bool
+    {
+        return $this->hasPublicWindows() && ! $this->isWithinPublicWindow();
+    }
+
+    public function confirmationState(): ?string
+    {
+        if ($this->confirmation_policy === 'none' || $this->arrival_confirmation_minutes === null) {
+            return null;
         }
 
-        return (bool) $this->arrival_confirmation_required;
+        $since = CarbonImmutable::now()->subMinutes($this->arrival_confirmation_minutes);
+
+        $pendingCount = $this->accessLogs()
+            ->whereNull('checked_out_at')
+            ->where('verified_at', '<=', $since)
+            ->whereNull('arrival_confirmed_at')
+            ->count();
+
+        if ($pendingCount > 0) {
+            return 'overdue';
+        }
+
+        return 'confirmed';
     }
 
-    /**
-     * Scope to active organizations.
-     *
-     * @param  Builder<$this>  $query
-     * @return Builder<$this>
-     */
-    public function scopeActive(Builder $query): Builder
+    public function requiresArrivalConfirmation(): bool
     {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope to quick entry enabled organizations.
-     *
-     * @param  Builder<$this>  $query
-     * @return Builder<$this>
-     */
-    public function scopeQuickEntryEnabled(Builder $query): Builder
-    {
-        return $query->where('is_active', true)->where('quick_entry_enabled', true);
+        return $this->confirmation_policy === 'required'
+            && $this->arrival_confirmation_minutes !== null;
     }
 }
