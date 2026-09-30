@@ -415,7 +415,7 @@
                     </tr>
                     <tr>
                         <td class="meta-label">Billing Period:</td>
-                        <td class="meta-value">{{ $invoice->billing_period_start->format('M d, Y') }} – {{ $invoice->billing_period_end->format('M d, Y') }}</td>
+                        <td class="meta-value">{{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}</td>
                     </tr>
                     @if(!$invoice->user && $invoice->resident_count)
                     <tr>
@@ -471,7 +471,7 @@
                         @endif
                     </div>
                     <div class="item-desc">
-                        Kontrol Billing for {{ $invoice->billing_period_start->format('M d, Y') }} – {{ $invoice->billing_period_end->format('M d, Y') }}
+                        Kontrol Billing for {{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}
                     </div>
                 </td>
                 <td class="item-amount">
