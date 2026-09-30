@@ -333,7 +333,7 @@ export default function AccessList({
                         {membership.is_admin && (
                             <button
                                 type="button"
-                                onClick={() => setAddPersonModalOpen(true)}
+                                onClick={gated(() => setAddPersonModalOpen(true))}
                                 className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
