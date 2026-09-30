@@ -38,9 +38,9 @@ class OrganizationBulkInviteController extends Controller
                     'recipients',
                     'renewals',
                     'recipients as sent_recipients_count' => fn ($q) => $q->where('delivery_status', 'sent'),
+                    'recipients as pending_recipients_count' => fn ($q) => $q->whereIn('delivery_status', ['pending', 'queued']),
                     'recipients as failed_recipients_count' => fn ($q) => $q->where('delivery_status', 'failed'),
-                ])
-                ->with(['recipients' => fn ($q) => $q->latest()->limit(5)]);
+                ]);
 
             if ($status === 'active') {
                 $query->where('status', 'active');
@@ -50,9 +50,91 @@ class OrganizationBulkInviteController extends Controller
                 $query->where('status', 'cancelled');
             }
 
-            return $query->latest()
+            $now = Carbon::now();
+            $paginator = $query->latest()
                 ->paginate(15)
                 ->withQueryString();
+
+            return $paginator->through(function (OrganizationBulkInvite $invite) use ($now) {
+                $status = $invite->status;
+                $validFrom = $invite->valid_from ? Carbon::parse($invite->valid_from)->startOfDay() : null;
+                $validUntil = $invite->valid_until ? Carbon::parse($invite->valid_until)->endOfDay() : null;
+                $currentYear = $now->year;
+
+                // Derive state
+                if ($status === 'cancelled') {
+                    $state = 'cancelled';
+                } elseif ($validUntil && $now->isAfter($validUntil)) {
+                    $state = 'expired';
+                } elseif ($validFrom && $now->isBefore($validFrom)) {
+                    $state = 'upcoming';
+                } else {
+                    $daysLeft = $validUntil ? (int) ceil($now->diffInDays($validUntil, false)) : 0;
+                    if ($daysLeft <= 3 && ! $invite->auto_renew) {
+                        $state = 'expiring';
+                    } else {
+                        $state = 'active';
+                    }
+                }
+
+                $formatDateLabel = function (?Carbon $date) use ($currentYear) {
+                    if (! $date) {
+                        return '';
+                    }
+
+                    return $date->year === $currentYear
+                        ? $date->isoFormat('ddd D MMM')
+                        : $date->isoFormat('ddd D MMM YYYY');
+                };
+
+                $startsOnLabel = $formatDateLabel($validFrom);
+                $endsOnLabel = $formatDateLabel($validUntil);
+                $daysLeft = $validUntil ? max(0, (int) ceil($now->diffInDays($validUntil, false))) : 0;
+
+                // Elapsed ratio (0 to 1)
+                $elapsedRatio = 0;
+                if ($validFrom && $validUntil && $validUntil->gt($validFrom)) {
+                    $totalSecs = $validUntil->diffInSeconds($validFrom);
+                    $elapsedSecs = max(0, $now->diffInSeconds($validFrom, false));
+                    $elapsedRatio = min(1, max(0, $totalSecs > 0 ? $elapsedSecs / $totalSecs : 0));
+                }
+
+                $blockedReasonLabel = match ($invite->renewal_blocked_reason) {
+                    'subscription_required' => 'subscription required',
+                    'manual_intervention_required' => 'manual review required',
+                    default => $invite->renewal_blocked_reason,
+                };
+
+                return [
+                    'id' => $invite->id,
+                    'name' => $invite->name,
+                    'purpose' => $invite->purpose,
+                    'role' => $invite->role,
+                    'valid_from' => $invite->valid_from?->toDateString(),
+                    'valid_until' => $invite->valid_until?->toDateString(),
+                    'status' => $invite->status,
+                    'recipients_count' => (int) $invite->recipients_count,
+                    'renewals_count' => (int) $invite->renewals_count,
+                    'validity' => [
+                        'state' => $state,
+                        'starts_on_label' => $startsOnLabel,
+                        'ends_on_label' => $endsOnLabel,
+                        'days_left' => $daysLeft,
+                        'elapsed_ratio' => round($elapsedRatio, 4),
+                    ],
+                    'renewal' => [
+                        'auto' => (bool) $invite->auto_renew,
+                        'next_on_label' => $invite->next_renewal_at ? $formatDateLabel(Carbon::parse($invite->next_renewal_at)) : null,
+                        'blocked_reason_label' => $blockedReasonLabel,
+                    ],
+                    'delivery' => [
+                        'total' => (int) $invite->recipients_count,
+                        'sent' => (int) ($invite->sent_recipients_count ?? 0),
+                        'pending' => (int) ($invite->pending_recipients_count ?? 0),
+                        'failed' => (int) ($invite->failed_recipients_count ?? 0),
+                    ],
+                ];
+            });
         });
 
         return Inertia::render('Organization/BulkInvites/Index', [
