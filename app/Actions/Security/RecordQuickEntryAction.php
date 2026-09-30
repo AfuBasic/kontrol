@@ -2,29 +2,33 @@
 
 namespace App\Actions\Security;
 
+use App\Actions\Visitor\ResolveVisitorIdentityAction;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
 use App\Models\EstateSettings;
-use App\Models\QuickEntryAllocation;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Visitor\TagGeneratorService;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class RecordQuickEntryAction
 {
+    public function __construct(
+        private ResolveVisitorIdentityAction $resolveVisitorIdentity,
+        private TagGeneratorService $tagGenerator,
+    ) {}
+
     /**
-     * Record a quick entry access log.
-     *
      * @param  array{
-     *     tag: string,
-     *     organization_id: int,
      *     visitor_name?: string|null,
+     *     id_photo?: UploadedFile|null,
+     *     organization_id: int,
      *     vehicle_plate_number?: string|null,
      *     vehicle_make?: string|null,
      *     vehicle_model?: string|null,
-     *     allocation_id?: int|null,
      *     verified_at?: string|\DateTimeInterface|null,
      *     entry_point?: string|null,
      * }  $data
@@ -39,9 +43,13 @@ class RecordQuickEntryAction
             : now();
 
         $entryPoint = $data['entry_point'] ?? app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
-        $tag = strtoupper(trim($data['tag']));
 
-        return DB::transaction(function () use ($estateId, $verifiedBy, $data, $tag, $timestamp, $entryPoint) {
+        $tag = $this->tagGenerator->generateUnique($estateId);
+
+        $idPhotoFile = $data['id_photo'] ?? null;
+        $visitorName = ! empty($data['visitor_name']) ? trim($data['visitor_name']) : null;
+
+        return DB::transaction(function () use ($estateId, $verifiedBy, $data, $tag, $timestamp, $entryPoint, $idPhotoFile, $visitorName) {
             $organization = EstateOrganization::where('estate_id', $estateId)
                 ->where('id', $data['organization_id'])
                 ->firstOrFail();
@@ -54,32 +62,24 @@ class RecordQuickEntryAction
 
             $settings = EstateSettings::forEstate($estateId);
             $enforcement = $organization->resolvedEnforcement($settings);
-            $withinHours = $organization->isWithinOperatingHours($timestamp);
+            $outsideHours = false;
 
-            if (! $withinHours && $enforcement === 'block') {
-                throw ValidationException::withMessages([
-                    'organization_id' => ['Quick Entry is not permitted outside operating hours for this organization.'],
-                ]);
-            }
-
-            // If an allocation ID was provided, mark tag used on allocation if present
-            if (! empty($data['allocation_id'])) {
-                $allocation = QuickEntryAllocation::where('estate_id', $estateId)
-                    ->where('id', $data['allocation_id'])
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($allocation) {
-                    $allocation->increment('used_count');
+            if ($organization->hasPublicWindows() && ! $organization->isWithinPublicWindow()) {
+                if ($enforcement === 'block') {
+                    throw ValidationException::withMessages([
+                        'organization_id' => ['Quick Entry is not permitted outside operating hours for this organization.'],
+                    ]);
                 }
+                $outsideHours = true;
             }
 
-            $visitorName = ! empty($data['visitor_name']) ? trim($data['visitor_name']) : null;
-            $displayName = $visitorName ?? "Visitor ({$organization->name})";
+            $visitorProfile = $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId);
+            $displayName = $visitorProfile->name;
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
                 'organization_id' => $organization->id,
+                'visitor_profile_id' => $visitorProfile->id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => null,
                 'verified_by' => $verifiedBy->id,
@@ -95,9 +95,9 @@ class RecordQuickEntryAction
                     'organization_type' => $organization->type,
                     'admission_basis' => $organization->access_policy === 'public_window' ? 'public_window' : ($organization->isUnrestricted() ? 'unrestricted' : 'quick_entry'),
                     'visitor_name' => $displayName,
-                    'allocation_id' => $data['allocation_id'] ?? null,
+                    'visitor_profile_id' => $visitorProfile->id,
                     'entry_point' => $entryPoint,
-                    'outside_hours' => ! $withinHours,
+                    'outside_hours' => $outsideHours,
                 ],
             ]);
 
@@ -107,6 +107,7 @@ class RecordQuickEntryAction
                     'visitor_name' => $displayName,
                     'tag' => $tag,
                     'organization' => $organization->name,
+                    'visitor_profile_id' => $visitorProfile->id,
                 ])
                 ->log("Quick Entry admitted for {$organization->name} (Tag: {$tag})");
 
