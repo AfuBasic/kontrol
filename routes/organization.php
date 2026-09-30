@@ -59,6 +59,8 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/', [OrganizationBulkInviteController::class, 'index'])->name('index');
         Route::post('/', [OrganizationBulkInviteController::class, 'store'])->name('store');
         Route::get('/{bulkInvite}', [OrganizationBulkInviteController::class, 'show'])->name('show');
+        Route::get('/{bulkInvite}/delivery-status', [OrganizationBulkInviteController::class, 'deliveryStatus'])->name('delivery-status');
+        Route::post('/{bulkInvite}/retry-failed', [OrganizationBulkInviteController::class, 'retryFailed'])->name('retry-failed');
         Route::post('/{bulkInvite}/renew', [OrganizationBulkInviteController::class, 'renew'])->name('renew');
         Route::post('/{bulkInvite}/cancel', [OrganizationBulkInviteController::class, 'cancel'])->name('cancel');
     });
