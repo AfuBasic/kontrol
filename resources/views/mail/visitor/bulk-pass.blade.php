@@ -39,8 +39,8 @@
     </div>
 
     <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
-        <strong>Entry Instructions</strong><br>
-        Show your digital pass or mention your access code to security personnel at the estate entrance gate for quick verification.
+        <strong>Entry Instructions & PDF Pass</strong><br>
+        Your official visitor entry pass is attached to this email as a PDF. You can also click the button above to view your live digital pass or present the access code to security personnel upon arrival.
     </div>
 
     <div class="divider" style="height: 1px; background-color: #e2e8f0; margin: 32px 0;"></div>
