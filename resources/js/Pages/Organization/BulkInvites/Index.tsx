@@ -14,6 +14,8 @@ import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 
 interface Recipient {
@@ -64,6 +66,7 @@ export default function BulkInvitesIndex({
     filters,
 }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [search, setSearch] = useState(filters?.search ?? '');
 
     useEffect(() => {
@@ -99,7 +102,7 @@ export default function BulkInvitesIndex({
                         membership.is_admin ? (
                             <button
                                 type="button"
-                                onClick={() => setModalOpen(true)}
+                                onClick={gated(() => setModalOpen(true))}
                                 className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -150,7 +153,7 @@ export default function BulkInvitesIndex({
                         {membership.is_admin && (
                             <button
                                 type="button"
-                                onClick={() => setModalOpen(true)}
+                                onClick={gated(() => setModalOpen(true))}
                                 className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-4 py-2 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -284,6 +287,9 @@ export default function BulkInvitesIndex({
             </div>
 
             <BulkInviteModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+
+            {/* Subscription Gate Sheet */}
+            <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
         </OrganizationLayout>
     );
 }
