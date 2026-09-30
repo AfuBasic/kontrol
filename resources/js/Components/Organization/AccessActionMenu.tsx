@@ -2,6 +2,8 @@ import { router } from '@inertiajs/react';
 import { Plus, UserPlus, Users, CalendarDays, ChevronDown } from 'lucide-react';
 import React, { useState } from 'react';
 import ResponsiveSheet from './ResponsiveSheet';
+import SubscriptionGateSheet from './SubscriptionGateSheet';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface Props {
     onAddPerson?: () => void;
@@ -11,19 +13,22 @@ interface Props {
 
 export default function AccessActionMenu({ onAddPerson, onInviteVisitor, onInviteMultiple }: Props) {
     const [isOpen, setIsOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
 
     const handleAction = (action: 'add_person' | 'invite_visitor' | 'invite_multiple') => {
         setIsOpen(false);
-        if (action === 'add_person') {
-            if (onAddPerson) onAddPerson();
-            else router.get('/org/access-list', { action: 'add_person' });
-        } else if (action === 'invite_visitor') {
-            if (onInviteVisitor) onInviteVisitor();
-            else router.get('/org/visitors', { action: 'invite_visitor' });
-        } else if (action === 'invite_multiple') {
-            if (onInviteMultiple) onInviteMultiple();
-            else router.get('/org/visitors', { action: 'invite_multiple' });
-        }
+        gated(() => {
+            if (action === 'add_person') {
+                if (onAddPerson) onAddPerson();
+                else router.get('/org/access-list', { action: 'add_person' });
+            } else if (action === 'invite_visitor') {
+                if (onInviteVisitor) onInviteVisitor();
+                else router.get('/org/visitors', { action: 'invite_visitor' });
+            } else if (action === 'invite_multiple') {
+                if (onInviteMultiple) onInviteMultiple();
+                else router.get('/org/visitors', { action: 'invite_multiple' });
+            }
+        })();
     };
 
     return (
@@ -80,6 +85,8 @@ export default function AccessActionMenu({ onAddPerson, onInviteVisitor, onInvit
                     </button>
                 </div>
             </ResponsiveSheet>
+
+            <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
         </>
     );
 }
