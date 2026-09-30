@@ -92,6 +92,9 @@ export default function OrganizationLayout({
         if (item.name === 'Access') {
             return (
                 url.startsWith('/org/access-list') ||
+                url.startsWith('/org/visitors') ||
+                url.startsWith('/org/bulk-invites') ||
+                url.startsWith('/org/on-site') ||
                 url.startsWith('/org/arrivals') ||
                 url.startsWith('/org/credentials') ||
                 url.startsWith('/org/public-windows')
