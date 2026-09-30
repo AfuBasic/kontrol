@@ -28,23 +28,20 @@ class ArrivalController extends Controller
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
 
         $filters = $request->only(['search', 'admission_basis']);
-        $arrivals = $this->arrivalService->getActiveArrivals($organization, $filters);
+        $onSiteVisitors = $this->arrivalService->getActiveArrivals($organization, $filters);
         $metrics = $this->arrivalService->getMetrics($organization);
 
-        return Inertia::render('Organization/Arrivals', [
+        return Inertia::render('Organization/OnSite', [
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'estate_name' => $organization->estate?->name,
-                'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
-                'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
-                'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
             ],
             'membership' => [
                 'role' => $membership->role,
                 'is_admin' => $membership->isAdmin(),
             ],
-            'arrivals' => $arrivals,
+            'onSiteVisitors' => $onSiteVisitors,
             'metrics' => $metrics,
             'filters' => $filters,
         ]);

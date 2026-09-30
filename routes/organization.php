@@ -41,8 +41,8 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::post('/{credential}/revoke', [CredentialController::class, 'revoke'])->name('revoke');
     });
 
-    // Access: Arrivals & History
-    Route::prefix('arrivals')->name('arrivals.')->group(function () {
+    // Access: On-site (visitors currently present, only when checkout tracking is enabled)
+    Route::prefix('on-site')->name('on-site.')->group(function () {
         Route::get('/', [ArrivalController::class, 'index'])->name('index');
         Route::get('/history', [ArrivalController::class, 'history'])->name('history');
         Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
