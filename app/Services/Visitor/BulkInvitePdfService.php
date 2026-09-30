@@ -6,7 +6,7 @@ use App\Models\AccessCode;
 use App\Models\OrganizationBulkInviteRecipient;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use PdfStudio\Laravel\Facades\Pdf;
 
 class BulkInvitePdfService
@@ -25,12 +25,9 @@ class BulkInvitePdfService
         $passUrl = route('public.pass', ['uuid' => $accessCode->pass_uuid]);
         $qrBase64 = $this->generateQrBase64($passUrl);
 
-        $tempDir = storage_path('app/temp/bulk-passes');
-        if (! File::isDirectory($tempDir)) {
-            File::makeDirectory($tempDir, 0755, true, true);
-        }
-
-        $filePath = "{$tempDir}/pass-{$accessCode->code}-{$recipient->id}.pdf";
+        $relativeDir = 'temp/bulk-passes';
+        $fileName = "pass-{$accessCode->code}-{$recipient->id}.pdf";
+        $relativePath = "{$relativeDir}/{$fileName}";
 
         Pdf::view('pdf.visitor.bulk-invite-pass')
             ->data([
@@ -46,9 +43,9 @@ class BulkInvitePdfService
                 'passUrl' => $passUrl,
                 'qrBase64' => $qrBase64,
             ])
-            ->save($filePath);
+            ->save($relativePath);
 
-        return $filePath;
+        return Storage::disk('local')->path($relativePath);
     }
 
     /**
