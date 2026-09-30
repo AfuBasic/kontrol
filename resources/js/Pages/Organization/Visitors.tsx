@@ -13,7 +13,6 @@ import CustomSelect from '@/Components/UI/CustomSelect';
 import Button from '@/Components/UI/Button';
 import TextInput from '@/Components/UI/TextInput';
 import { shareAccessCode } from '@/Utils/share';
-import BulkInviteModal from './BulkInviteModal';
 
 interface Organization {
     id: number;
