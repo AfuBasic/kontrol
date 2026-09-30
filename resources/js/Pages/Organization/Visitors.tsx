@@ -1,7 +1,7 @@
 
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Search, Tag, Users, Copy, Share2, Check, X, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
