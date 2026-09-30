@@ -29,8 +29,10 @@ import { shareAccessCode } from '@/Utils/share';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface Member {
     id: number;
@@ -87,6 +89,7 @@ interface Props {
         confirmation_window_minutes?: number;
         confirmation_escalation?: string;
         estate_name?: string;
+        visitor_checkout_enabled?: boolean;
     };
     membership: {
         role: string;
@@ -144,6 +147,7 @@ export default function AccessList({
     const user = auth.user || {};
 
     const [addPersonModalOpen, setAddPersonModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [shareCopied, setShareCopied] = useState(false);
@@ -175,9 +179,9 @@ export default function AccessList({
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('action') === 'add_person') {
-            setAddPersonModalOpen(true);
+            gated(() => setAddPersonModalOpen(true))();
         }
-    }, []);
+    }, [gated]);
 
     const currentlyHere = metrics?.currently_inside ?? 0;
     const waitingCount = pending_arrivals.length;
@@ -372,6 +376,7 @@ export default function AccessList({
                         activeTab="people"
                         pendingCount={waitingCount}
                         activeCount={currentlyHere}
+                        showOnSiteTab={organization.visitor_checkout_enabled}
                     />
                 </div>
 
@@ -381,7 +386,7 @@ export default function AccessList({
                     <div className="grid grid-cols-2 gap-3.5">
                         <button
                             type="button"
-                            onClick={() => setAddPersonModalOpen(true)}
+                            onClick={gated(() => setAddPersonModalOpen(true))}
                             className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
@@ -412,24 +417,26 @@ export default function AccessList({
                             </div>
                         </Link>
 
-                        <Link
-                            href="/org/arrivals"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                        >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
-                                <Clock className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's on site</span>
+                        {organization.visitor_checkout_enabled && (
+                            <Link
+                                href="/org/on-site"
+                                className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                            >
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                                    <Clock className="h-5 w-5" strokeWidth={2.2} />
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
-                            </div>
-                        </Link>
+                                <div className="flex items-end justify-between w-full mt-auto">
+                                    <div className="flex flex-col">
+                                        <span className="text-[14px] font-bold text-[#071f4b] leading-tight">On-site</span>
+                                        <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's present</span>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                </div>
+                            </Link>
+                        )}
 
                         <Link
-                            href="/org/arrivals/history"
+                            href="/org/on-site/history"
                             className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
@@ -458,7 +465,7 @@ export default function AccessList({
                         </div>
 
                         <div className="flex items-stretch justify-between">
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-mint mb-1.5">
                                     <Users className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -470,7 +477,7 @@ export default function AccessList({
 
                             <div className="w-px bg-slate-100 self-stretch mx-0.5" />
 
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
                                     <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -482,7 +489,7 @@ export default function AccessList({
 
                             <div className="w-px bg-slate-100 self-stretch mx-0.5" />
 
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
                                     <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -494,7 +501,7 @@ export default function AccessList({
 
                             <div className="w-px bg-slate-100 self-stretch mx-0.5" />
 
-                            <Link href="/org/arrivals/history" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site/history" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-sky mb-1.5">
                                     <Calendar className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -511,7 +518,7 @@ export default function AccessList({
                 <div className="flex flex-col">
                     <div className="flex items-center justify-between mb-2.5 px-0.5">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
-                        <Link href="/org/arrivals/history" className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition">
+                        <Link href="/org/on-site/history" className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition">
                             View all <ChevronRight className="h-3 w-3 ml-0.5" />
                         </Link>
                     </div>
@@ -523,10 +530,9 @@ export default function AccessList({
                             {recent_activity.slice(0, 5).map((item, index) => {
                                 const actStatus = getActivityStatus(item);
                                 return (
-                                    <Link
+                                    <div
                                         key={item.id}
-                                        href={`/org/arrivals/${item.id}`}
-                                        className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 active:bg-slate-100 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
+                                        className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
                                     >
                                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}>
                                             {initialsFor(item.name)}
@@ -545,9 +551,8 @@ export default function AccessList({
                                         </div>
                                         <div className="flex shrink-0 flex-col items-end gap-0.5">
                                             <span className="text-[11px] font-medium text-slate-400">{item.time_human}</span>
-                                            <ChevronRight className="h-3.5 w-3.5 text-slate-300" strokeWidth={2.5} />
                                         </div>
-                                    </Link>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -601,7 +606,7 @@ export default function AccessList({
                             {membership.is_admin && (
                                 <button
                                     type="button"
-                                    onClick={() => setAddPersonModalOpen(true)}
+                                    onClick={gated(() => setAddPersonModalOpen(true))}
                                     className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#0b4aa2] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0a408b] active:scale-[0.98]"
                                 >
                                     <Plus className="h-4 w-4" strokeWidth={2.25} />
@@ -958,6 +963,9 @@ export default function AccessList({
                         </div>
                     )}
                 </ResponsiveSheet>
+
+                {/* Subscription Gate Sheet */}
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );
