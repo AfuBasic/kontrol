@@ -147,9 +147,9 @@ pre {
     -webkit-touch-callout: default !important;
 }
 
-/* Ensure mobile form controls on iOS/WebKit use at least 16px font size on mobile to prevent unwanted focus zoom */
+/* Ensure mobile form controls on iOS/WebKit use at least 16px font size on mobile to prevent unwanted focus zoom, unless explicitly styled smaller */
 @media screen and (max-width: 768px) {
-    input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']),
+    input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']):not([type='search']):not(.text-xs):not(.text-\[11px\]):not(.text-\[12px\]):not(.text-\[13px\]),
     select,
     textarea {
         font-size: 16px !important;
