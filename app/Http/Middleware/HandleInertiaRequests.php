@@ -268,8 +268,8 @@ class HandleInertiaRequests extends Middleware
             'billing_enabled' => fn () => $estate ? ($estate->settings->charge_type === 'estate') : false,
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
-            'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],
-            'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
+            'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions($estate) : [],
+            'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints($estate) : ['min' => 30, 'max' => 1440],
             'unreadCount' => fn () => $user ? app(NotificationContextService::class)->unreadCountForCurrentContext($user) : 0,
             'app_url' => url('/'),
             'app_subdomain_url' => config('domains.routing_enabled')
