@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, WhenVisible } from '@inertiajs/react';
 import {
     ChevronRight,
     Mail,
@@ -8,6 +8,7 @@ import {
     AlertCircle,
     CheckCircle2,
     Search,
+    Loader2,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -43,6 +44,7 @@ interface PaginatedData<T> {
     current_page: number;
     last_page: number;
     total: number;
+    next_page_url: string | null;
     links: Array<{ url: string | null; label: string; active: boolean }>;
 }
 
@@ -113,11 +115,23 @@ export default function BulkInvitesIndex({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search groups..."
-                        className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                        className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                     />
                 </div>
 
-                {bulkInvites.data.length === 0 ? (
+                {!bulkInvites ? (
+                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex animate-pulse items-center justify-between p-4">
+                                <div className="space-y-2">
+                                    <div className="h-3.5 w-36 rounded-full bg-slate-100" />
+                                    <div className="h-2.5 w-24 rounded-full bg-slate-100" />
+                                </div>
+                                <div className="h-3.5 w-16 rounded-full bg-slate-100" />
+                            </div>
+                        ))}
+                    </div>
+                ) : bulkInvites.data.length === 0 ? (
                     <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center shadow-xs">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                             <Users className="h-6 w-6" />
@@ -233,6 +247,31 @@ export default function BulkInvitesIndex({
                                 </Link>
                             );
                         })}
+
+                        {bulkInvites.next_page_url && (
+                            <WhenVisible
+                                always
+                                params={{
+                                    data: {
+                                        page: bulkInvites.current_page + 1,
+                                        search: search.trim() || undefined,
+                                    },
+                                    only: ['bulkInvites'],
+                                    preserveUrl: true,
+                                }}
+                                fallback={
+                                    <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-slate-400">
+                                        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                                        <span>Loading more groups...</span>
+                                    </div>
+                                }
+                            >
+                                <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-slate-400">
+                                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                                    <span>Loading more groups...</span>
+                                </div>
+                            </WhenVisible>
+                        )}
                     </div>
                 )}
             </div>
