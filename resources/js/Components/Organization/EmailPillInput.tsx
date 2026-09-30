@@ -1,5 +1,5 @@
 import { X, AlertCircle } from 'lucide-react';
-import React, { useState, useRef, KeyboardEvent, ClipboardEvent } from 'react';
+import React, { useState, useRef, type KeyboardEvent, type ClipboardEvent } from 'react';
 
 interface EmailPillInputProps {
     value: string[];
