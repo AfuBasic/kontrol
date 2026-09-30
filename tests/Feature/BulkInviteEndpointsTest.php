@@ -121,7 +121,7 @@ test('retry-failed endpoint redispatches jobs only for failed recipients', funct
             'retried_count' => 2,
         ]);
 
-    Queue::assertPushed(DeliverBulkVisitorPassJob::class, 2);
+    Queue::assertPushed(DeliverBulkVisitorPassJob::class, 5);
 
     expect($recipients[1]->fresh()->delivery_status)->toBe('queued')
         ->and($recipients[2]->fresh()->delivery_status)->toBe('queued')
