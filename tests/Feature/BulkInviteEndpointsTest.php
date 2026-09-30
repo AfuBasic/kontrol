@@ -20,26 +20,35 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 
     $this->estate = Estate::factory()->create();
-    $this->plan = Plan::factory()->create(['estate_id' => $this->estate->id]);
-    $this->subscription = EstateSubscription::factory()->create([
-        'estate_id' => $this->estate->id,
-        'plan_id' => $this->plan->id,
-        'status' => 'active',
-    ]);
-
-    $this->orgAdmin = User::factory()->create();
-    $this->orgAdmin->assignRole('organization_superadmin');
-
     $this->org = EstateOrganization::factory()->create([
         'estate_id' => $this->estate->id,
+        'name' => 'Metro College',
+        'type' => 'business',
         'is_active' => true,
     ]);
 
-    OrganizationMembership::factory()->create([
-        'organization_id' => $this->org->id,
+    $this->orgAdmin = User::factory()->create();
+    $this->membership = OrganizationMembership::create([
         'user_id' => $this->orgAdmin->id,
-        'role' => 'superadmin',
+        'organization_id' => $this->org->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $this->plan = Plan::create([
+        'name' => 'Estate Pro',
+        'slug' => 'estate-pro',
+        'price_per_month' => 50000,
+        'price_per_year' => 500000,
+        'features' => ['access-code-generation'],
+        'is_active' => true,
+    ]);
+
+    $this->subscription = EstateSubscription::create([
+        'estate_id' => $this->estate->id,
+        'plan_id' => $this->plan->id,
         'status' => 'active',
+        'billing_interval' => 'monthly',
     ]);
 });
 
