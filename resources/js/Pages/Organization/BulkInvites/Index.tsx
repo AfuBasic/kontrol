@@ -60,21 +60,6 @@ export default function BulkInvitesIndex({
 }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
 
-    const handleTabChange = (status: string) => {
-        router.get(
-            '/org/bulk-invites',
-            { status: status === 'all' ? undefined : status },
-            { preserveState: true, preserveScroll: true }
-        );
-    };
-
-    const tabs = [
-        { id: 'all', label: 'All' },
-        { id: 'active', label: 'Active' },
-        { id: 'expired', label: 'Expired' },
-        { id: 'cancelled', label: 'Cancelled' },
-    ];
-
     return (
         <OrganizationLayout
             title="Access - Bulk Invites"
@@ -100,34 +85,6 @@ export default function BulkInvitesIndex({
                     }
                 />
 
-                <div className="flex flex-col gap-1 px-1">
-                    <h2 className="text-[17px] font-bold text-slate-900">Bulk Invite Batches</h2>
-                    <p className="text-xs text-slate-500">
-                        Group access passes issued with automatic renewal and delivery tracking.
-                    </p>
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
-                    {tabs.map((tab) => {
-                        const isActive = currentStatus === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                                    isActive
-                                        ? 'bg-[#eef4ff] text-[#1a5dbf] border border-[#dce9ff] shadow-xs'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
-
                 {bulkInvites.data.length === 0 ? (
                     <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center shadow-xs">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
@@ -135,11 +92,9 @@ export default function BulkInvitesIndex({
                         </div>
                         <h3 className="text-sm font-bold text-slate-900">No bulk invites found</h3>
                         <p className="mt-1 text-xs text-slate-500">
-                            {currentStatus === 'all'
-                                ? 'Create a bulk visitor invite to generate passes and deliver branded PDF passes to multiple recipients simultaneously.'
-                                : `There are no bulk invites currently with "${currentStatus}" status.`}
+                            Create a bulk visitor invite to generate passes and deliver branded PDF passes to multiple recipients simultaneously.
                         </p>
-                        {membership.is_admin && currentStatus === 'all' && (
+                        {membership.is_admin && (
                             <button
                                 type="button"
                                 onClick={() => setModalOpen(true)}
