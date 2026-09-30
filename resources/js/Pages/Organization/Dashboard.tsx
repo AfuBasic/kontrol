@@ -13,6 +13,9 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
+import { router } from '@inertiajs/react';
 
 
 interface MetricProps {
@@ -78,6 +81,7 @@ export default function Dashboard({
     const page = usePage();
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
 
     const currentlyHere = metrics.currently_inside ?? 0;
     const pendingTotal = pending_arrivals.length;
@@ -193,13 +197,14 @@ export default function Dashboard({
                         <h1 className="text-[26px] font-extrabold tracking-tight text-[#071f4b] leading-tight">
                             {organization.name}
                         </h1>
-                        <Link
-                            href="/org/access-list?action=add_person"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/access-list?action=add_person'))}
                             className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                         >
                             <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
                             Add person
-                        </Link>
+                        </button>
                     </div>
                     {organization.estate_name && (
                         <p className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-slate-500">
@@ -240,9 +245,10 @@ export default function Dashboard({
                 <div className="flex flex-col mt-1">
                     <h2 className="text-[14px] font-bold text-[#071f4b] mb-2.5 px-1 tracking-tight">Quick actions</h2>
                     <div className="grid grid-cols-2 gap-3.5">
-                        <Link
-                            href="/org/access-list?action=add_person"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/access-list?action=add_person'))}
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
                                 <UserPlus className="h-5 w-5" strokeWidth={2.2} />
@@ -254,11 +260,12 @@ export default function Dashboard({
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
                             </div>
-                        </Link>
+                        </button>
 
-                        <Link
-                            href="/org/visitors"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/visitors?action=invite_visitor'))}
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-mint mb-3">
                                 <UserCircle className="h-5 w-5" strokeWidth={2.2} />
@@ -270,7 +277,7 @@ export default function Dashboard({
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
                             </div>
-                        </Link>
+                        </button>
 
                         {organization.visitor_checkout_enabled && (
                             <Link
@@ -461,6 +468,7 @@ export default function Dashboard({
                         </div>
                     )}
                 </div>
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );
