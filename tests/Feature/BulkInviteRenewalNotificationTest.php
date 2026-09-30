@@ -105,6 +105,8 @@ test('NotifyBulkInviteDeliveryReportJob notifies creator when delivery failures 
         'created_by' => $this->orgAdmin->id,
         'name' => 'Vendor Batch',
         'status' => 'active',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(7)->toDateString(),
     ]);
 
     OrganizationBulkInviteRecipient::create([
@@ -145,6 +147,8 @@ test('NotifyBulkInviteDeliveryReportJob does not notify creator when no delivery
         'created_by' => $this->orgAdmin->id,
         'name' => 'All Good Batch',
         'status' => 'active',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(7)->toDateString(),
     ]);
 
     OrganizationBulkInviteRecipient::create([
