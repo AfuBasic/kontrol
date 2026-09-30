@@ -281,14 +281,24 @@ export default function Visitors({ organization, membership, visitors, filters }
                     activeTab="visitors"
                     primaryAction={
                         membership.is_admin ? (
-                            <button
-                                type="button"
-                                onClick={() => setInviteModalOpen(true)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
-                            >
-                                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                Invite
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setBulkInviteModalOpen(true)}
+                                    className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95"
+                                >
+                                    <Users className="h-3.5 w-3.5 text-slate-500" />
+                                    Bulk
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setInviteModalOpen(true)}
+                                    className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
+                                >
+                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                    Invite
+                                </button>
+                            </div>
                         ) : undefined
                     }
                 />
