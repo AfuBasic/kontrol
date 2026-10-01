@@ -551,16 +551,13 @@ export default function AccessList({
                         variant="category"
                         value={category}
                         onChange={(id) => {
-                            if (id !== 'more') {
-                                setCategory(id);
-                                applyFilters({ category: id });
-                            }
+                            setCategory(id);
+                            applyFilters({ category: id });
                         }}
                         options={[
                             { id: 'all', label: 'All', count: category === 'all' ? members.total : undefined },
                             { id: 'staff', label: 'Staff' },
                             { id: 'parent', label: 'Parents' },
-                            { id: 'more', label: 'More' },
                         ]}
                     />
 
