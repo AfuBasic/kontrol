@@ -4,6 +4,8 @@ namespace App\Services\Visitor;
 
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInviteRecipient;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Writer\Result\ResultInterface;
@@ -66,8 +68,18 @@ class BulkInvitePdfService
         return $this->writeQr($data)->getString();
     }
 
+    /**
+     * Kontrol-blue QR with high error correction, matching the in-app visitor pass so the
+     * centred logo overlay can't make it unreadable at the gate.
+     */
     private function writeQr(string $data): ResultInterface
     {
-        return (new PngWriter)->write(new QrCode($data));
+        return (new PngWriter)->write(new QrCode(
+            data: $data,
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 360,
+            margin: 8,
+            foregroundColor: new Color(26, 93, 191),
+        ));
     }
 }
