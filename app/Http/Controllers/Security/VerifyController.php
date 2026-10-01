@@ -35,8 +35,10 @@ class VerifyController extends Controller
         $gateName = $this->checkpointClaim->getCurrentCheckpoint($estate->id, $user);
         $settings = EstateSettings::forEstate($estate->id);
 
+        // Only organizations that take walk-ins at all: a "no walk-ins" destination can never be chosen.
         $organizations = $estate->organizations()
             ->where('is_active', true)
+            ->where('access_policy', '!=', 'managed')
             ->select(['id', 'name', 'type', 'access_policy'])
             ->orderBy('name')
             ->get()
@@ -290,6 +292,7 @@ class VerifyController extends Controller
 
             $organizations = $estate->organizations()
                 ->where('is_active', true)
+                ->where('access_policy', '!=', 'managed')
                 ->select(['id', 'name', 'type', 'access_policy'])
                 ->orderBy('name')
                 ->get();
