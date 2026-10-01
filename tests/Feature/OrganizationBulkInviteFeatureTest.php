@@ -14,7 +14,9 @@ use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRenewal;
 use App\Models\OrganizationMembership;
 use App\Models\Plan;
+use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Services\Visitor\BulkInvitePdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -143,7 +145,7 @@ test('auto-renew fails if organization does not have active subscription', funct
 test('auto-renew succeeds if organization member has active resident subscription', function () {
     $this->subscription->update(['status' => 'cancelled']);
 
-    \App\Models\ResidentSubscription::create([
+    ResidentSubscription::create([
         'user_id' => $this->orgAdmin->id,
         'estate_id' => $this->estate->id,
         'status' => 'active',
@@ -243,11 +245,64 @@ test('delivery job sends pass email to recipient', function () {
     $deliveryJob = new DeliverBulkVisitorPassJob($pass->id, $recipient->id);
     app()->call([$deliveryJob, 'handle']);
 
-    Mail::assertQueued(BulkVisitorPassMail::class, function ($mail) use ($recipient) {
-        return $mail->hasTo($recipient->email);
+    Mail::assertNothingQueued();
+    Mail::assertSent(BulkVisitorPassMail::class, function (BulkVisitorPassMail $mail) use ($recipient, $pass) {
+        return $mail->hasTo($recipient->email)
+            && str_starts_with((string) $mail->pdfContents, '%PDF')
+            && count($mail->attachments()) === 1
+            && $mail->attachments()[0]->as === "Visitor-Pass-{$pass->code}.pdf";
     });
 
     $recipient->refresh();
     expect($recipient->last_delivered_at)->not->toBeNull()
         ->and($recipient->delivery_status)->toBe('sent');
+});
+
+test('delivery job retries instead of sending without the PDF when generation fails', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $bulkInvite = app(CreateBulkVisitorInviteAction::class)->execute(
+        organization: $this->org,
+        user: $this->orgAdmin,
+        emails: ['attendee@example.com'],
+        autoRenew: false,
+    );
+    $recipient = $bulkInvite->recipients->first();
+
+    $this->mock(BulkInvitePdfService::class)
+        ->shouldReceive('generatePassPdf')
+        ->andThrow(new RuntimeException('QR library unavailable'));
+
+    $job = (new DeliverBulkVisitorPassJob($recipient->last_access_code_id, $recipient->id))->withFakeQueueInteractions();
+    app()->call([$job, 'handle']);
+
+    $job->assertReleased();
+    Mail::assertNothingSent();
+    expect($recipient->fresh()->delivery_status)->toBe('queued');
+});
+
+test('delivery job sends the link-only email on the final attempt if the PDF still fails', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $bulkInvite = app(CreateBulkVisitorInviteAction::class)->execute(
+        organization: $this->org,
+        user: $this->orgAdmin,
+        emails: ['attendee@example.com'],
+        autoRenew: false,
+    );
+    $recipient = $bulkInvite->recipients->first();
+
+    $this->mock(BulkInvitePdfService::class)
+        ->shouldReceive('generatePassPdf')
+        ->andThrow(new RuntimeException('QR library unavailable'));
+
+    $job = (new DeliverBulkVisitorPassJob($recipient->last_access_code_id, $recipient->id))->withFakeQueueInteractions();
+    $job->job->attempts = $job->tries;
+    app()->call([$job, 'handle']);
+
+    $job->assertNotReleased();
+    Mail::assertSent(BulkVisitorPassMail::class, fn (BulkVisitorPassMail $mail) => $mail->pdfContents === null);
+    expect($recipient->fresh()->delivery_status)->toBe('sent');
 });
