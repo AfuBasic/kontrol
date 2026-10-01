@@ -45,7 +45,6 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     Route::prefix('on-site')->name('on-site.')->group(function () {
         Route::get('/', [ArrivalController::class, 'index'])->name('index');
         Route::get('/history', [ArrivalController::class, 'history'])->name('history');
-        Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
     });
 
     // Access: Visitors (Temporary passes)
