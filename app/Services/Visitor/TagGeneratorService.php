@@ -35,6 +35,14 @@ class TagGeneratorService
     }
 
     /**
+     * Whether a tag is held by a quick entry visitor who has not checked out yet.
+     */
+    public function isInUse(int $estateId, string $tag): bool
+    {
+        return $this->getActiveTags($estateId)->contains(strtoupper(trim($tag)));
+    }
+
+    /**
      * Get all currently active (unchecked-out) tags for an estate.
      *
      * @return Collection<int, string>
