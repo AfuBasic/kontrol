@@ -124,3 +124,34 @@ test('walk-in status says when a closed organization opens next', function () {
 
     expect($this->org->fresh()->walkInStatus())->toBe(['open' => false, 'label' => 'Closed · opens today 2:00 PM']);
 });
+
+test('an organization that relies on walk-in hours but has none is flagged on home', function () {
+    $props = $this->actingAs($this->admin)->get(route('org.dashboard'))->assertOk()->inertiaPage()['props']['organization'];
+
+    expect($props['needs_walk_in_hours'])->toBeTrue()
+        ->and($props['walk_in'])->toBe(['open' => false, 'label' => 'No walk-in hours set']);
+});
+
+test('the flag clears once hours are added and never applies to other policies', function () {
+    OrganizationPublicWindow::create([
+        'organization_id' => $this->org->id, 'name' => 'Walk-in hours', 'day_of_week' => 3,
+        'start_time' => '08:00', 'end_time' => '10:00', 'is_active' => true,
+    ]);
+    expect($this->org->fresh()->needsWalkInHours())->toBeFalse();
+
+    $this->org->update(['access_policy' => 'unrestricted']);
+    $this->org->publicWindows()->delete();
+    expect($this->org->fresh()->needsWalkInHours())->toBeFalse();
+
+    $this->org->update(['access_policy' => 'managed']);
+    expect($this->org->fresh()->needsWalkInHours())->toBeFalse();
+});
+
+test('paused hours do not count as set', function () {
+    OrganizationPublicWindow::create([
+        'organization_id' => $this->org->id, 'name' => 'Walk-in hours', 'day_of_week' => 3,
+        'start_time' => '08:00', 'end_time' => '10:00', 'is_active' => false,
+    ]);
+
+    expect($this->org->fresh()->needsWalkInHours())->toBeTrue();
+});
