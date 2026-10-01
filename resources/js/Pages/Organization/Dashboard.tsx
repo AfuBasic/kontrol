@@ -11,6 +11,7 @@ import {
     Users,
 } from 'lucide-react';
 import React from 'react';
+import WalkInHoursSetupCard from '@/Components/Organization/WalkInHoursSetupCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
@@ -49,6 +50,7 @@ interface Props {
         access_policy: string;
         estate_name: string;
         walk_in: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
         visitor_checkout_enabled?: boolean;
     };
     membership: {
@@ -63,6 +65,7 @@ interface Props {
 
 export default function Dashboard({
     organization,
+    membership,
     total_access_members = 0,
     metrics,
     recent_arrivals = [],
@@ -159,6 +162,10 @@ export default function Dashboard({
                         </p>
                     )}
                 </header>
+
+                {organization.needs_walk_in_hours && (
+                    <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />
+                )}
 
 
 
