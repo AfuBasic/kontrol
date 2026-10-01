@@ -20,7 +20,7 @@ class ArrivalService
         $query = AccessLog::withoutGlobalScope(ZoneScope::class)
             ->where('organization_id', $organization->id)
             ->whereNull('checked_out_at')
-            ->with(['accessCode.organizationMember', 'verifier:id,name', 'confirmedBy:id,name'])
+            ->with(['accessCode.organizationMember', 'verifier:id,name'])
             ->latest('verified_at');
 
         if (! empty($filters['search'])) {
@@ -46,7 +46,7 @@ class ArrivalService
     {
         $query = AccessLog::withoutGlobalScope(ZoneScope::class)
             ->where('organization_id', $organization->id)
-            ->with(['accessCode.organizationMember', 'verifier:id,name', 'confirmedBy:id,name', 'checkoutVerifier:id,name'])
+            ->with(['accessCode.organizationMember', 'verifier:id,name', 'checkoutVerifier:id,name'])
             ->latest('verified_at');
 
         if (! empty($filters['search'])) {
@@ -82,23 +82,7 @@ class ArrivalService
             ->where('organization_id', $organization->id)
             ->whereNull('checked_out_at');
 
-        $activeLogs = (clone $activeQuery)->get();
-        $window = $organization->confirmation_window_minutes ?? 15;
-
-        $pendingCount = 0;
-        $overdueCount = 0;
-        $confirmedCount = 0;
-
-        foreach ($activeLogs as $log) {
-            $state = $log->confirmationState($window);
-            if ($state === 'PENDING') {
-                $pendingCount++;
-            } elseif ($state === 'OVERDUE') {
-                $overdueCount++;
-            } elseif ($state === 'CONFIRMED') {
-                $confirmedCount++;
-            }
-        }
+        $currentlyInside = (clone $activeQuery)->count();
 
         $todayEntries = AccessLog::withoutGlobalScope(ZoneScope::class)
             ->where('organization_id', $organization->id)
@@ -106,12 +90,8 @@ class ArrivalService
             ->count();
 
         return [
-            'currently_inside' => $activeLogs->count(),
+            'currently_inside' => $currentlyInside,
             'today_entries' => $todayEntries,
-            'pending_confirmation' => $pendingCount,
-            'overdue_confirmation' => $overdueCount,
-            'confirmed' => $confirmedCount,
-            'confirmation_required' => $organization->requiresArrivalConfirmation(),
         ];
     }
 
@@ -120,15 +100,8 @@ class ArrivalService
      */
     public function transformArrival(AccessLog $log, ?EstateOrganization $organization = null): array
     {
-        $org = $organization ?? $log->organization;
         $meta = $log->meta ?? [];
-        $window = $org?->confirmation_window_minutes ?? 15;
-        $confirmationState = $log->confirmationState($window);
-
         $entryTime = $log->verified_at ? CarbonImmutable::instance($log->verified_at) : null;
-        $dueAt = ($entryTime && $org?->requiresArrivalConfirmation())
-            ? $entryTime->addMinutes($window)
-            : null;
 
         return [
             'id' => $log->id,
@@ -143,13 +116,7 @@ class ArrivalService
             'verified_at_human' => $entryTime?->diffForHumans(),
             'checked_out_at' => $log->checked_out_at?->toISOString(),
             'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
-            'confirmed_at' => $log->confirmed_at?->toISOString(),
-            'confirmed_at_human' => $log->confirmed_at?->diffForHumans(),
-            'confirmation_state' => $confirmationState,
-            'confirmation_due_at' => $dueAt?->toISOString(),
-            'is_overdue' => $confirmationState === 'OVERDUE',
             'verified_by' => $log->verifier ? ['id' => $log->verifier->id, 'name' => $log->verifier->name] : null,
-            'confirmed_by' => $log->confirmedBy ? ['id' => $log->confirmedBy->id, 'name' => $log->confirmedBy->name] : null,
             'member' => $log->accessCode?->organizationMember ? [
                 'id' => $log->accessCode->organizationMember->id,
                 'name' => $log->accessCode->organizationMember->name,
