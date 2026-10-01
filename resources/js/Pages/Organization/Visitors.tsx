@@ -2,11 +2,11 @@
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
+import { Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
+import PassTimingPicker, { defaultPassTiming, passStart, type PassTiming } from '@/Components/Organization/PassTimingPicker';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
@@ -65,9 +65,11 @@ interface Props {
     membership: { role: string; is_admin: boolean };
     visitors: PaginatedData<VisitorPass>;
     filters: { search: string | null };
+    durationOptions: { minutes: number; label: string }[];
+    durationConstraints: { min: number; max: number };
 }
 
-export default function Visitors({ organization, membership, visitors, filters }: Props) {
+export default function Visitors({ organization, membership, visitors, filters, durationOptions, durationConstraints }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState('all');
@@ -77,7 +79,8 @@ export default function Visitors({ organization, membership, visitors, filters }
     const [selectedPass, setSelectedPass] = useState<VisitorPass | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [copiedAll, setCopiedAll] = useState(false);
-    const [isCustomTime, setIsCustomTime] = useState(false);
+    const initialDuration = durationOptions.find((o) => o.minutes === 60)?.minutes ?? durationOptions[0]?.minutes ?? durationConstraints.min;
+    const [timing, setTiming] = useState<PassTiming>(() => defaultPassTiming(initialDuration));
 
     const purposeOptions = [
         { value: 'meeting', label: 'Meeting' },
@@ -99,13 +102,10 @@ export default function Visitors({ organization, membership, visitors, filters }
         }
     }, [flash.bulk_passes, gated]);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         visitor_name: '',
         visitor_phone: '',
         purpose: '',
-        date: new Date().toISOString().split('T')[0],
-        start_time: '',
-        end_time: '',
     });
 
     const [copiedCode, setCopiedCode] = useState(false);
@@ -229,12 +229,17 @@ export default function Visitors({ organization, membership, visitors, filters }
 
     const handleInvite = (e: React.FormEvent) => {
         e.preventDefault();
+        transform((form) => ({
+            ...form,
+            starts_at: passStart(timing)?.toISOString() ?? null,
+            duration_minutes: timing.durationMinutes,
+        }));
         post('/org/visitors', {
             preserveScroll: true,
             onSuccess: () => {
                 setInviteModalOpen(false);
                 reset();
-                setIsCustomTime(false);
+                setTiming(defaultPassTiming(initialDuration));
             },
         });
     };
@@ -269,6 +274,11 @@ export default function Visitors({ organization, membership, visitors, filters }
 
         const startFormatted = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const endFormatted = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+        if (start.toDateString() !== end.toDateString()) {
+            const day = (d: Date) => d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+            return `${day(start)}, ${startFormatted} - ${day(end)}, ${endFormatted}`;
+        }
 
         return `${startFormatted} - ${endFormatted}`;
     };
@@ -577,83 +587,13 @@ export default function Visitors({ organization, membership, visitors, filters }
                             error={errors.visitor_phone}
                         />
 
-                        <TextInput
-                            label="Date of Visit"
-                            icon={Calendar}
-                            type="date"
-                            required
-                            min={new Date().toISOString().split('T')[0]}
-                            value={data.date}
-                            onChange={(e) => setData('date', e.target.value)}
-                            error={errors.date}
+                        <PassTimingPicker
+                            value={timing}
+                            onChange={setTiming}
+                            durationOptions={durationOptions}
+                            constraints={durationConstraints}
+                            errors={errors as { starts_at?: string; duration_minutes?: string }}
                         />
-
-                        <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-700">Timeframe</label>
-                            <div className="relative flex rounded-xl border border-slate-200 bg-slate-50 p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsCustomTime(false);
-                                        setData((prev) => ({ ...prev, start_time: '', end_time: '' }));
-                                    }}
-                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                                        !isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    All Day
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCustomTime(true)}
-                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                                        isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    Specific Hours
-                                </button>
-                                {/* Active background pill */}
-                                <motion.div
-                                    className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-xs ring-1 ring-slate-900/5"
-                                    animate={{ left: isCustomTime ? 'calc(50% + 0.125rem)' : '0.25rem' }}
-                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                />
-                            </div>
-
-                            <AnimatePresence>
-                                {isCustomTime && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.25 }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="mt-4 grid grid-cols-2 gap-4">
-                                            <TextInput
-                                                label="Start Time"
-                                                icon={Clock}
-                                                type="time"
-                                                required={isCustomTime}
-                                                value={data.start_time}
-                                                onChange={(e) => setData('start_time', e.target.value)}
-                                                error={errors.start_time}
-                                            />
-                                            <TextInput
-                                                label="End Time"
-                                                icon={Clock}
-                                                type="time"
-                                                required={isCustomTime}
-                                                value={data.end_time}
-                                                onChange={(e) => setData('end_time', e.target.value)}
-                                                error={errors.end_time}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                            {!isCustomTime && <p className="mt-2 px-1 text-xs text-slate-400">Valid entire day (expires at 11:59 PM)</p>}
-                        </div>
 
                         <CustomSelect
                             label="Purpose"
