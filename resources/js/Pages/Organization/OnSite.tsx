@@ -15,12 +15,7 @@ interface Arrival {
     entry_point: string | null;
     verified_at: string | null;
     verified_at_human: string | null;
-    confirmed_at: string | null;
-    confirmed_at_human: string | null;
-    confirmation_state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE';
-    is_overdue: boolean;
     verified_by: { id: number; name: string } | null;
-    confirmed_by: { id: number; name: string } | null;
     member: {
         id: number;
         name: string;
@@ -31,10 +26,6 @@ interface Arrival {
 
 interface Metrics {
     currently_inside: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
 }
 
 interface Props {
