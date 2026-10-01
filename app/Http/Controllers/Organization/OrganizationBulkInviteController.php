@@ -14,10 +14,12 @@ use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRecipient;
 use App\Services\Organization\BulkInviteVisitService;
 use App\Services\OrganizationContextService;
+use App\Services\Visitor\BulkInvitePdfService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -224,7 +226,7 @@ class OrganizationBulkInviteController extends Controller
         }
 
         $bulkInvite->load([
-            'recipients' => fn ($q) => $q->where('status', 'active')->with('lastAccessCode')->oldest('id'),
+            'recipients' => fn ($q) => $q->where('status', 'active')->with(['lastAccessCode', 'usablePasses'])->oldest('id'),
             'renewals' => fn ($q) => $q->latest(),
         ]);
 
@@ -279,8 +281,7 @@ class OrganizationBulkInviteController extends Controller
                     'delivery_status' => $recipient->delivery_status,
                     'delivery_error' => $recipient->delivery_error,
                     'delivered_label' => $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
-                    'code' => $recipient->lastAccessCode?->code,
-                    'pass_uuid' => $recipient->lastAccessCode?->pass_uuid,
+                    ...$this->currentPassPayload($bulkInvite, $recipient),
                     'can_resend' => $this->isResendable($recipient),
                     'visits_count' => $visitStats['by_recipient'][$recipient->id]['visits'] ?? 0,
                     'last_visit_label' => $visits->recencyLabel($visitStats['by_recipient'][$recipient->id]['last_visit_at'] ?? null),
@@ -413,6 +414,65 @@ class OrganizationBulkInviteController extends Controller
             && $code !== null
             && in_array($code->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled], true)
             && ($code->expires_at === null || $code->expires_at->isFuture());
+    }
+
+    public function recipientQr(
+        Request $request,
+        OrganizationBulkInvite $bulkInvite,
+        OrganizationBulkInviteRecipient $recipient,
+        BulkInvitePdfService $qr,
+    ): HttpResponse {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+
+        abort_unless(
+            $bulkInvite->organization_id === $organization->id
+                && $recipient->bulk_invite_id === $bulkInvite->id
+                && $recipient->status === 'active',
+            404
+        );
+
+        $pass = $recipient->currentPass();
+        abort_if($pass === null, 404);
+
+        // The QR is a working gate credential: never cache it in shared caches.
+        return response($qr->generateQrPng($pass->gateQrPayload()), 200, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * The pass shown for a recipient: the one valid today, else the next one to start.
+     *
+     * @return array{code: string|null, pass_uuid: string|null, pass_valid_label: string|null, pass_starts_later: bool, qr_url: string|null}
+     */
+    private function currentPassPayload(OrganizationBulkInvite $bulkInvite, OrganizationBulkInviteRecipient $recipient): array
+    {
+        $pass = $recipient->currentPass();
+
+        if (! $pass) {
+            return [
+                'code' => $recipient->lastAccessCode?->code,
+                'pass_uuid' => $recipient->lastAccessCode?->pass_uuid,
+                'pass_valid_label' => null,
+                'pass_starts_later' => false,
+                'qr_url' => null,
+            ];
+        }
+
+        $startsAt = $pass->starts_at ? Carbon::parse($pass->starts_at) : null;
+        $expiresAt = $pass->expires_at ? Carbon::parse($pass->expires_at) : null;
+
+        return [
+            'code' => $pass->code,
+            'pass_uuid' => $pass->pass_uuid,
+            'pass_valid_label' => $startsAt && $expiresAt
+                ? $this->shortDate($startsAt).' – '.$this->shortDate($expiresAt)
+                : ($expiresAt ? 'Until '.$this->shortDate($expiresAt) : null),
+            'pass_starts_later' => $startsAt !== null && $startsAt->isFuture(),
+            'qr_url' => route('org.bulk-invites.recipients.qr', [$bulkInvite, $recipient]),
+        ];
     }
 
     /**
