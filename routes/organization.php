@@ -70,6 +70,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::post('/{bulkInvite}/cancel', [OrganizationBulkInviteController::class, 'cancel'])->name('cancel');
         Route::delete('/{bulkInvite}/recipients/{recipient}', [OrganizationBulkInviteController::class, 'removeRecipient'])->name('recipients.destroy');
         Route::post('/{bulkInvite}/recipients/{recipient}/resend', [OrganizationBulkInviteController::class, 'resendRecipient'])->name('recipients.resend');
+        Route::get('/{bulkInvite}/recipients/{recipient}/visits', [OrganizationBulkInviteController::class, 'recipientVisits'])->name('recipients.visits');
 
         // Requires active subscription
         Route::middleware('resident.active:force')->group(function () {
