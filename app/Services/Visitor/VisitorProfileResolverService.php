@@ -6,6 +6,9 @@ use App\Models\VisitorProfile;
 
 class VisitorProfileResolverService
 {
+    /** Name stored when a visitor is admitted with no name typed. */
+    public const UNKNOWN_NAME = 'Unknown Visitor';
+
     /**
      * Resolve or create a visitor profile from an ID photo.
      *
@@ -23,6 +26,8 @@ class VisitorProfileResolverService
             $profile->update([
                 'last_seen_at' => now(),
                 'visit_count' => $profile->visit_count + 1,
+                // Adopt the first real name a guard types, but never overwrite a name already on file.
+                'name' => ($profile->name === self::UNKNOWN_NAME && $visitorName) ? $visitorName : $profile->name,
             ]);
 
             return $profile->fresh();
@@ -30,7 +35,7 @@ class VisitorProfileResolverService
 
         return VisitorProfile::create([
             'estate_id' => $estateId,
-            'name' => $visitorName ?: 'Unknown Visitor',
+            'name' => $visitorName ?: self::UNKNOWN_NAME,
             'id_photo_hash' => $hash,
             'id_photo_path' => $idPhotoPath,
             'first_seen_at' => now(),
