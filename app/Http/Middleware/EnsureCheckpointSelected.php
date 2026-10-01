@@ -36,6 +36,9 @@ class EnsureCheckpointSelected
             return $next($request);
         }
 
+        // Security controllers (Verify, QuickEntry, Reserve, Confirm) read the estate from here.
+        $request->attributes->set('estate_id', $estate->id);
+
         $settings = EstateSettings::forEstate($estate->id);
 
         if (! $settings->entry_point_checkout_enforced) {
