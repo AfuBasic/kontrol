@@ -37,12 +37,17 @@ class VisitorLogController extends Controller
             'vehicle_plate',
             'host_id',
             'status',
+            'entry_type',
             'gate',
             'verifier_id',
             'sort',
             'direction',
             'view',
         ]);
+
+        if (! in_array($filters['entry_type'] ?? null, ['access_code', 'walk_in'], true)) {
+            unset($filters['entry_type']);
+        }
 
         $filters['sort'] = $this->normalizeSort($filters['sort'] ?? null);
         $filters['direction'] = $this->normalizeDirection($filters['direction'] ?? null);
@@ -130,7 +135,11 @@ class VisitorLogController extends Controller
                     })
                         ->orWhereHas('accessCode.user', function ($sq) use ($search) {
                             $sq->where('name', 'like', "%{$search}%");
-                        });
+                        })
+                        // Walk-ins have no access code: find them by tag, name, or destination.
+                        ->orWhere('access_logs.meta->tag', 'like', '%'.strtoupper($search).'%')
+                        ->orWhere('access_logs.meta->visitor_name', 'like', "%{$search}%")
+                        ->orWhere('access_logs.meta->organization_name', 'like', "%{$search}%");
                 });
             })
             ->when($filters['date'] ?? null, function ($query, $date) {
@@ -151,6 +160,9 @@ class VisitorLogController extends Controller
                     $query->whereNotNull('access_logs.checked_out_at');
                 }
             })
+            ->when($filters['entry_type'] ?? null, function ($query, $entryType) {
+                $entryType === 'walk_in' ? $query->walkIn() : $query->viaAccessCode();
+            })
             ->when($filters['verifier_id'] ?? null, function ($query, $verifierId) {
                 $query->where('access_logs.verified_by', $verifierId);
             });
@@ -168,16 +180,21 @@ class VisitorLogController extends Controller
      */
     private function applyLogSort($query, string $sort, string $direction): void
     {
+        // Walk-ins carry their visitor name and destination in meta; wrap the JSON path for the active driver.
+        $grammar = $query->getQuery()->getGrammar();
+        $walkInName = $grammar->wrap('access_logs.meta->visitor_name');
+        $walkInDestination = $grammar->wrap('access_logs.meta->organization_name');
+
         match ($sort) {
             'visitor' => $query
                 ->leftJoin('access_codes as ac_sort', 'access_logs.access_code_id', '=', 'ac_sort.id')
-                ->orderBy('ac_sort.visitor_name', $direction)
+                ->orderByRaw("COALESCE(ac_sort.visitor_name, {$walkInName}) {$direction}")
                 ->orderByDesc('access_logs.verified_at')
                 ->select('access_logs.*'),
             'host' => $query
                 ->leftJoin('access_codes as ac_sort', 'access_logs.access_code_id', '=', 'ac_sort.id')
                 ->leftJoin('users as host_sort', 'ac_sort.user_id', '=', 'host_sort.id')
-                ->orderBy('host_sort.name', $direction)
+                ->orderByRaw("COALESCE(host_sort.name, {$walkInDestination}) {$direction}")
                 ->orderByDesc('access_logs.verified_at')
                 ->select('access_logs.*'),
             'duration' => $query
@@ -215,27 +232,41 @@ class VisitorLogController extends Controller
     private function transformLog(AccessLog $log): array
     {
         $code = $log->accessCode;
+        $isWalkIn = $log->isWalkIn();
         $issuedAt = $code?->created_at;
         $isOverstayed = $code?->expires_at ? $code->expires_at->isPast() && $log->checked_out_at === null : false;
 
         return [
             'id' => $log->id,
+            // How this person got in: with an access code, or as a walk-in admitted with a tag.
+            'entry_type' => $isWalkIn ? 'walk_in' : 'access_code',
+            'tag' => $isWalkIn ? ($log->meta['tag'] ?? null) : null,
             'code' => $code?->code,
             'visitor' => [
-                'name' => $code?->visitor_name ?? 'Visitor',
+                'name' => $isWalkIn
+                    ? ($log->meta['visitor_name'] ?? 'Walk-in visitor')
+                    : ($code?->visitor_name ?? 'Visitor'),
                 'phone' => $code?->visitor_phone,
-                'type' => $code?->type,
+                'type' => $isWalkIn ? 'walk_in' : $code?->type,
             ],
-            'host' => [
-                'id' => $code?->user_id,
-                'name' => $code?->user?->name ?? 'Host',
-                'unit' => $code?->user?->profile?->unit_number,
-                'address' => $code?->user?->profile?->address,
-            ],
-            'purpose' => $code?->purpose,
+            // For a walk-in the "host" is the destination organization they said they were going to.
+            'host' => $isWalkIn
+                ? [
+                    'id' => null,
+                    'name' => $log->meta['organization_name'] ?? 'Organization',
+                    'unit' => null,
+                    'address' => null,
+                ]
+                : [
+                    'id' => $code?->user_id,
+                    'name' => $code?->user?->name ?? 'Host',
+                    'unit' => $code?->user?->profile?->unit_number,
+                    'address' => $code?->user?->profile?->address,
+                ],
+            'purpose' => $isWalkIn ? null : $code?->purpose,
             'issued_at' => $issuedAt?->format('M j, Y g:i A'),
             'issued_at_iso' => $issuedAt?->toIso8601String(),
-            'issued_by' => $code?->user?->name ?? 'Resident',
+            'issued_by' => $isWalkIn ? null : ($code?->user?->name ?? 'Resident'),
             'verified_at' => $log->verified_at->format('M j, Y g:i A'),
             'verified_at_iso' => $log->verified_at->toIso8601String(),
             'verified_at_human' => $log->verified_at->diffForHumans(),
