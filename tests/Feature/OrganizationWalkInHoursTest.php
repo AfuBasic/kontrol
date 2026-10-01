@@ -159,15 +159,15 @@ test('paused hours do not count as set', function () {
 
 test('organization admin can change the walk-in policy and the change is logged', function () {
     $this->actingAs($this->admin)
-        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'unrestricted'])
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'managed'])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 
-    expect($this->org->fresh()->access_policy)->toBe('unrestricted');
+    expect($this->org->fresh()->access_policy)->toBe('managed');
 
     $log = Activity::where('log_name', 'access')->latest('id')->first();
     expect($log->causer_id)->toBe($this->admin->id)
-        ->and($log->properties->toArray())->toBe(['from' => 'public_window', 'to' => 'unrestricted']);
+        ->and($log->properties->toArray())->toBe(['from' => 'public_window', 'to' => 'managed']);
 });
 
 test('changing to the same policy logs nothing', function () {
@@ -191,7 +191,7 @@ test('an organization can turn walk-ins off and the gate then refuses them', fun
 
 test('staff cannot change the walk-in policy', function () {
     $this->actingAs($this->staff)
-        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'unrestricted'])
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'managed'])
         ->assertForbidden();
 
     expect($this->org->fresh()->access_policy)->toBe('public_window');
@@ -207,7 +207,31 @@ test('a hospital cannot stop admitting walk-ins', function () {
     expect($this->org->fresh()->access_policy)->toBe('unrestricted');
 
     $page = $this->actingAs($this->admin)->get(route('org.public-windows.index'))->assertOk()->inertiaPage()['props']['organization'];
-    expect($page['policy_locked'])->toBeTrue();
+    expect($page['policy_lock'])->toBe('hospital');
+});
+
+test('an organization cannot give itself walk-ins at any time; only the estate can', function () {
+    $this->actingAs($this->admin)
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'unrestricted'])
+        ->assertSessionHasErrors(['access_policy' => 'Only the estate admin can allow walk-ins at any time.']);
+
+    expect($this->org->fresh()->access_policy)->toBe('public_window');
+
+    $page = $this->actingAs($this->admin)->get(route('org.public-windows.index'))->inertiaPage()['props']['organization'];
+    expect($page['policy_lock'])->toBeNull();
+});
+
+test('an organization the estate set to any time cannot change it from its profile', function () {
+    $this->org->update(['access_policy' => 'unrestricted']);
+
+    $this->actingAs($this->admin)
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'managed'])
+        ->assertSessionHasErrors('access_policy');
+
+    expect($this->org->fresh()->access_policy)->toBe('unrestricted');
+
+    $page = $this->actingAs($this->admin)->get(route('org.public-windows.index'))->inertiaPage()['props']['organization'];
+    expect($page['policy_lock'])->toBe('estate');
 });
 
 test('an unknown policy value is rejected', function () {
