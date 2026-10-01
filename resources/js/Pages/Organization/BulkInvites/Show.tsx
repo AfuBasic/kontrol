@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { CheckCircle2, ChevronLeft, Copy, Loader2, MoreHorizontal, Search, Send, Trash2 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -14,6 +14,25 @@ interface Recipient {
     code: string | null;
     pass_uuid: string | null;
     can_resend: boolean;
+    visits_count: number;
+    last_visit_label: string | null;
+}
+
+interface VisitSummary {
+    total: number;
+    visited_count: number;
+    inside_now: number;
+    last_visit_label: string | null;
+}
+
+interface Visit {
+    id: number;
+    day_label: string;
+    entered_at_label: string;
+    left_at_label: string | null;
+    left_another_day: boolean;
+    entry_point: string | null;
+    is_inside: boolean;
 }
 
 interface Renewal {
@@ -38,6 +57,7 @@ interface BulkInvite {
     next_renewal_label: string | null;
     renewal_blocked_reason_label: string | null;
     recipients: Recipient[];
+    visits: VisitSummary;
     renewals: Renewal[];
 }
 
@@ -199,49 +219,80 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                     Groups
                 </Link>
 
-                {/* Identity */}
-                <header className="mt-1">
-                    <h1 className="text-[22px] font-semibold tracking-[-0.015em] text-[#071f4b]">{title}</h1>
-                    <p className="mt-0.5 text-[13px] text-slate-500">{meta.join(' · ')}</p>
-                </header>
-
-                {/* Validity + renewal */}
-                <dl className={`mt-5 grid grid-cols-2 gap-4 ${isLive ? '' : 'opacity-60'}`}>
-                    <div className="min-w-0">
-                        <dt className="text-[11px] text-slate-500">Valid</dt>
-                        <dd className="mt-0.5 text-[15px] text-[#071f4b]">
-                            {bulkInvite.valid_from_label} – {bulkInvite.valid_until_label}
-                        </dd>
-                        <dd className={`mt-0.5 text-[12px] ${validityWarn ? 'text-amber-700' : 'text-slate-500'}`}>
-                            {validityHint}
-                        </dd>
+                {/* Group overview */}
+                <section className="mt-1 rounded-[22px] border border-slate-200/70 bg-white px-5 pt-4 pb-5 shadow-[0_1px_2px_rgba(7,31,75,0.04)]">
+                    <div className="flex items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-1.5 text-[12px] text-slate-600">
+                            <span className={`h-1.5 w-1.5 rounded-full ${STATUS[bulkInvite.state].dot}`} />
+                            {bulkInvite.state === 'upcoming'
+                                ? `Starts ${bulkInvite.valid_from_label}`
+                                : STATUS[bulkInvite.state].label}
+                        </span>
+                        {bulkInvite.visits.inside_now > 0 && (
+                            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
+                                <span className="relative flex h-1.5 w-1.5">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                </span>
+                                {bulkInvite.visits.inside_now} inside now
+                            </span>
+                        )}
                     </div>
-                    {bulkInvite.state !== 'cancelled' && (
+
+                    <h1 className="mt-2 text-[24px] leading-tight font-semibold tracking-[-0.02em] text-[#071f4b]">
+                        {title}
+                    </h1>
+                    <p className="mt-0.5 text-[13px] text-slate-500">{meta.join(' · ')}</p>
+
+                    {bulkInvite.visits.total > 0 ? (
+                        <dl className="mt-5 grid grid-cols-3 divide-x divide-slate-100">
+                            <Stat value={String(bulkInvite.visits.total)} label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'} />
+                            <Stat value={`${bulkInvite.visits.visited_count} of ${total}`} label="Came in" />
+                            <Stat value={bulkInvite.visits.last_visit_label ?? '—'} label="Last visit" />
+                        </dl>
+                    ) : (
+                        <p className="mt-5 text-[13px] text-slate-500">
+                            {isLive ? 'No one has used their pass yet.' : 'No one used their pass.'}
+                        </p>
+                    )}
+
+                    <dl className={`mt-5 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 ${isLive ? '' : 'opacity-60'}`}>
                         <div className="min-w-0">
-                            <dt className="text-[11px] text-slate-500">Auto-renew</dt>
-                            <dd
-                                className={`mt-0.5 text-[15px] ${
-                                    renewalValue === 'Paused'
-                                        ? 'text-amber-700'
-                                        : renewalValue === 'On' && isLive
-                                          ? 'text-emerald-700'
-                                          : 'text-[#071f4b]'
-                                }`}
-                            >
-                                {renewalValue}
+                            <dt className="text-[11px] text-slate-500">Valid</dt>
+                            <dd className="mt-0.5 text-[15px] text-[#071f4b]">
+                                {bulkInvite.valid_from_label} – {bulkInvite.valid_until_label}
                             </dd>
-                            {renewalHint && (
+                            <dd className={`mt-0.5 text-[12px] ${validityWarn ? 'text-amber-700' : 'text-slate-500'}`}>
+                                {validityHint}
+                            </dd>
+                        </div>
+                        {bulkInvite.state !== 'cancelled' && (
+                            <div className="min-w-0">
+                                <dt className="text-[11px] text-slate-500">Auto-renew</dt>
                                 <dd
-                                    className={`mt-0.5 truncate text-[12px] ${
-                                        renewalValue === 'Paused' ? 'text-amber-700' : 'text-slate-500'
+                                    className={`mt-0.5 text-[15px] ${
+                                        renewalValue === 'Paused'
+                                            ? 'text-amber-700'
+                                            : renewalValue === 'On' && isLive
+                                              ? 'text-emerald-700'
+                                              : 'text-[#071f4b]'
                                     }`}
                                 >
-                                    {renewalHint}
+                                    {renewalValue}
                                 </dd>
-                            )}
-                        </div>
-                    )}
-                </dl>
+                                {renewalHint && (
+                                    <dd
+                                        className={`mt-0.5 truncate text-[12px] ${
+                                            renewalValue === 'Paused' ? 'text-amber-700' : 'text-slate-500'
+                                        }`}
+                                    >
+                                        {renewalHint}
+                                    </dd>
+                                )}
+                            </div>
+                        )}
+                    </dl>
+                </section>
 
                 {/* Delivery summary: one line, only loud when something failed */}
                 {total > 0 && (
@@ -370,24 +421,35 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 )}
             </div>
 
-            {/* Person actions */}
+            {/* Person details */}
             <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email}>
                 {selected && (
-                    <div className="flex flex-col gap-4 pb-2">
-                        <div className="flex items-baseline justify-between">
+                    <div className="flex flex-col gap-5 pb-2">
+                        <div className="flex items-end justify-between gap-3">
                             <div>
                                 <p className="text-[11px] text-slate-500">Pass code</p>
-                                <p className="mt-0.5 font-mono text-[20px] tracking-[0.12em] text-[#071f4b]">
+                                <p className="mt-0.5 font-mono text-[22px] tracking-[0.12em] text-[#071f4b]">
                                     {selected.code ?? '—'}
                                 </p>
                             </div>
-                            <p className="text-[12px] text-slate-500">
+                            <p className="pb-1 text-right text-[12px] text-slate-500">
                                 <RecipientStatus recipient={selected} />
                             </p>
                         </div>
                         {selected.delivery_error && (
-                            <p className="text-[12px] text-rose-600">{selected.delivery_error}</p>
+                            <p className="-mt-3 text-[12px] text-rose-600">{selected.delivery_error}</p>
                         )}
+
+                        <dl className="grid grid-cols-2 divide-x divide-slate-100 rounded-2xl bg-slate-50 py-3">
+                            <Stat value={String(selected.visits_count)} label={selected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
+                            <Stat value={selected.last_visit_label ?? '—'} label="Last visit" inset />
+                        </dl>
+
+                        <VisitHistory
+                            key={selected.id}
+                            url={`/org/bulk-invites/${bulkInvite.id}/recipients/${selected.id}/visits`}
+                            hasVisits={selected.visits_count > 0}
+                        />
 
                         <div className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70">
                             {selected.pass_uuid && (
@@ -459,4 +521,124 @@ function RecipientStatus({ recipient }: { recipient: Recipient }) {
         default:
             return <span>Sending…</span>;
     }
+}
+
+const STATUS: Record<BulkInvite['state'], { label: string; dot: string }> = {
+    active: { label: 'Active', dot: 'bg-emerald-500' },
+    upcoming: { label: 'Upcoming', dot: 'bg-[#1a5dbf]' },
+    expired: { label: 'Ended', dot: 'bg-slate-400' },
+    cancelled: { label: 'Cancelled', dot: 'bg-slate-400' },
+};
+
+function Stat({ value, label, inset = false }: { value: string; label: string; inset?: boolean }) {
+    return (
+        <div className={`flex min-w-0 flex-col-reverse ${inset ? 'px-4' : 'px-3 first:pl-0 last:pr-0'}`}>
+            <dt className="mt-0.5 text-[11px] text-slate-500">{label}</dt>
+            <dd className="truncate text-[20px] leading-tight font-semibold tracking-[-0.01em] text-[#071f4b] tabular-nums">
+                {value}
+            </dd>
+        </div>
+    );
+}
+
+function VisitHistory({ url, hasVisits }: { url: string; hasVisits: boolean }) {
+    const [visits, setVisits] = useState<Visit[]>([]);
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [loading, setLoading] = useState(hasVisits);
+    const [failed, setFailed] = useState(false);
+
+    const load = useCallback(
+        async (nextCursor: string | null) => {
+            setLoading(true);
+            setFailed(false);
+            try {
+                const res = await fetch(nextCursor ? `${url}?cursor=${encodeURIComponent(nextCursor)}` : url, {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json: { data: Visit[]; next_cursor: string | null } = await res.json();
+                setVisits((prev) => (nextCursor ? [...prev, ...json.data] : json.data));
+                setCursor(json.next_cursor);
+            } catch {
+                setFailed(true);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [url],
+    );
+
+    useEffect(() => {
+        if (hasVisits) load(null);
+    }, [hasVisits, load]);
+
+    return (
+        <section>
+            <h3 className="mb-2 px-0.5 text-[13px] font-medium text-slate-500">Visits</h3>
+
+            {!hasVisits ? (
+                <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-5 text-center text-[13px] text-slate-500">
+                    Hasn't used this pass yet.
+                </p>
+            ) : (
+                <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70">
+                    {visits.map((visit) => (
+                        <li key={visit.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                            <div className="min-w-0">
+                                <p className="text-[14px] text-[#071f4b]">{visit.day_label}</p>
+                                <p className="mt-0.5 truncate text-[12px] text-slate-500">
+                                    {visit.entry_point ?? 'Gate not recorded'}
+                                </p>
+                            </div>
+                            <p className="shrink-0 text-right text-[13px] text-slate-600 tabular-nums">
+                                {visit.entered_at_label}
+                                {visit.is_inside ? (
+                                    <span className="text-emerald-700"> · Inside</span>
+                                ) : visit.left_at_label ? (
+                                    <span className="text-slate-500">
+                                        {' '}
+                                        – {visit.left_at_label}
+                                        {visit.left_another_day && ' (next day)'}
+                                    </span>
+                                ) : null}
+                            </p>
+                        </li>
+                    ))}
+
+                    {loading &&
+                        Array.from({ length: visits.length === 0 ? 3 : 1 }).map((_, i) => (
+                            <li key={`skeleton-${i}`} className="flex animate-pulse items-center justify-between px-4 py-3.5">
+                                <div className="space-y-1.5">
+                                    <div className="h-3.5 w-20 rounded bg-slate-100" />
+                                    <div className="h-3 w-28 rounded bg-slate-100" />
+                                </div>
+                                <div className="h-3.5 w-24 rounded bg-slate-100" />
+                            </li>
+                        ))}
+
+                    {failed && (
+                        <li className="flex items-center justify-between px-4 py-3 text-[13px]">
+                            <span className="text-slate-500">Couldn't load visits.</span>
+                            <button type="button" onClick={() => load(cursor)} className="font-medium text-[#1a5dbf]">
+                                Try again
+                            </button>
+                        </li>
+                    )}
+
+                    {!loading && !failed && cursor && (
+                        <li>
+                            <button
+                                type="button"
+                                onClick={() => load(cursor)}
+                                className="min-h-[44px] w-full text-center text-[13px] font-medium text-[#1a5dbf] active:bg-slate-50"
+                            >
+                                Show earlier visits
+                            </button>
+                        </li>
+                    )}
+                </ul>
+            )}
+        </section>
+    );
 }
