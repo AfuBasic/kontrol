@@ -449,13 +449,6 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                     <div className="mt-8 flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
                         <button
                             type="button"
-                            onClick={() => setConfirming('renew')}
-                            className="min-h-[48px] px-4 text-left text-[14px] text-[#1a5dbf] active:bg-slate-50"
-                        >
-                            Renew now
-                        </button>
-                        <button
-                            type="button"
                             onClick={() => setConfirming('cancel')}
                             className="min-h-[48px] px-4 text-left text-[14px] text-rose-600 active:bg-slate-50"
                         >
@@ -510,7 +503,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                     {copied ? 'Link copied' : 'Copy pass link'}
                                 </button>
                             )}
-                            {canManage && retainedSelected.can_resend && (
+                            {canManage && retainedSelected.can_resend && retainedSelected.delivery_status === 'failed' && (
                                 <button
                                     type="button"
                                     onClick={() => resendPass(retainedSelected)}
