@@ -265,6 +265,7 @@ class HandleInertiaRequests extends Middleware
                 'sos_success' => $request->session()->get('sos_success'),
                 'validation_result' => $request->session()->get('validation_result'),
             ],
+            'org_on_site_enabled' => fn () => $estate ? (bool) ($estate->settings?->visitor_checkout_enabled ?? false) : false,
             'billing_enabled' => fn () => $estate ? ($estate->settings->charge_type === 'estate') : false,
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
