@@ -29,11 +29,6 @@ class DashboardController extends Controller
         $metrics = $this->arrivalService->getMetrics($organization);
         $activeArrivals = $this->arrivalService->getActiveArrivals($organization);
 
-        // Filter arrivals that need confirmation
-        $pendingArrivals = $activeArrivals
-            ->filter(fn (array $arr) => in_array($arr['confirmation_state'], ['PENDING', 'OVERDUE'], true))
-            ->values();
-
         // Recent activity feed: latest 8 logs (entries/exits) formatted with human action messages
         $recentLogs = AccessLog::withoutGlobalScope(ZoneScope::class)
             ->where('organization_id', $organization->id)
@@ -52,10 +47,6 @@ class DashboardController extends Controller
                 $description = "{$displayName} departed";
                 $timestamp = $log->checked_out_at->diffForHumans();
                 $type = 'checkout';
-            } elseif ($log->confirmed_at) {
-                $description = "{$displayName}'s arrival was confirmed";
-                $timestamp = $log->confirmed_at->diffForHumans();
-                $type = 'confirmed';
             } else {
                 $description = "{$displayName} arrived via {$gate}";
                 $timestamp = $log->verified_at ? $log->verified_at->diffForHumans() : 'Just now';
@@ -80,10 +71,8 @@ class DashboardController extends Controller
                 'name' => $organization->name,
                 'type' => $organization->type,
                 'access_policy' => $organization->access_policy,
-                'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
-                'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
-                'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
                 'estate_name' => $organization->estate?->name,
+                'walk_in' => $organization->walkInStatus(),
                 'visitor_checkout_enabled' => (bool) ($organization->estate?->settings?->visitor_checkout_enabled ?? false),
             ],
             'membership' => [
@@ -93,7 +82,6 @@ class DashboardController extends Controller
             'total_access_members' => $totalAccessMembers,
             'metrics' => $metrics,
             'recent_arrivals' => $activeArrivals->take(10)->values(),
-            'pending_arrivals' => $pendingArrivals,
             'recent_activity' => $recentActivity,
         ]);
     }
