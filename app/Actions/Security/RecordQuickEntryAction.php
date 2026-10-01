@@ -67,9 +67,9 @@ class RecordQuickEntryAction
                 ->where('id', $data['organization_id'])
                 ->firstOrFail();
 
-            if (! $organization->is_active || ! $organization->quick_entry_enabled) {
+            if (! $organization->is_active) {
                 throw ValidationException::withMessages([
-                    'organization_id' => ['Quick entry is currently disabled for this organization.'],
+                    'organization_id' => ['This organization is not active.'],
                 ]);
             }
 
