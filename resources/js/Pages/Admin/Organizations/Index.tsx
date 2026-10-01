@@ -3,12 +3,8 @@ import {
     Building2,
     Plus,
     Search,
-    Clock,
-    Zap,
-    Shield,
     Pencil,
     Trash2,
-    Check,
     X,
     AlertCircle,
     School,
@@ -23,7 +19,7 @@ import {
     MoreHorizontal,
     Power,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import TextInput from '@/Components/UI/TextInput';
@@ -62,16 +58,6 @@ export interface Organization {
     name: string;
     type: 'school' | 'church' | 'hospital' | 'business' | 'facility' | 'other';
     access_policy?: 'unrestricted' | 'public_window' | 'managed';
-    arrival_confirmation_required?: boolean;
-    confirmation_window_minutes?: number;
-    confirmation_escalation?: 'alert_only' | 'flag_security';
-    operating_hours: {
-        open?: string;
-        close?: string;
-        days?: string[];
-        [key: string]: any;
-    } | null;
-    hours_enforcement: 'inherit' | 'off' | 'warn' | 'block';
     quick_entry_enabled: boolean;
     is_active: boolean;
     created_at: string;
@@ -108,20 +94,17 @@ const buildOperationalDetail = (org: Organization): string => {
     const count = org.access_members_count ?? 0;
 
     if (org.type === 'hospital' || org.access_policy === 'unrestricted') {
-        return 'Unrestricted destination · Verification not required';
+        return 'Walk-ins any time';
     }
 
     if (org.access_policy === 'public_window') {
         const nextWindow = org.public_windows?.[0];
         const nextStr = nextWindow ? `Next: ${DAY_LABELS[nextWindow.day_of_week]} ${formatTime(nextWindow.start_time)}` : 'No windows configured';
-        return `Public schedule · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
+        return `Walk-ins during their hours · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
     }
 
-    let line = `Managed access · ${count} member${count !== 1 ? 's' : ''}`;
+    let line = `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
     if (org.quick_entry_enabled) line += ' · Quick Entry';
-    if (org.arrival_confirmation_required) {
-        line += ` · Confirmation ${org.confirmation_window_minutes ?? 30}m`;
-    }
     return line;
 };
 
@@ -188,15 +171,6 @@ const TYPE_CONFIG = {
     },
 } as const;
 
-const DAYS = [
-    { key: 'monday', label: 'Mon' },
-    { key: 'tuesday', label: 'Tue' },
-    { key: 'wednesday', label: 'Wed' },
-    { key: 'thursday', label: 'Thu' },
-    { key: 'friday', label: 'Fri' },
-    { key: 'saturday', label: 'Sat' },
-    { key: 'sunday', label: 'Sun' },
-];
 
 /** Format 24h time 'HH:mm' to 'h:mm A' */
 function formatTime(timeStr?: string | null): string {
@@ -259,12 +233,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 name: org.name,
                 type: org.type,
                 access_policy: org.access_policy ?? 'managed',
-                arrival_confirmation_required: org.arrival_confirmation_required ?? false,
-                confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
-                confirmation_escalation: org.confirmation_escalation ?? 'alert_only',
-                hours_enforcement: org.hours_enforcement ?? 'inherit',
                 quick_entry_enabled: org.quick_entry_enabled ?? true,
-                operating_hours: org.operating_hours,
                 is_active: !org.is_active,
             },
             { preserveScroll: true },
@@ -278,14 +247,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         admin_email: '',
         admin_phone: '',
         access_policy: 'managed' as 'unrestricted' | 'public_window' | 'managed',
-        arrival_confirmation_required: false,
-        confirmation_window_minutes: 30,
-        confirmation_escalation: 'alert_only' as 'alert_only' | 'flag_security',
-        has_hours: true,
-        open_time: '07:30',
-        close_time: '16:00',
-        selected_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        hours_enforcement: 'inherit' as Organization['hours_enforcement'],
         quick_entry_enabled: true,
         is_active: true,
     });
@@ -347,14 +308,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: '',
             admin_phone: '',
             access_policy: 'managed',
-            arrival_confirmation_required: false,
-            confirmation_window_minutes: 30,
-            confirmation_escalation: 'alert_only',
-            has_hours: true,
-            open_time: '07:30',
-            close_time: '16:00',
-            selected_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-            hours_enforcement: 'inherit',
             quick_entry_enabled: true,
             is_active: true,
         });
@@ -365,7 +318,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const openEditModal = (org: Organization) => {
         form.clearErrors();
         setEditingOrg(org);
-        const hours = org.operating_hours;
         const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
 
         form.setData({
@@ -375,14 +327,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_phone: primaryAdmin?.profile?.phone || '',
             access_policy: (org.access_policy ||
                 (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
-            arrival_confirmation_required: Boolean(org.arrival_confirmation_required),
-            confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
-            confirmation_escalation: (org.confirmation_escalation || 'alert_only') as any,
-            has_hours: Boolean(hours && hours.open && hours.close),
-            open_time: hours?.open || '08:00',
-            close_time: hours?.close || '17:00',
-            selected_days: hours?.days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-            hours_enforcement: org.hours_enforcement || 'inherit',
             quick_entry_enabled: org.quick_entry_enabled,
             is_active: org.is_active,
         });
@@ -391,36 +335,18 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
     const handleTypeSelect = (newType: Organization['type']) => {
         const config = TYPE_CONFIG[newType];
-        if (config.isUnrestricted) {
-            form.setData({
-                ...form.data,
-                type: newType,
-                access_policy: 'unrestricted',
-                arrival_confirmation_required: false,
-                has_hours: false,
-                hours_enforcement: 'off',
-                quick_entry_enabled: true,
-            });
-        } else if (config.defaultHours) {
-            form.setData({
-                ...form.data,
-                type: newType,
-                access_policy:
-                    form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
-                has_hours: true,
-                open_time: config.defaultHours.open,
-                close_time: config.defaultHours.close,
-                selected_days: [...config.defaultHours.days],
-                hours_enforcement: 'inherit',
-            });
-        } else {
-            form.setData({
-                ...form.data,
-                type: newType,
-                access_policy:
-                    form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
-            });
-        }
+        form.setData({
+            ...form.data,
+            type: newType,
+            access_policy: config.isUnrestricted
+                ? 'unrestricted'
+                : form.data.access_policy === 'unrestricted'
+                  ? newType === 'church'
+                      ? 'public_window'
+                      : 'managed'
+                  : form.data.access_policy,
+            quick_entry_enabled: config.isUnrestricted ? true : form.data.quick_entry_enabled,
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -435,20 +361,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: form.data.admin_email,
             admin_phone: form.data.admin_phone,
             access_policy: effectivePolicy,
-            arrival_confirmation_required: effectivePolicy === 'unrestricted' ? false : form.data.arrival_confirmation_required,
-            confirmation_window_minutes: form.data.confirmation_window_minutes,
-            confirmation_escalation: form.data.confirmation_escalation,
-            hours_enforcement: isHospital ? 'off' : form.data.hours_enforcement,
             quick_entry_enabled: form.data.quick_entry_enabled,
             is_active: form.data.is_active,
-            operating_hours:
-                !isHospital && form.data.has_hours
-                    ? {
-                          open: form.data.open_time,
-                          close: form.data.close_time,
-                          days: form.data.selected_days,
-                      }
-                    : null,
         };
 
         setIsSubmitting(true);
@@ -477,29 +391,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         router.delete(destroy.url(deletingOrg.id), {
             onSuccess: () => setDeletingOrg(null),
         });
-    };
-
-    const toggleDay = (dayKey: string) => {
-        const current = [...form.data.selected_days];
-        const index = current.indexOf(dayKey);
-        if (index > -1) {
-            if (current.length > 1) {
-                current.splice(index, 1);
-            }
-        } else {
-            current.push(dayKey);
-        }
-        form.setData('selected_days', current);
-    };
-
-    const setDaysPreset = (preset: 'weekdays' | 'daily' | 'weekends') => {
-        if (preset === 'weekdays') {
-            form.setData('selected_days', ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
-        } else if (preset === 'daily') {
-            form.setData('selected_days', ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
-        } else if (preset === 'weekends') {
-            form.setData('selected_days', ['saturday', 'sunday']);
-        }
     };
 
     const isFiltered = Boolean(searchQuery || (selectedType && selectedType !== 'all') || (selectedStatus && selectedStatus !== 'all'));
@@ -928,8 +819,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 {form.data.type === 'hospital' ? (
                                     <div className="rounded-lg border border-rose-100 bg-rose-50 p-3.5 text-xs leading-relaxed text-rose-800">
                                         <span className="mb-0.5 block font-semibold">Unrestricted medical destination</span>
-                                        Security logs visitor details and generates an entry tag immediately 24/7. Physical arrival confirmation is
-                                        never required.
+                                        Walk-ins are admitted any time. Security photographs the visitor's ID and issues an entry tag.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -941,49 +831,18 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 options={[
                                                     {
                                                         value: 'managed',
-                                                        label: 'Managed Access',
-                                                        description: 'Staff, students, and roster members admitted',
+                                                        label: 'No walk-ins',
+                                                        description: 'Only members and visitors with a pass are admitted',
                                                     },
                                                     {
                                                         value: 'public_window',
-                                                        label: 'Public Schedule',
-                                                        description: 'Admit visitors during defined operating hours & windows',
+                                                        label: 'Walk-ins during their hours',
+                                                        description: 'The organization sets its own walk-in hours',
                                                     },
                                                     {
                                                         value: 'unrestricted',
-                                                        label: 'Unrestricted Entry',
-                                                        description: 'Guard issues an entry tag (no arrival confirmation required)',
-                                                    },
-                                                ]}
-                                                size="sm"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <CustomSelect
-                                                label="Outside normal hours"
-                                                value={form.data.hours_enforcement}
-                                                onChange={(val) => form.setData('hours_enforcement', val as any)}
-                                                options={[
-                                                    {
-                                                        value: 'inherit',
-                                                        label: 'Follow estate default',
-                                                        description: 'Inherit estate-wide policy outside schedule',
-                                                    },
-                                                    {
-                                                        value: 'warn',
-                                                        label: 'Warn & require confirmation',
-                                                        description: 'Notify guard and prompt for admission confirmation',
-                                                    },
-                                                    {
-                                                        value: 'block',
-                                                        label: 'Strictly block visitors',
-                                                        description: 'Disallow non-emergency entry outside schedule',
-                                                    },
-                                                    {
-                                                        value: 'off',
-                                                        label: 'Off (informational only)',
-                                                        description: 'Gate logging only without warnings or blocks',
+                                                        label: 'Walk-ins any time',
+                                                        description: 'Always open, e.g. hospitals and clinics',
                                                     },
                                                 ]}
                                                 size="sm"
@@ -1014,205 +873,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             </button>
                                         </div>
 
-                                        {/* Arrival Confirmation Settings (Progressive Disclosure) */}
-                                        {form.data.access_policy !== 'unrestricted' && (
-                                            <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <div className="flex-1 pr-2">
-                                                        <span className="block text-xs font-semibold text-slate-900">
-                                                            Require Arrival Confirmation
-                                                        </span>
-                                                        <span className="block text-[11px] leading-relaxed text-slate-500">
-                                                            Organization admin verifies visitor reached premises (checkout is never blocked)
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        role="switch"
-                                                        aria-checked={form.data.arrival_confirmation_required}
-                                                        onClick={() =>
-                                                            form.setData('arrival_confirmation_required', !form.data.arrival_confirmation_required)
-                                                        }
-                                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                            form.data.arrival_confirmation_required ? 'bg-slate-900' : 'bg-slate-200'
-                                                        }`}
-                                                    >
-                                                        <span
-                                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                                form.data.arrival_confirmation_required ? 'translate-x-4' : 'translate-x-0'
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                </div>
-
-                                                {form.data.arrival_confirmation_required && (
-                                                    <div className="grid grid-cols-2 gap-3 border-t border-slate-200/60 pt-2">
-                                                        <div>
-                                                            <CustomSelect
-                                                                label="Expected arrival window"
-                                                                value={String(form.data.confirmation_window_minutes)}
-                                                                onChange={(val) => form.setData('confirmation_window_minutes', Number(val))}
-                                                                options={[
-                                                                    { value: '15', label: '15 minutes' },
-                                                                    { value: '30', label: '30 minutes' },
-                                                                    { value: '45', label: '45 minutes' },
-                                                                    { value: '60', label: '60 minutes' },
-                                                                    { value: '120', label: '2 hours' },
-                                                                ]}
-                                                                size="sm"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <CustomSelect
-                                                                label="If overdue escalate to"
-                                                                value={form.data.confirmation_escalation}
-                                                                onChange={(val) => form.setData('confirmation_escalation', val as any)}
-                                                                options={[
-                                                                    {
-                                                                        value: 'alert_only',
-                                                                        label: 'Alert only',
-                                                                        description: 'Internal organization dashboard alert',
-                                                                    },
-                                                                    {
-                                                                        value: 'flag_security',
-                                                                        label: 'Flag security terminal',
-                                                                        description: 'Highlight on guard console queue',
-                                                                    },
-                                                                ]}
-                                                                size="sm"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Section 3: Operating hours (Hidden for Hospital) */}
-                            {form.data.type !== 'hospital' && (
-                                <div className="space-y-4 border-t border-slate-100 pt-5">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex-1 pr-2">
-                                            <h3 className="text-sm font-semibold text-slate-900">Operating hours</h3>
-                                            <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                                                Set normal operational days and gate arrival window
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            role="switch"
-                                            aria-checked={form.data.has_hours}
-                                            onClick={() => form.setData('has_hours', !form.data.has_hours)}
-                                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                form.data.has_hours ? 'bg-slate-900' : 'bg-slate-200'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                    form.data.has_hours ? 'translate-x-4' : 'translate-x-0'
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    {form.data.has_hours ? (
-                                        <div className="space-y-4">
-                                            {/* Days Selector with Quick Presets */}
-                                            <div>
-                                                <div className="mb-1.5 flex items-center justify-between">
-                                                    <label className="block text-xs font-medium text-slate-700">Days</label>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setDaysPreset('weekdays')}
-                                                            className="transition-colors hover:text-slate-800"
-                                                        >
-                                                            Weekdays
-                                                        </button>
-                                                        <span>·</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setDaysPreset('daily')}
-                                                            className="transition-colors hover:text-slate-800"
-                                                        >
-                                                            Every day
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {DAYS.map((d) => {
-                                                        const isSelected = form.data.selected_days.includes(d.key);
-                                                        return (
-                                                            <button
-                                                                key={d.key}
-                                                                type="button"
-                                                                onClick={() => toggleDay(d.key)}
-                                                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                                                                    isSelected
-                                                                        ? 'bg-slate-900 text-white'
-                                                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                                                }`}
-                                                            >
-                                                                {d.label}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-
-                                            {/* Hours Pickers */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <CustomSelect
-                                                        label="Opening time"
-                                                        value={form.data.open_time}
-                                                        onChange={(val) => form.setData('open_time', String(val))}
-                                                        options={[
-                                                            { value: '06:00', label: '6:00 AM' },
-                                                            { value: '06:30', label: '6:30 AM' },
-                                                            { value: '07:00', label: '7:00 AM' },
-                                                            { value: '07:30', label: '7:30 AM' },
-                                                            { value: '08:00', label: '8:00 AM' },
-                                                            { value: '08:30', label: '8:30 AM' },
-                                                            { value: '09:00', label: '9:00 AM' },
-                                                            { value: '09:30', label: '9:30 AM' },
-                                                            { value: '10:00', label: '10:00 AM' },
-                                                            { value: '11:00', label: '11:00 AM' },
-                                                            { value: '12:00', label: '12:00 PM' },
-                                                        ]}
-                                                        size="sm"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <CustomSelect
-                                                        label="Closing time"
-                                                        value={form.data.close_time}
-                                                        onChange={(val) => form.setData('close_time', String(val))}
-                                                        options={[
-                                                            { value: '12:00', label: '12:00 PM' },
-                                                            { value: '13:00', label: '1:00 PM' },
-                                                            { value: '14:00', label: '2:00 PM' },
-                                                            { value: '15:00', label: '3:00 PM' },
-                                                            { value: '16:00', label: '4:00 PM' },
-                                                            { value: '17:00', label: '5:00 PM' },
-                                                            { value: '18:00', label: '6:00 PM' },
-                                                            { value: '19:00', label: '7:00 PM' },
-                                                            { value: '20:00', label: '8:00 PM' },
-                                                            { value: '21:00', label: '9:00 PM' },
-                                                            { value: '22:00', label: '10:00 PM' },
-                                                        ]}
-                                                        size="sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-xs text-slate-400">No schedule set - operates 24/7 or per special event.</p>
-                                    )}
+                            {form.data.type !== 'hospital' && form.data.access_policy === 'public_window' && (
+                                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-600">
+                                    <span className="mb-0.5 block font-semibold text-slate-900">Walk-in hours</span>
+                                    The organization's admin sets and updates its walk-in hours from their Profile. Until they do, walk-ins are
+                                    turned away.
                                 </div>
                             )}
 
@@ -1256,7 +925,11 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         <span className="text-xs font-medium text-slate-700">{currentTypeConfig.label}</span>
                                         <span className="text-xs text-slate-400">·</span>
                                         <span className="text-xs text-slate-500">
-                                            {form.data.type === 'hospital' ? 'Unrestricted' : 'Managed Access'}
+                                            {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
+                                                ? 'Walk-ins any time'
+                                                : form.data.access_policy === 'public_window'
+                                                  ? 'Walk-ins during their hours'
+                                                  : 'No walk-ins'}
                                         </span>
                                     </div>
                                 </div>
@@ -1266,60 +939,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         <span className="mb-0.5 block font-medium text-slate-400">Policy</span>
                                         <p className="leading-relaxed text-slate-700">
                                             {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
-                                                ? '24/7 Unrestricted Medical / Emergency Access'
+                                                ? 'Walk-ins admitted any time'
                                                 : form.data.access_policy === 'public_window'
-                                                  ? 'Public Schedule (Windows & Operating Hours)'
-                                                  : 'Managed Access (Staff, Students & Member Roster)'}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Outside Hours Rule</span>
-                                        <p className="leading-relaxed text-slate-700">
-                                            {form.data.type === 'hospital'
-                                                ? 'Exempt (24/7)'
-                                                : form.data.hours_enforcement === 'inherit'
-                                                  ? 'Follow estate default policy'
-                                                  : form.data.hours_enforcement === 'warn'
-                                                    ? 'Warn security guard & require confirmation'
-                                                    : form.data.hours_enforcement === 'block'
-                                                      ? 'Strictly block visitors outside schedule'
-                                                      : 'Off (informational schedule only)'}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Operating hours</span>
-                                        {form.data.type === 'hospital' ? (
-                                            <p className="text-slate-700">Open 24/7 · Emergency exempt</p>
-                                        ) : form.data.has_hours ? (
-                                            <div>
-                                                <p className="font-medium text-slate-800">
-                                                    {formatTime(form.data.open_time)} – {formatTime(form.data.close_time)}
-                                                </p>
-                                                <p className="mt-0.5 text-slate-500">
-                                                    {form.data.selected_days.length === 7
-                                                        ? 'Every day'
-                                                        : form.data.selected_days.length === 5 &&
-                                                            !form.data.selected_days.includes('saturday') &&
-                                                            !form.data.selected_days.includes('sunday')
-                                                          ? 'Monday to Friday'
-                                                          : `${form.data.selected_days.length} days / week`}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-slate-500">No schedule set (operates 24/7)</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Arrival Confirmation</span>
-                                        <p className="text-slate-700">
-                                            {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
-                                                ? 'Not required'
-                                                : form.data.arrival_confirmation_required
-                                                  ? `Required within ${form.data.confirmation_window_minutes}m`
-                                                  : 'Disabled'}
+                                                  ? 'Walk-ins admitted during the hours the organization sets'
+                                                  : 'No walk-ins; members and pass holders only'}
                                         </p>
                                     </div>
 
