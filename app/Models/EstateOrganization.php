@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -118,32 +119,78 @@ class EstateOrganization extends Model
     }
 
     /**
-     * Check if the organization is within any active public window right now.
+     * Check if the organization is within any active public window (now, or at a given time).
      */
-    public function isWithinPublicWindow(): bool
+    public function isWithinPublicWindow(?CarbonInterface $at = null): bool
     {
-        $now = CarbonImmutable::now();
+        $at ??= CarbonImmutable::now();
 
         return $this->publicWindows()
             ->where('is_active', true)
             ->get()
-            ->contains(fn ($window) => $window->isOpenAt($now));
+            ->contains(fn ($window) => $window->isOpenAt($at));
+    }
+
+    /**
+     * Whether a walk-in (quick entry) may be admitted at the given time.
+     *
+     * Unrestricted organizations are always open, public-window organizations only during an
+     * open window, and managed organizations never take walk-ins. Closed means no entry.
+     */
+    public function acceptsWalkInsAt(?CarbonInterface $at = null): bool
+    {
+        return match ($this->access_policy) {
+            'unrestricted' => true,
+            'public_window' => $this->isWithinPublicWindow($at),
+            default => false,
+        };
+    }
+
+    /**
+     * Walk-in status for the gate's destination picker.
+     *
+     * @return array{open: bool, label: string}
+     */
+    public function walkInStatus(): array
+    {
+        if ($this->access_policy === 'unrestricted') {
+            return ['open' => true, 'label' => 'Always open'];
+        }
+
+        if ($this->access_policy !== 'public_window') {
+            return ['open' => false, 'label' => 'Closed to walk-ins'];
+        }
+
+        $now = CarbonImmutable::now();
+        $windows = $this->publicWindows()->where('is_active', true)->get();
+
+        $current = $windows->first(fn ($window) => $window->isOpenAt($now));
+        if ($current) {
+            return ['open' => true, 'label' => 'Open until '.CarbonImmutable::parse($current->end_time)->format('g:i A')];
+        }
+
+        // Next opening within the coming week.
+        for ($offset = 0; $offset <= 7; $offset++) {
+            $day = $now->addDays($offset);
+            $next = $windows
+                ->filter(fn ($window) => (int) $window->day_of_week === $day->dayOfWeek)
+                ->sortBy('start_time')
+                ->first(fn ($window) => $offset > 0 || substr($window->start_time, 0, 8) > $now->format('H:i:s'));
+
+            if ($next) {
+                $time = CarbonImmutable::parse($next->start_time)->format('g:i A');
+                $when = $offset === 0 ? "today {$time}" : ($offset === 1 ? "tomorrow {$time}" : $day->format('D')." {$time}");
+
+                return ['open' => false, 'label' => "Closed · opens {$when}"];
+            }
+        }
+
+        return ['open' => false, 'label' => 'Closed'];
     }
 
     public function isUnrestricted(): bool
     {
         return $this->access_policy === 'unrestricted';
-    }
-
-    /**
-     * Resolve the effective hours enforcement mode for this organization.
-     *
-     * Since hours_enforcement was removed from estate_organizations,
-     * enforcement is now estate-level only via EstateSettings::quick_entry_hours_enforcement.
-     */
-    public function resolvedEnforcement(EstateSettings $settings): string
-    {
-        return $settings->quick_entry_hours_enforcement ?: 'warn';
     }
 
     /**
