@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers\Organization;
 
-use App\Actions\Organization\ConfirmArrivalAction;
 use App\Http\Controllers\Controller;
-use App\Models\AccessLog;
 use App\Models\EstateOrganization;
 use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +15,6 @@ class ArrivalController extends Controller
     public function __construct(
         private OrganizationContextService $contextService,
         private ArrivalService $arrivalService,
-        private ConfirmArrivalAction $confirmAction,
     ) {}
 
     public function index(Request $request): Response
@@ -69,20 +65,5 @@ class ArrivalController extends Controller
             'logs' => $logs,
             'filters' => $filters,
         ]);
-    }
-
-    public function confirm(Request $request, int|string $log): RedirectResponse
-    {
-        /** @var EstateOrganization $organization */
-        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
-
-        /** @var AccessLog $accessLog */
-        $accessLog = AccessLog::withoutZoneIsolation()
-            ->where('organization_id', $organization->id)
-            ->findOrFail($log);
-
-        $this->confirmAction->execute($accessLog, $request->user());
-
-        return back()->with('success', 'Arrival confirmed successfully.');
     }
 }
