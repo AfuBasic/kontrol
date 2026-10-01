@@ -1,10 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, Loader2, MoreHorizontal, Search, Send, Trash2, Users } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, Loader2, MoreHorizontal, Search, Send, Share2, Trash2, Users } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
+import { shareAccessCode } from '@/Utils/share';
 
 interface Recipient {
     id: number;
@@ -17,6 +18,8 @@ interface Recipient {
     can_resend: boolean;
     pass_valid_label: string | null;
     pass_starts_later: boolean;
+    pass_starts_at: string | null;
+    pass_expires_at: string | null;
     qr_url: string | null;
     visits_count: number;
     last_visit_label: string | null;
@@ -139,6 +142,37 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
         : bulkInvite.next_renewal_label
           ? `Next on ${bulkInvite.next_renewal_label}`
           : null;
+
+    const ticketRef = useRef<HTMLDivElement>(null);
+    const [sharing, setSharing] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const sharePass = async (recipient: Recipient) => {
+        if (sharing || !recipient.code) return;
+        setSharing(true);
+        try {
+            const result = await shareAccessCode(
+                {
+                    id: recipient.id,
+                    code: recipient.code,
+                    type: 'bulk_visitor',
+                    visitor_name: recipient.email.split('@')[0],
+                    pass_uuid: recipient.pass_uuid ?? undefined,
+                    starts_at: recipient.pass_starts_at,
+                    expires_at: recipient.pass_expires_at,
+                    estate_name: organization.name,
+                } as any,
+                ticketRef.current,
+                { trackShare: false },
+            );
+            if (result?.method === 'copy' && result.success) {
+                setShareCopied(true);
+                setTimeout(() => setShareCopied(false), 2500);
+            }
+        } finally {
+            setSharing(false);
+        }
+    };
 
     const copyPassLink = (recipient: Recipient) => {
         if (!recipient.pass_uuid) return;
@@ -473,7 +507,14 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email ?? retainedSelected?.email}>
                 {retainedSelected && (
                     <div className="flex flex-col gap-5 pb-2">
-                        <PassTicket key={retainedSelected.id} recipient={retainedSelected} />
+                        <div ref={ticketRef}>
+                            <PassTicket
+                                key={retainedSelected.id}
+                                recipient={retainedSelected}
+                                organizationName={organization.name}
+                                groupName={title}
+                            />
+                        </div>
                         {retainedSelected.delivery_error && (
                             <p className="-mt-3 text-[12px] text-rose-600">{retainedSelected.delivery_error}</p>
                         )}
@@ -490,6 +531,23 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                         />
 
                         <div className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70">
+                            {retainedSelected.qr_url && (
+                                <button
+                                    type="button"
+                                    onClick={() => sharePass(retainedSelected)}
+                                    disabled={sharing}
+                                    className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] font-medium text-[#1a5dbf] active:bg-slate-50 disabled:opacity-60"
+                                >
+                                    {sharing ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : shareCopied ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <Share2 className="h-4 w-4" />
+                                    )}
+                                    {sharing ? 'Preparing pass…' : shareCopied ? 'Pass details copied' : 'Share pass'}
+                                </button>
+                            )}
                             {retainedSelected.pass_uuid && (
                                 <button
                                     type="button"
@@ -700,11 +758,26 @@ function VisitHistory({ url, hasVisits }: { url: string; hasVisits: boolean }) {
  * The person's gate pass, styled like the visitor PassCard: QR on a blue field,
  * a perforated divider, and the typed fallback code underneath.
  */
-function PassTicket({ recipient }: { recipient: Recipient }) {
+function PassTicket({
+    recipient,
+    organizationName,
+    groupName,
+}: {
+    recipient: Recipient;
+    organizationName: string;
+    groupName: string;
+}) {
     const [loaded, setLoaded] = useState(false);
 
     return (
         <div className="overflow-hidden rounded-[24px] border border-blue-100 bg-white">
+            <div className="flex items-center justify-between gap-3 border-b border-blue-100 bg-blue-50/40 px-5 py-3">
+                <div className="min-w-0">
+                    <p className="truncate text-[14px] font-semibold text-[#071f4b]">{organizationName}</p>
+                    <p className="truncate text-[11px] text-slate-500">{groupName} · Access pass</p>
+                </div>
+                <img src={KONTROL_LOGO_BASE64} alt="Kontrol" className="h-7 w-7 shrink-0 object-contain" />
+            </div>
             <div className="flex flex-col items-center bg-blue-50/50 px-5 pt-5 pb-4">
                 <div className="relative rounded-2xl border border-blue-100 bg-white p-3 shadow-xs">
                     {recipient.qr_url ? (
@@ -712,12 +785,13 @@ function PassTicket({ recipient }: { recipient: Recipient }) {
                             {!loaded && <div className="absolute inset-3 animate-pulse rounded-lg bg-slate-100" />}
                             <img
                                 src={recipient.qr_url}
-                                alt={`Gate QR for ${recipient.email}`}
+                                // shareAccessCode looks the QR up by this alt text to bake the logo into the shared image.
+                                alt="Access QR Code"
                                 onLoad={() => setLoaded(true)}
                                 className={`block h-40 w-40 transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'}`}
                             />
                             {loaded && (
-                                <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg bg-white p-1">
+                                <div className="share-exclude absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg bg-white p-1">
                                     <img src={KONTROL_LOGO_BASE64} alt="" className="h-6 w-6 object-contain" />
                                 </div>
                             )}
