@@ -75,6 +75,7 @@ class AccessMemberController extends Controller
                 'access_policy' => $organization->access_policy,
                 'estate_name' => $organization->estate?->name,
                 'walk_in' => $organization->walkInStatus(),
+                'needs_walk_in_hours' => $organization->needsWalkInHours(),
                 'visitor_checkout_enabled' => (bool) ($organization->estate?->settings?->visitor_checkout_enabled ?? false),
             ],
             'membership' => [
