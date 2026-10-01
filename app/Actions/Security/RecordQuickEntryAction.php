@@ -5,6 +5,7 @@ namespace App\Actions\Security;
 use App\Actions\Visitor\ResolveVisitorIdentityAction;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use App\Services\Visitor\TagGeneratorService;
@@ -57,6 +58,23 @@ class RecordQuickEntryAction
             }
         } else {
             $tag = $this->tagGenerator->generateUnique($estateId);
+        }
+
+        $settings = EstateSettings::where('estate_id', $estateId)->first();
+
+        // The estate's switch is the rule; the gate screen merely reflects it.
+        if ($settings && ! $settings->quick_entry_enabled) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['Walk-in entry is switched off for this estate.'],
+            ]);
+        }
+
+        // A vehicle that was reported must be identifiable when the estate requires vehicle details.
+        $reportsVehicle = ! empty($data['vehicle_make']) || ! empty($data['vehicle_model']) || ! empty($data['vehicle_plate_number']);
+        if ($settings?->require_vehicle_information && $reportsVehicle && empty($data['vehicle_plate_number'])) {
+            throw ValidationException::withMessages([
+                'vehicle_plate_number' => ['Enter the vehicle plate number.'],
+            ]);
         }
 
         $idPhotoFile = $data['id_photo'] ?? null;
