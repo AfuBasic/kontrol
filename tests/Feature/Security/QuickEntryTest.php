@@ -265,22 +265,36 @@ it('explains when no visitor inside holds the tag', function () {
         ->assertJsonValidationErrors(['tag']);
 });
 
-it('lists every active organization on the gate, with walk-in status, so closed ones can be explained', function () {
+it('lists only organizations that take walk-ins on the gate, with their status', function () {
     EstateOrganization::factory()->create([
         'estate_id' => $this->estate->id,
         'name' => 'Dormant Org',
         'is_active' => false,
         'access_policy' => 'unrestricted',
     ]);
+    // Takes walk-ins during its hours but has none set yet: still listed, as closed.
+    ($this->makeOrg)('public_window', 'New Church');
 
     $props = ($this->asGuard)()->get(route('security.verify'))->assertOk()->inertiaPage()['props'];
     $byName = collect($props['organizations'])->keyBy('name');
 
-    expect($byName)->toHaveKeys(['Grace Chapel', 'City Hospital', 'Lounge Bar'])
+    expect($byName->keys()->sort()->values()->all())->toBe(['City Hospital', 'Grace Chapel', 'New Church'])
+        ->and($byName)->not->toHaveKey('Lounge Bar')
         ->and($byName)->not->toHaveKey('Dormant Org')
         ->and($byName['City Hospital']['is_open'])->toBeTrue()
-        ->and($byName['Lounge Bar']['is_open'])->toBeFalse()
-        ->and($byName['Lounge Bar']['status_label'])->toBe('Closed to walk-ins');
+        ->and($byName['Grace Chapel']['is_open'])->toBeTrue()
+        ->and($byName['New Church']['is_open'])->toBeFalse()
+        ->and($byName['New Church']['status_label'])->toBe('No walk-in hours set');
+});
+
+it('leaves an organization off the gate list once it stops taking walk-ins', function () {
+    $names = fn () => collect(($this->asGuard)()->get(route('security.verify'))->inertiaPage()['props']['organizations'])->pluck('name');
+
+    expect($names())->toContain('City Hospital');
+
+    $this->hospital->update(['access_policy' => 'managed']);
+
+    expect($names())->not->toContain('City Hospital');
 });
 
 it('refuses walk-ins to an inactive organization', function () {
