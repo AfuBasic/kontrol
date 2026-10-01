@@ -88,7 +88,7 @@ export default function AccessHeader({
                     activeTab={activeTab}
                     pendingCount={pendingCount}
                     activeCount={activeCount}
-                    showOnSiteTab={showOnSiteTab ?? !!organization.visitor_checkout_enabled}
+                    showOnSiteTab={showOnSiteTab ?? !!(organization.visitor_checkout_enabled ?? props.org_on_site_enabled)}
                     onTabChange={onTabChange}
                 />
             </div>
