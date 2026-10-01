@@ -445,7 +445,7 @@ class OrganizationBulkInviteController extends Controller
     /**
      * The pass shown for a recipient: the one valid today, else the next one to start.
      *
-     * @return array{code: string|null, pass_uuid: string|null, pass_valid_label: string|null, pass_starts_later: bool, qr_url: string|null}
+     * @return array{code: string|null, pass_uuid: string|null, pass_valid_label: string|null, pass_starts_later: bool, pass_starts_at: string|null, pass_expires_at: string|null, qr_url: string|null}
      */
     private function currentPassPayload(OrganizationBulkInvite $bulkInvite, OrganizationBulkInviteRecipient $recipient): array
     {
@@ -457,6 +457,8 @@ class OrganizationBulkInviteController extends Controller
                 'pass_uuid' => $recipient->lastAccessCode?->pass_uuid,
                 'pass_valid_label' => null,
                 'pass_starts_later' => false,
+                'pass_starts_at' => null,
+                'pass_expires_at' => null,
                 'qr_url' => null,
             ];
         }
@@ -471,6 +473,8 @@ class OrganizationBulkInviteController extends Controller
                 ? $this->shortDate($startsAt).' – '.$this->shortDate($expiresAt)
                 : ($expiresAt ? 'Until '.$this->shortDate($expiresAt) : null),
             'pass_starts_later' => $startsAt !== null && $startsAt->isFuture(),
+            'pass_starts_at' => $startsAt?->toISOString(),
+            'pass_expires_at' => $expiresAt?->toISOString(),
             'qr_url' => route('org.bulk-invites.recipients.qr', [$bulkInvite, $recipient]),
         ];
     }
