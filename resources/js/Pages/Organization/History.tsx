@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import FilterChips from '@/Components/Organization/FilterChips';
@@ -16,8 +16,6 @@ interface Log {
     verified_at_human: string | null;
     checked_out_at: string | null;
     checked_out_at_human: string | null;
-    confirmed_at: string | null;
-    confirmation_state: string;
 }
 
 interface PaginatedLogs {
