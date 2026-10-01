@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Car, CheckCircle2, Flame, Gauge, Loader2, RefreshCw, ShieldAlert, Tag, User, X, Zap } from 'lucide-react';
-import { QuickEntryStore, type ReservedTag } from '@/Resilience/OfflineStorage/QuickEntryStore';
+import { Building2, Car, CheckCircle2, Gauge, Loader2, ShieldAlert, Tag, User, X } from 'lucide-react';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 
 interface Organization {
@@ -21,6 +20,16 @@ interface QuickEntryPanelProps {
 }
 
 
+// Same unambiguous charset as the server's TagGeneratorService (no 0/O, 1/I/L).
+const TAG_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+/** A 4-character tag for entries issued while the gate is offline; the server keeps it on sync. */
+function generateDeviceTag(): string {
+    const bytes = new Uint32Array(4);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => TAG_CHARSET[b % TAG_CHARSET.length]).join('');
+}
+
 export default function QuickEntryPanel({
     organizations,
     estateName: _estateName,
@@ -36,8 +45,6 @@ export default function QuickEntryPanel({
     const [vehicleModel, setVehicleModel] = useState('');
     const [rushMode, setRushMode] = useState(false);
 
-    const [poolCount, setPoolCount] = useState<number>(0);
-    const [reserving, setReserving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     // Latest issued tag modal/banner state
@@ -52,55 +59,7 @@ export default function QuickEntryPanel({
 
     const selectedOrg = organizations.find((o) => o.id === selectedOrgId);
 
-    // Update remaining pool count
-    const updatePoolCount = async () => {
-        const count = await QuickEntryStore.countRemainingTags();
-        setPoolCount(count);
-    };
-
-    useEffect(() => {
-        void updatePoolCount();
-    }, []);
-
-    // Reserve more tags from server
-    const reserveMoreTags = async () => {
-        if (!isOnline) {
-            setErrorMessage('Cannot reserve tags while offline. Please connect to internet.');
-            return;
-        }
-
-        setReserving(true);
-        setErrorMessage(null);
-        try {
-            const res = await axios.get('/security/quick-entry/reserve', {
-                params: { count: 50 },
-            });
-            if (res.data?.success && res.data.data?.tags) {
-                const allocationId = res.data.data.allocation_id;
-                const newItems: ReservedTag[] = res.data.data.tags.map((t: string) => ({
-                    tag: t,
-                    allocation_id: allocationId,
-                    created_at: new Date().toISOString(),
-                }));
-                await QuickEntryStore.addTags(newItems);
-                await updatePoolCount();
-            }
-        } catch (err: any) {
-            console.error('Failed to reserve tags:', err);
-            setErrorMessage(err.response?.data?.message || 'Failed to reserve tags from gate server.');
-        } finally {
-            setReserving(false);
-        }
-    };
-
-    // Auto-reserve if pool is low and online
-    useEffect(() => {
-        if (isOnline && poolCount < 10 && !reserving) {
-            void reserveMoreTags();
-        }
-    }, [poolCount, isOnline]);
-
-    const handleAssignEntry = async (skipHoursConfirm = false) => {
+    const handleAssignEntry = async () => {
         if (!selectedOrgId || !selectedOrg) {
             setErrorMessage('Please select a destination organization.');
             return;
@@ -114,63 +73,45 @@ export default function QuickEntryPanel({
         setSubmitting(true);
         setErrorMessage(null);
 
+        const chosenOrgName = selectedOrg.name || 'Organization';
+        const entryPayload = {
+            organization_id: selectedOrgId,
+            visitor_name: visitorName.trim() || null,
+            vehicle_plate_number: hasVehicle && plateNumber.trim() ? plateNumber.trim().toUpperCase() : null,
+            vehicle_make: hasVehicle && vehicleMake.trim() ? vehicleMake.trim() : null,
+            vehicle_model: hasVehicle && vehicleModel.trim() ? vehicleModel.trim() : null,
+        };
+
         try {
-            // Pick tag from local pre-allocated pool
-            let tagItem = await QuickEntryStore.getNextTag();
-
-            if (!tagItem && isOnline) {
-                // Try immediate reservation
-                const res = await axios.get('/security/quick-entry/reserve', {
-                    params: { count: 20 },
-                });
-                if (res.data?.success && res.data.data?.tags?.length > 0) {
-                    const allocationId = res.data.data.allocation_id;
-                    const items: ReservedTag[] = res.data.data.tags.map((t: string) => ({
-                        tag: t,
-                        allocation_id: allocationId,
-                        created_at: new Date().toISOString(),
-                    }));
-                    await QuickEntryStore.addTags(items);
-                    tagItem = await QuickEntryStore.getNextTag();
-                }
-            }
-
-            if (!tagItem) {
-                setErrorMessage('No quick entry tags available in gate pool! Please fetch tags or connect to network.');
-                setSubmitting(false);
-                return;
-            }
-
-            const chosenOrg = selectedOrg;
-
-            const entryPayload = {
-                tag: tagItem.tag,
-                organization_id: selectedOrgId,
-                visitor_name: visitorName.trim() || null,
-                vehicle_plate_number: hasVehicle && plateNumber.trim() ? plateNumber.trim().toUpperCase() : null,
-                vehicle_make: hasVehicle && vehicleMake.trim() ? vehicleMake.trim() : null,
-                vehicle_model: hasVehicle && vehicleModel.trim() ? vehicleModel.trim() : null,
-                allocation_id: tagItem.allocation_id,
-            };
+            let issued = false;
 
             if (isOnline) {
                 try {
-                    await axios.post('/security/quick-entry/log', entryPayload);
+                    // The server issues the tag; show the guard exactly what was recorded.
+                    const res = await axios.post('/security/quick-entry/log', entryPayload);
                     setLastIssued({
-                        tag: tagItem.tag,
-                        orgName: chosenOrg?.name || 'Organization',
+                        tag: res.data.tag,
+                        orgName: res.data.organization_name || chosenOrgName,
                         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         isOffline: false,
                     });
-                } catch (_netErr) {
-                    // Fallback to offline queue
-                    await queueOfflineEntry(entryPayload, tagItem.tag, chosenOrg?.name || 'Organization');
+                    issued = true;
+                } catch (err: any) {
+                    // A server answer (e.g. outside the public window) is a real refusal: show it.
+                    // Only a missing response means the network failed and we fall back to offline.
+                    if (err?.response) {
+                        const data = err.response.data;
+                        const firstError = data?.errors ? (Object.values(data.errors)[0] as string[] | undefined)?.[0] : null;
+                        setErrorMessage(firstError || data?.message || 'Quick entry was refused by the gate server.');
+                        return;
+                    }
                 }
-            } else {
-                await queueOfflineEntry(entryPayload, tagItem.tag, chosenOrg?.name || 'Organization');
             }
 
-            await updatePoolCount();
+            if (!issued) {
+                const tag = generateDeviceTag();
+                await queueOfflineEntry({ ...entryPayload, tag }, tag, chosenOrgName);
+            }
 
             // Clear inputs unless rush mode
             if (!rushMode) {
@@ -213,7 +154,7 @@ export default function QuickEntryPanel({
 
     return (
         <div className="flex w-full flex-col items-center">
-            {/* Rush Mode and Pool Status Banner */}
+            {/* Rush Mode and connectivity banner */}
             <div className="mb-4 flex w-full items-center justify-between gap-2">
                 <button
                     type="button"
@@ -228,23 +169,11 @@ export default function QuickEntryPanel({
                     <span>{rushMode ? 'Rush Mode ON' : 'Rush Mode'}</span>
                 </button>
 
-                <div className="flex items-center gap-2">
-                    <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        Pool:{' '}
-                        <span className={poolCount <= 5 ? 'font-extrabold text-rose-600' : 'font-extrabold text-emerald-600'}>{poolCount} tags</span>
+                {!isOnline && (
+                    <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-amber-200">
+                        Offline · tags issued on this device
                     </span>
-                    {isOnline && (
-                        <button
-                            type="button"
-                            onClick={reserveMoreTags}
-                            disabled={reserving}
-                            title="Reserve more gate tags"
-                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-xs hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
-                        >
-                            <RefreshCw className={`h-3 w-3 ${reserving ? 'animate-spin text-indigo-600' : ''}`} />
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
 
             {/* Success Card Modal / Banner when tag is issued */}
@@ -435,7 +364,7 @@ export default function QuickEntryPanel({
             <div className="mt-6 w-full">
                 <button
                     type="button"
-                    onClick={() => handleAssignEntry(false)}
+                    onClick={() => handleAssignEntry()}
                     disabled={submitting || organizations.length === 0}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4.5 text-base font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-95 hover:bg-indigo-700 disabled:opacity-50"
                 >
