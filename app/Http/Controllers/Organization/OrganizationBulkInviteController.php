@@ -352,6 +352,8 @@ class OrganizationBulkInviteController extends Controller
                     'left_at_label' => $leftAt?->isoFormat('h:mm A'),
                     'left_another_day' => $leftAt !== null && ! $leftAt->isSameDay($enteredAt),
                     'entry_point' => $log->entry_point,
+                    // Check-out gate lives in meta (access_logs has no exit_point column).
+                    'exit_point' => $leftAt ? ($log->meta['exit_point'] ?? null) : null,
                     'is_inside' => $leftAt === null && $enteredAt->isToday(),
                 ];
             })->values(),
