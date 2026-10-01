@@ -78,7 +78,14 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
     const [submitting, setSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [tagSheetOpen, setTagSheetOpen] = useState(false);
-    const [issued, setIssued] = useState<{ tag: string; orgName: string; timestamp: string; isOffline: boolean; isReturning: boolean } | null>(null);
+    const [issued, setIssued] = useState<{
+        tag: string;
+        visitorName: string | null;
+        orgName: string;
+        timestamp: string;
+        isOffline: boolean;
+        isReturning: boolean;
+    } | null>(null);
 
     const cameraInput = useRef<HTMLInputElement>(null);
     const canAdmit = !!destination?.is_open && !!idPhoto && !submitting && !processingPhoto;
@@ -138,6 +145,7 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                     rememberDestination(destination.id);
                     showIssued({
                         tag: res.data.tag,
+                        visitorName: res.data.visitor_name ?? null,
                         orgName: res.data.organization_name || destination.name,
                         timestamp: now(),
                         isOffline: false,
@@ -165,7 +173,7 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                 retryPolicyKey: 'quick_entry_log',
             });
             rememberDestination(destination.id);
-            showIssued({ tag, orgName: destination.name, timestamp: now(), isOffline: true, isReturning: false });
+            showIssued({ tag, visitorName: fields.visitor_name, orgName: destination.name, timestamp: now(), isOffline: true, isReturning: false });
             resetVisitor();
         } catch (err: any) {
             console.error('Walk-in admission failed', err);
@@ -346,6 +354,10 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                         </motion.div>
 
                         <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-900">Admitted</h2>
+                        {/* The name that was recorded, so the guard can see it (typed now, or saved for this ID) */}
+                        {issued.visitorName && issued.visitorName !== 'Unknown Visitor' && (
+                            <p className="mt-1 text-lg font-bold text-slate-800">{issued.visitorName}</p>
+                        )}
                         <p className="mt-0.5 text-sm font-medium text-slate-500">
                             {issued.orgName} · {issued.timestamp}
                         </p>
