@@ -59,20 +59,15 @@ it('allows estate admin to view organizations index page', function () {
         );
 });
 
-it('allows estate admin to create a new organization with operating hours and enforcement', function () {
+it('allows estate admin to create a new organization with a walk-in policy', function () {
     $response = $this->actingAs($this->admin)
         ->withSession(['active_context_assignment_id' => $this->assignment->id])
         ->post(route('admin.organizations.store'), [
             'name' => 'St. Mary High School',
             'type' => 'school',
-            'hours_enforcement' => 'block',
+            'access_policy' => 'public_window',
             'quick_entry_enabled' => true,
             'is_active' => true,
-            'operating_hours' => [
-                'open' => '07:30',
-                'close' => '16:00',
-                'days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-            ],
         ]);
 
     $response->assertRedirect()
@@ -82,14 +77,10 @@ it('allows estate admin to create a new organization with operating hours and en
         'estate_id' => $this->estate->id,
         'name' => 'St. Mary High School',
         'type' => 'school',
-        'hours_enforcement' => 'block',
+        'access_policy' => 'public_window',
         'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
-
-    $org = EstateOrganization::where('name', 'St. Mary High School')->first();
-    expect($org->operating_hours['open'])->toBe('07:30')
-        ->and($org->operating_hours['close'])->toBe('16:00');
 });
 
 it('allows estate admin to update an existing organization', function () {
@@ -97,7 +88,6 @@ it('allows estate admin to update an existing organization', function () {
         'estate_id' => $this->estate->id,
         'name' => 'Old Name',
         'type' => 'business',
-        'hours_enforcement' => 'inherit',
         'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
@@ -107,7 +97,6 @@ it('allows estate admin to update an existing organization', function () {
         ->put(route('admin.organizations.update', $org->id), [
             'name' => 'Updated Community Hospital',
             'type' => 'hospital',
-            'hours_enforcement' => 'off',
             'quick_entry_enabled' => false,
             'is_active' => false,
         ]);
@@ -118,7 +107,6 @@ it('allows estate admin to update an existing organization', function () {
     $org->refresh();
     expect($org->name)->toBe('Updated Community Hospital')
         ->and($org->type)->toBe('hospital')
-        ->and($org->hours_enforcement)->toBe('off')
         ->and($org->quick_entry_enabled)->toBeFalse()
         ->and($org->is_active)->toBeFalse();
 });
@@ -166,7 +154,6 @@ it('allows estate admin to create an organization with an initial administrator'
             'type' => 'school',
             'admin_email' => 'sarah.johnson@greenwood.edu',
             'admin_phone' => '+2348012345678',
-            'hours_enforcement' => 'warn',
             'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
@@ -249,7 +236,6 @@ it('allows an already existing resident user to be assigned as organization admi
             'type' => 'facility',
             'admin_email' => 'resident.john@example.com',
             'admin_phone' => '+2348000000001',
-            'hours_enforcement' => 'inherit',
             'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
