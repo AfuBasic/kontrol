@@ -19,12 +19,12 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
     // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
     if (status === 'past_due') {
         if (is_grace_period) {
-            return <Banner title="Overdue" description="Grace period active" cta="Settle now" onCtaClick={openExternalBilling} variant="grace" />;
+            return <Banner title="Overdue" description="Grace period active" cta="Settle now" onCtaClick={() => openExternalBilling({ destination: 'payment' })} variant="grace" />;
         }
 
         if (!is_active) {
             return (
-                <Banner title="Account inactive" description="Access limited" cta="Settle now" onCtaClick={openExternalBilling} variant="inactive" />
+                <Banner title="Account inactive" description="Access limited" cta="Settle now" onCtaClick={() => openExternalBilling({ destination: 'payment' })} variant="inactive" />
             );
         }
     }
@@ -42,11 +42,11 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
         const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffTime < 0) {
-            return <Banner title="Trial expired" description="Access limited" cta="Settle now" onCtaClick={openExternalBilling} variant="inactive" />;
+            return <Banner title="Trial expired" description="Access limited" cta="Settle now" onCtaClick={() => openExternalBilling({ destination: 'payment' })} variant="inactive" />;
         }
 
         if (diffTime === 0) {
-            return <Banner title="Trial period" description="Ends today" cta="Settle now" onCtaClick={openExternalBilling} variant="grace" />;
+            return <Banner title="Trial period" description="Ends today" cta="Settle now" onCtaClick={() => openExternalBilling({ destination: 'payment' })} variant="grace" />;
         }
 
         // Less than or equal to 3 days: show 'Settle now'
@@ -58,7 +58,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 title="Trial period"
                 description={`Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
                 cta={showCta ? 'Settle now' : undefined}
-                onCtaClick={openExternalBilling}
+                onCtaClick={() => openExternalBilling({ destination: 'payment' })}
                 variant={daysLeft <= 3 ? 'grace' : 'active'}
             />
         );

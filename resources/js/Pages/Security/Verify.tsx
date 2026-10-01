@@ -13,9 +13,8 @@ import SecurityLayout from '@/Layouts/SecurityLayout';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 import { SecurityStore, sha256 } from '@/Resilience/OfflineStorage/SecurityStore';
 import { SyncStatus } from '@/Resilience/SyncStatus';
-import QuickEntryPanel from '@/Components/Security/QuickEntryPanel';
-import QuickEntryCheckoutPanel from '@/Components/Security/QuickEntryCheckoutPanel';
-import { KeyRound, Zap, LogOut } from 'lucide-react';
+import WalkInPanel from '@/Components/Security/WalkInPanel';
+import { KeyRound, UserPlus } from 'lucide-react';
 
 const CODE_LENGTH = 6;
 const SYNC_ENDPOINT = '/security/verify/sync';
@@ -24,16 +23,9 @@ interface Organization {
     id: number;
     name: string;
     type: string;
-    operating_hours?:
-        | {
-              open?: string;
-              close?: string;
-              days?: string[];
-              [key: string]: any;
-          }
-        | string
-        | null;
-    hours_enforcement?: 'inherit' | 'off' | 'warn' | 'block';
+    access_policy: string;
+    is_open: boolean;
+    status_label?: string;
 }
 
 interface PageProps {
@@ -42,7 +34,6 @@ interface PageProps {
     accessCodesEnabled?: boolean;
     visitorCheckoutEnabled?: boolean;
     quickEntryEnabled?: boolean;
-    quickEntryHoursEnforcement?: 'off' | 'warn' | 'block';
     requireVehicleInformation?: boolean;
     organizations?: Organization[];
     flash?: {
@@ -72,18 +63,17 @@ function cameraErrorMessage(err: unknown): string {
 export default function SecurityVerify() {
     const {
         flash,
-        estateName,
-        gateName,
+        estateName: _estateName,
+        gateName: _gateName,
         accessCodesEnabled = true,
         visitorCheckoutEnabled = true,
         quickEntryEnabled = true,
-        quickEntryHoursEnforcement = 'warn',
         requireVehicleInformation = false,
         organizations = [],
     } = usePage<PageProps>().props;
     const { quality, isOnline, isServerReachable } = useNetworkQuality();
     const { pendingCount, isSyncing, syncNow } = useSyncStatus();
-    const [verifyMode, setVerifyMode] = useState<'pass' | 'quick_entry' | 'quick_checkout'>('pass');
+    const [verifyMode, setVerifyMode] = useState<'pass' | 'walk_in'>('pass');
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<ValidationResult | null>(null);
@@ -636,50 +626,32 @@ export default function SecurityVerify() {
                     )}
                 </AnimatePresence>
 
-                {/* Gate Verification Mode Switcher (Visitor Pass vs Quick Entry vs Quick Checkout) */}
+                {/* Two gate modes: visitors with a pass, and walk-ins (tag in, same tag out) */}
                 {quickEntryEnabled && !result && !isScanning && !submitting && (
                     <div className="mb-6 flex items-center justify-center">
-                        <div className="flex w-full max-w-md items-center rounded-2xl bg-slate-100/90 p-1 shadow-inner backdrop-blur-xs dark:bg-slate-800/90">
-                            <button
-                                type="button"
-                                onClick={() => setVerifyMode('pass')}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black transition-all ${
-                                    verifyMode === 'pass'
-                                        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
-                                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                                }`}
-                            >
-                                <KeyRound className="h-3.5 w-3.5" />
-                                <span>Visitor Pass</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setVerifyMode('quick_entry')}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black transition-all ${
-                                    verifyMode === 'quick_entry'
-                                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20'
-                                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                                }`}
-                            >
-                                <Zap className="h-3.5 w-3.5" />
-                                <span>Quick Entry</span>
-                            </button>
-
-                            {visitorCheckoutEnabled && (
+                        <div className="grid w-full max-w-sm grid-cols-2 rounded-2xl bg-slate-100/90 p-1 dark:bg-slate-800/90" role="tablist">
+                            {(
+                                [
+                                    { mode: 'pass', label: 'Pass', Icon: KeyRound },
+                                    { mode: 'walk_in', label: 'Walk-in', Icon: UserPlus },
+                                ] as const
+                            ).map(({ mode, label, Icon }) => (
                                 <button
+                                    key={mode}
                                     type="button"
-                                    onClick={() => setVerifyMode('quick_checkout')}
-                                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black transition-all ${
-                                        verifyMode === 'quick_checkout'
+                                    role="tab"
+                                    aria-selected={verifyMode === mode}
+                                    onClick={() => setVerifyMode(mode)}
+                                    className={`flex min-h-[44px] items-center justify-center gap-2 rounded-xl text-sm font-black transition-all ${
+                                        verifyMode === mode
                                             ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
                                             : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                     }`}
                                 >
-                                    <LogOut className="h-3.5 w-3.5 text-emerald-600" />
-                                    <span>Quick Exit</span>
+                                    <Icon className="h-4 w-4" />
+                                    {label}
                                 </button>
-                            )}
+                            ))}
                         </div>
                     </div>
                 )}
@@ -744,34 +716,21 @@ export default function SecurityVerify() {
                                 Use Fallback Code
                             </button>
                         </motion.div>
-                    ) : verifyMode === 'quick_entry' ? (
+                    ) : verifyMode === 'walk_in' ? (
                         <motion.div
-                            key="quick-entry"
+                            key="walk-in"
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
                             transition={{ duration: 0.15 }}
-                            className="flex flex-1 flex-col items-center justify-center pt-2"
+                            className="flex flex-1 flex-col items-center pt-2"
                         >
-                            <QuickEntryPanel
-                                organizations={organizations}
-                                estateName={estateName}
-                                gateName={gateName}
+                            <WalkInPanel
+                                destinations={organizations}
                                 isOnline={isOnline}
                                 requireVehicleInformation={requireVehicleInformation}
-                                estateHoursEnforcement={quickEntryHoursEnforcement}
+                                checkoutEnabled={visitorCheckoutEnabled}
                             />
-                        </motion.div>
-                    ) : verifyMode === 'quick_checkout' ? (
-                        <motion.div
-                            key="quick-checkout"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex flex-1 flex-col items-center justify-center pt-6"
-                        >
-                            <QuickEntryCheckoutPanel gateName={gateName} isOnline={isOnline} />
                         </motion.div>
                     ) : (
                         <motion.div

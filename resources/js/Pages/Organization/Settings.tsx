@@ -1,9 +1,11 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, LogOut, Plus, Trash2, X } from 'lucide-react';
+import { ChevronRight, CreditCard, Crown, LogOut, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface StaffMember {
     id: number;
@@ -21,11 +23,11 @@ interface Props {
         name: string;
         type: string;
         access_policy: string;
-        arrival_confirmation_required: boolean;
-        confirmation_window_minutes: number;
-        confirmation_escalation: string;
         is_unrestricted: boolean;
         estate_name?: string;
+        walk_in: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
+        walk_in_windows: { id: number; name: string; day_of_week: number; start_time: string; end_time: string }[];
     };
     membership: {
         role: string;
@@ -39,25 +41,12 @@ export default function Settings({ organization, membership, staff }: Props) {
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
 
-    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'preferences' | 'help' | 'signout' | 'personal' | null>(null);
-
-    const policyForm = useForm({
-        arrival_confirmation_required: organization.arrival_confirmation_required,
-        confirmation_window_minutes: organization.confirmation_window_minutes || 15,
-        confirmation_escalation: organization.confirmation_escalation || 'alert_only',
-    });
+    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'help' | 'signout' | 'personal' | null>(null);
 
     const inviteForm = useForm({
         email: '',
         role: 'member',
     });
-
-    const handleUpdatePolicy = (e: React.FormEvent) => {
-        e.preventDefault();
-        policyForm.patch('/org/settings/confirmation-policy', {
-            onSuccess: () => setActiveModal(null),
-        });
-    };
 
     const handleInviteStaff = (e: React.FormEvent) => {
         e.preventDefault();
@@ -71,6 +60,9 @@ export default function Settings({ organization, membership, staff }: Props) {
             router.delete(`/org/settings/staff/${id}`);
         }
     };
+
+    const { openExternalBilling } = useExternalBilling();
+    const subscription = user.resident_subscription;
 
     return (
         <OrganizationLayout title="Profile">
@@ -92,6 +84,70 @@ export default function Settings({ organization, membership, staff }: Props) {
                         </div>
                     </div>
                 </div>
+
+
+
+                {/* 1.5 SUBSCRIPTION CARD (Resident profile dark card style) */}
+                {subscription && (subscription.current_period_end || subscription.trial_ends_at) && (
+                    <button
+                        type="button"
+                        onClick={() => openExternalBilling()}
+                        className="group relative w-full overflow-hidden rounded-3xl bg-[#0B101E] p-6 text-left shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10 active:scale-[0.99]"
+                    >
+                        {/* Subtle Top Edge Highlight */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+
+                        {/* Soft Deep Glow */}
+                        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/10 blur-[60px]" />
+
+                        <div className="relative z-10 flex flex-col gap-8">
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 text-slate-300">
+                                    <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
+                                    <h2 className="text-[14px] font-medium tracking-wide">{subscription.plan_name || 'Organization Subscription'}</h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {subscription.status === 'active' || subscription.status === 'trial' ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-emerald-400">
+                                                {subscription.status === 'active' ? 'Active' : 'Trial'}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-rose-400">Expired</span>
+                                        </div>
+                                    )}
+                                    <ChevronRight className="h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-0.5" />
+                                </div>
+                            </div>
+
+                            {/* Body */}
+                            <div className="flex flex-col gap-1">
+                                {(() => {
+                                    const targetDate = subscription.current_period_end || subscription.trial_ends_at;
+                                    const formattedDate = targetDate
+                                        ? new Date(targetDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                        : '';
+                                    const diffTime = targetDate ? new Date(targetDate).getTime() - new Date().getTime() : 0;
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                                    return (
+                                        <>
+                                            <h3 className="text-[28px] font-medium tracking-tight text-white">{formattedDate}</h3>
+                                            <p className="text-[14px] font-medium text-slate-500">
+                                                {diffDays > 0 ? `${diffDays} Days Remaining` : `${Math.abs(diffDays)} Days Ago`}
+                                            </p>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    </button>
+                )}
 
                 {/* 2. ACCOUNT SECTION */}
                 <section className="space-y-3">
@@ -115,10 +171,73 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
                 </section>
 
+                {/* 2.5 BALANCES & BILLING SECTION */}
+                <section className="space-y-3">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => openExternalBilling()}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <div className="flex min-w-0 flex-1 items-center gap-3 pr-2">
+                                <CreditCard className="h-4 w-4 shrink-0 text-slate-500" />
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-sm font-bold text-slate-900">Subscription & Billing</span>
+                                    <p className="truncate text-xs text-slate-400">Manage plan, billing cycle & receipts</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
+                        </button>
+                        <Link
+                            href="/org/payments"
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <div className="flex min-w-0 flex-1 items-center gap-3 pr-2">
+                                <CreditCard className="h-4 w-4 shrink-0 text-slate-500" />
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-sm font-bold text-slate-900">Estate Payments & Dues</span>
+                                    <p className="truncate text-xs text-slate-400">View balances, dues & payments</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
+                        </Link>
+                    </div>
+                </section>
+
                 {/* 3. ORGANIZATION SECTION */}
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{organization.name}</h2>
                     <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <Link
+                            href="/org/public-windows"
+                            className="group flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <div className="min-w-0">
+                                <span className="block text-sm font-bold text-slate-900">Walk-in hours</span>
+                                <span
+                                    className={`mt-0.5 flex items-center gap-1.5 text-xs ${
+                                        organization.needs_walk_in_hours
+                                            ? 'font-semibold text-amber-700'
+                                            : organization.walk_in.open
+                                              ? 'text-emerald-700'
+                                              : 'text-slate-500'
+                                    }`}
+                                >
+                                    <span
+                                        className={`h-1.5 w-1.5 rounded-full ${
+                                            organization.needs_walk_in_hours
+                                                ? 'bg-amber-500'
+                                                : organization.walk_in.open
+                                                  ? 'bg-emerald-500'
+                                                  : 'bg-slate-400'
+                                        }`}
+                                    />
+                                    {organization.needs_walk_in_hours ? 'Not set · walk-ins are turned away' : organization.walk_in.label}
+                                </span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
+                        </Link>
                         <button
                             type="button"
                             onClick={() => setActiveModal('details')}
@@ -127,17 +246,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <span className="text-sm font-bold text-slate-900">Organization details</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </button>
-
-                        {!organization.is_unrestricted && membership.is_admin && (
-                            <button
-                                type="button"
-                                onClick={() => setActiveModal('preferences')}
-                                className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
-                            >
-                                <span className="text-sm font-bold text-slate-900">Arrival preferences</span>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
-                            </button>
-                        )}
                     </div>
                 </section>
 
@@ -188,10 +296,27 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{organization.type}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Policy Setup</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Walk-ins</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">
-                                {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
+                                {organization.access_policy === 'unrestricted'
+                                    ? 'Always admitted'
+                                    : organization.access_policy === 'public_window'
+                                      ? 'Admitted during walk-in hours'
+                                      : 'Not admitted'}
                             </p>
+                            {organization.access_policy === 'public_window' && (
+                                <ul className="mt-2 space-y-1 text-sm text-slate-600">
+                                    {organization.walk_in_windows.length === 0 ? (
+                                        <li>No hours set, so walk-ins are turned away.</li>
+                                    ) : (
+                                        organization.walk_in_windows.map((w) => (
+                                            <li key={w.id}>
+                                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][w.day_of_week]} · {w.start_time} – {w.end_time}
+                                            </li>
+                                        ))
+                                    )}
+                                </ul>
+                            )}
                         </div>
                     </div>
 
@@ -332,84 +457,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
                 </ResponsiveSheet>
 
-                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
-                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
-                <ResponsiveSheet isOpen={activeModal === 'preferences'} onClose={() => setActiveModal(null)}>
-                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-                        <div>
-                            <h3 className="text-base font-semibold text-slate-950">Arrival Preferences</h3>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleUpdatePolicy} className="mt-5 space-y-5">
-                        <label className="flex cursor-pointer items-start gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                            <input
-                                type="checkbox"
-                                checked={policyForm.data.arrival_confirmation_required}
-                                onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                            />
-                            <div>
-                                <span className="block text-sm font-semibold text-slate-900">Confirm visitor arrivals</span>
-                                <p className="mt-1 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
-                            </div>
-                        </label>
-
-                        {policyForm.data.arrival_confirmation_required && (
-                            <div className="space-y-4 pt-2">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        How long should we wait?
-                                    </label>
-                                    <select
-                                        value={policyForm.data.confirmation_window_minutes}
-                                        onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                    >
-                                        <option value={10}>10 minutes</option>
-                                        <option value={15}>15 minutes</option>
-                                        <option value={30}>30 minutes</option>
-                                        <option value={45}>45 minutes</option>
-                                        <option value={60}>1 hour</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        If unconfirmed
-                                    </label>
-                                    <select
-                                        value={policyForm.data.confirmation_escalation}
-                                        onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                    >
-                                        <option value="alert_only">Highlight on dashboard only</option>
-                                        <option value="flag_security">Flag for security gate</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setActiveModal(null)}
-                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={policyForm.processing}
-                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
-                            >
-                                {policyForm.processing ? 'Saving...' : 'Save Preferences'}
-                            </button>
-                        </div>
-                    </form>
-                </ResponsiveSheet>
-
-                {/* FOCUSED MODAL: HELP & SUPPORT */}
                 {/* FOCUSED MODAL: HELP & SUPPORT */}
                 <ResponsiveSheet isOpen={activeModal === 'help'} onClose={() => setActiveModal(null)}>
                     <div className="flex items-start justify-between border-b border-slate-100 pb-4">

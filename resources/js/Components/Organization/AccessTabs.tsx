@@ -1,13 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { Clock, History, User, Users } from 'lucide-react';
+import { Clock, History, User, Users, UsersRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React from 'react';
 
 interface Props {
-    activeTab?: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
+    activeTab?: 'people' | 'visitors' | 'bulk_invites' | 'on_site' | 'history' | 'public_windows' | 'credentials';
     pendingCount?: number;
     activeCount?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
+    showOnSiteTab?: boolean;
+    onTabChange?: (tab: 'people' | 'visitors' | 'bulk_invites' | 'on_site' | 'history' | 'public_windows' | 'credentials') => void;
 }
 
 interface AccessTab {
@@ -19,20 +20,27 @@ interface AccessTab {
     badgeVariant?: 'warning' | 'neutral';
 }
 
-export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 0, onTabChange }: Props) {
-    const tabs: AccessTab[] = [
+export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 0, showOnSiteTab = false, onTabChange }: Props) {
+    const baseTabs: AccessTab[] = [
         { id: 'people', label: 'People', href: '/org/access-list', icon: Users },
         { id: 'visitors', label: 'Visitors', href: '/org/visitors', icon: User },
-        {
-            id: 'arrivals',
-            label: 'Arrivals',
-            href: '/org/arrivals',
-            icon: Clock,
-            badge: pendingCount > 0 ? `${pendingCount}` : activeCount > 0 ? `${activeCount}` : undefined,
-            badgeVariant: pendingCount > 0 ? 'warning' : 'neutral',
-        },
-        { id: 'history', label: 'History', href: '/org/arrivals/history', icon: History },
+        { id: 'bulk_invites', label: 'Groups', href: '/org/bulk-invites', icon: UsersRound },
+        { id: 'history', label: 'History', href: '/org/on-site/history', icon: History },
     ];
+
+    const onSiteTab: AccessTab = {
+        id: 'on_site',
+        label: 'On-site',
+        href: '/org/on-site',
+        icon: Clock,
+        badge: activeCount > 0 ? `${activeCount}` : undefined,
+        badgeVariant: 'neutral',
+    };
+
+    // Insert On-site tab before History only when checkout tracking is enabled
+    const tabs = showOnSiteTab
+        ? [...baseTabs.slice(0, 3), onSiteTab, ...baseTabs.slice(3)]
+        : baseTabs;
 
     return (
         <nav

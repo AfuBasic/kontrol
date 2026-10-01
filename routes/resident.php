@@ -130,28 +130,30 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
 });
 
 // ──────────────────────────────────────────────────────────────
-// Primary resident & Property owner: billing & household management
+// Billing routes: accessible by residents, property owners, and organization accounts
+// ──────────────────────────────────────────────────────────────
+Route::middleware('resident.billing')->prefix('billing')->name('resident.billing.')->group(function (): void {
+    Route::get('/', [BillingController::class, 'index'])->name('index');
+    Route::get('/subscription', [BillingController::class, 'subscription'])->name('subscription');
+    Route::get('/payment', [BillingController::class, 'payment'])->name('payment');
+    Route::get('/receipts', [BillingController::class, 'receipts'])->name('receipts');
+    Route::get('/receipts/{invoice}/download', [BillingController::class, 'downloadReceipt'])->name('receipts.download')->middleware('throttle:30,1');
+    Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
+    Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
+    Route::post('/auto-renew/enable', [BillingController::class, 'enableAutoRenew'])->name('auto-renew.enable');
+    Route::post('/auto-renew/disable', [BillingController::class, 'disableAutoRenew'])->name('auto-renew.disable');
+    Route::post('/auto-renew/dismiss', [BillingController::class, 'dismissAutoRenewSuggestion'])->name('auto-renew.dismiss');
+    Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
+    Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
+    Route::post('/validate-coupon', [BillingController::class, 'validateCoupon'])->name('coupon.validate');
+});
+
+// ──────────────────────────────────────────────────────────────
+// Primary resident & Property owner: coupons, collections & household management
 // ──────────────────────────────────────────────────────────────
 Route::middleware('role:resident,property_owner')->group(function (): void {
     // Coupons
     Route::get('/coupons', [CouponController::class, 'index'])->name('resident.coupons.index');
-
-    // Billing
-    Route::prefix('billing')->name('resident.billing.')->group(function (): void {
-        Route::get('/', [BillingController::class, 'index'])->name('index');
-        Route::get('/subscription', [BillingController::class, 'subscription'])->name('subscription');
-        Route::get('/payment', [BillingController::class, 'payment'])->name('payment');
-        Route::get('/receipts', [BillingController::class, 'receipts'])->name('receipts');
-        Route::get('/receipts/{invoice}/download', [BillingController::class, 'downloadReceipt'])->name('receipts.download')->middleware('throttle:30,1');
-        Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
-        Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
-        Route::post('/auto-renew/enable', [BillingController::class, 'enableAutoRenew'])->name('auto-renew.enable');
-        Route::post('/auto-renew/disable', [BillingController::class, 'disableAutoRenew'])->name('auto-renew.disable');
-        Route::post('/auto-renew/dismiss', [BillingController::class, 'dismissAutoRenewSuggestion'])->name('auto-renew.dismiss');
-        Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
-        Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
-        Route::post('/validate-coupon', [BillingController::class, 'validateCoupon'])->name('coupon.validate');
-    });
 
     // Estate Collections (Dues)
     Route::prefix('dues')->name('resident.collections.')->middleware('check-estate-feature:payment-collection')->group(function (): void {

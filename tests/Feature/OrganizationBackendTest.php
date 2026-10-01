@@ -1,6 +1,5 @@
 <?php
 
-use App\Actions\Organization\ConfirmArrivalAction;
 use App\Actions\Organization\IssueOrganizationCredentialAction;
 use App\Actions\Organization\RenewOrganizationCredentialAction;
 use App\Actions\Security\RecordQuickEntryAction;
@@ -25,7 +24,9 @@ use App\Services\OrganizationContextService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -39,9 +40,6 @@ beforeEach(function () {
         'name' => 'St. Jude Academy',
         'type' => 'school',
         'access_policy' => 'managed',
-        'arrival_confirmation_required' => true,
-        'confirmation_window_minutes' => 15,
-        'confirmation_escalation' => 'alert_only',
         'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
@@ -219,6 +217,9 @@ test('organization isWithinPublicWindow evaluates all active windows', function 
 });
 
 test('record quick entry records organization_id and admission_basis', function () {
+    Storage::fake('local');
+    $this->org->update(['access_policy' => 'unrestricted']); // closed destinations take no walk-ins
+
     $guard = User::factory()->create();
     $action = app(RecordQuickEntryAction::class);
 
@@ -229,93 +230,35 @@ test('record quick entry records organization_id and admission_basis', function 
             'tag' => 'TAG1',
             'organization_id' => $this->org->id,
             'visitor_name' => 'Delivery Driver',
+            'id_photo' => UploadedFile::fake()->image('id.jpg'),
         ]
     );
 
     expect($log->organization_id)->toBe($this->org->id)
-        ->and($log->meta['admission_basis'])->toBe('quick_entry')
-        ->and($log->confirmed_at)->toBeNull()
-        ->and($log->confirmationState(15))->toBe('PENDING');
+        ->and($log->meta['tag'])->toBe('TAG1')
+        ->and($log->meta['admission_basis'])->toBe('unrestricted')
+        ->and($log->visitor_profile_id)->not->toBeNull();
 });
 
-test('confirm arrival action marks log as confirmed and is idempotent', function () {
-    $guard = User::factory()->create();
-    $quickEntry = app(RecordQuickEntryAction::class);
-    $confirmAction = app(ConfirmArrivalAction::class);
+test('arrival service metrics count who is inside and today\'s entries', function () {
+    Storage::fake('local');
+    $this->org->update(['access_policy' => 'unrestricted']);
 
-    $log = $quickEntry->execute(
-        estateId: $this->estate->id,
-        verifiedBy: $guard,
-        data: [
-            'tag' => 'TAG2',
-            'organization_id' => $this->org->id,
-            'visitor_name' => 'Parent Visitor',
-        ]
-    );
-
-    expect($log->confirmationState(15))->toBe('PENDING');
-
-    $confirmedLog = $confirmAction->execute($log, $this->orgAdmin);
-
-    expect($confirmedLog->confirmed_at)->not->toBeNull()
-        ->and($confirmedLog->confirmed_by)->toBe($this->orgAdmin->id)
-        ->and($confirmedLog->confirmationState(15))->toBe('CONFIRMED');
-
-    // Calling again returns cleanly (idempotent)
-    $confirmedAgain = $confirmAction->execute($confirmedLog, $this->orgAdmin);
-    expect($confirmedAgain->confirmed_at)->toEqual($confirmedLog->confirmed_at);
-});
-
-test('confirmation state returns OVERDUE when time exceeds confirmation window', function () {
-    $guard = User::factory()->create();
-    $quickEntry = app(RecordQuickEntryAction::class);
-
-    $verifiedAt = CarbonImmutable::now()->subMinutes(30);
-
-    $log = $quickEntry->execute(
-        estateId: $this->estate->id,
-        verifiedBy: $guard,
-        data: [
-            'tag' => 'TAG3',
-            'organization_id' => $this->org->id,
-            'visitor_name' => 'Late Visitor',
-            'verified_at' => $verifiedAt,
-        ]
-    );
-
-    expect($log->confirmationState(15))->toBe('OVERDUE');
-});
-
-test('arrival service metrics aggregate active entries and confirmation states', function () {
     $guard = User::factory()->create();
     $quickEntry = app(RecordQuickEntryAction::class);
     $arrivalService = app(ArrivalService::class);
 
-    // Entry 1: Recent, pending
-    $quickEntry->execute(
-        estateId: $this->estate->id,
-        verifiedBy: $guard,
-        data: ['tag' => 'T001', 'organization_id' => $this->org->id, 'visitor_name' => 'Guest 1']
-    );
-
-    // Entry 2: Old, overdue
-    $quickEntry->execute(
-        estateId: $this->estate->id,
-        verifiedBy: $guard,
-        data: [
-            'tag' => 'T002',
-            'organization_id' => $this->org->id,
-            'visitor_name' => 'Guest 2',
-            'verified_at' => now()->subMinutes(40),
-        ]
-    );
+    foreach (['T001', 'T002'] as $tag) {
+        $quickEntry->execute(
+            estateId: $this->estate->id,
+            verifiedBy: $guard,
+            data: ['tag' => $tag, 'organization_id' => $this->org->id, 'id_photo' => UploadedFile::fake()->image("{$tag}.jpg")]
+        );
+    }
 
     $metrics = $arrivalService->getMetrics($this->org);
 
-    expect($metrics['currently_inside'])->toBe(2)
-        ->and($metrics['pending_confirmation'])->toBe(1)
-        ->and($metrics['overdue_confirmation'])->toBe(1)
-        ->and($metrics['confirmed'])->toBe(0);
+    expect($metrics)->toBe(['currently_inside' => 2, 'today_entries' => 2]);
 });
 
 test('renew expiring credentials job auto-renews credentials expiring within 7 days', function () {
@@ -361,8 +304,8 @@ test('organization portal routes render successfully for authorized organization
     $this->get(route('org.dashboard'))->assertOk();
     $this->get(route('org.access-list.index'))->assertOk();
     $this->get(route('org.credentials.index'))->assertOk();
-    $this->get(route('org.arrivals.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'arrivals']));
-    $this->get(route('org.public-windows.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'public_windows']));
+    $this->get(route('org.on-site.index'))->assertOk();
+    $this->get(route('org.public-windows.index'))->assertOk();
     $this->get(route('org.payments.index'))->assertOk();
     $this->get(route('org.announcements.index'))->assertOk();
     $this->get(route('org.settings.index'))->assertOk();
@@ -402,33 +345,6 @@ test('organization announcements include media previews', function () {
             ->where('posts.data.0.media.0.url', '/storage/announcements/water.jpg')
             ->where('posts.data.0.media.0.mime_type', 'image/jpeg')
             ->where('posts.data.0.media.0.width', 1200));
-});
-
-test('organization admin can confirm arrival via portal HTTP endpoint', function () {
-    $guard = User::factory()->create();
-    $quickEntry = app(RecordQuickEntryAction::class);
-
-    $log = $quickEntry->execute(
-        estateId: $this->estate->id,
-        verifiedBy: $guard,
-        data: [
-            'tag' => 'TAG-HTTP-1',
-            'organization_id' => $this->org->id,
-            'visitor_name' => 'Endpoint Visitor',
-        ]
-    );
-
-    $this->actingAs($this->orgAdmin);
-    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
-
-    $response = $this->post(route('org.arrivals.confirm', $log));
-    $response->assertRedirect()
-        ->assertSessionHas('success');
-
-    $log->refresh();
-    expect($log->confirmed_at)->not->toBeNull()
-        ->and($log->confirmed_by)->toBe($this->orgAdmin->id)
-        ->and($log->confirmationState(15))->toBe('CONFIRMED');
 });
 
 test('organization announcements can be searched, filtered by category, and sorted', function () {

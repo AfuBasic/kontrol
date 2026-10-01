@@ -1,6 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
     Calendar,
     ChevronRight,
     Clock,
@@ -12,15 +11,16 @@ import {
     Users,
 } from 'lucide-react';
 import React from 'react';
+import WalkInHoursSetupCard from '@/Components/Organization/WalkInHoursSetupCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
+import { router } from '@inertiajs/react';
+
 
 interface MetricProps {
     currently_inside: number;
     today_entries: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
 }
 
 interface Arrival {
@@ -31,8 +31,6 @@ interface Arrival {
     vehicle_plate_number: string | null;
     entry_point: string | null;
     verified_at_human: string | null;
-    confirmation_state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE';
-    is_overdue: boolean;
 }
 
 interface ActivityItem {
@@ -40,7 +38,7 @@ interface ActivityItem {
     name: string;
     description: string;
     time_human: string;
-    type: 'arrival' | 'confirmed' | 'checkout';
+    type: 'arrival' | 'checkout';
     is_active: boolean;
 }
 
@@ -50,9 +48,10 @@ interface Props {
         name: string;
         type: string;
         access_policy: string;
-        arrival_confirmation_required: boolean;
-        confirmation_window_minutes: number;
         estate_name: string;
+        walk_in: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
+        visitor_checkout_enabled?: boolean;
     };
     membership: {
         role: string;
@@ -61,30 +60,23 @@ interface Props {
     total_access_members?: number;
     metrics: MetricProps;
     recent_arrivals: Arrival[];
-    pending_arrivals: Arrival[];
     recent_activity: ActivityItem[];
 }
 
 export default function Dashboard({
     organization,
+    membership,
     total_access_members = 0,
     metrics,
     recent_arrivals = [],
-    pending_arrivals = [],
     recent_activity = [],
 }: Props) {
     const page = usePage();
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
 
     const currentlyHere = metrics.currently_inside ?? 0;
-    const pendingTotal = pending_arrivals.length;
-    const overdueTotal = metrics.overdue_confirmation ?? 0;
-    const waitingCount = pendingTotal;
-    const attentionCount = overdueTotal;
-
-    const needsAttention = attentionCount > 0 || waitingCount > 0;
-    const isCritical = overdueTotal >= 3;
 
     const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
 
@@ -94,27 +86,6 @@ export default function Dashboard({
         if (hour < 17) return 'Good afternoon';
         return 'Good evening';
     };
-
-    const stateConfig = isCritical
-        ? {
-              label: 'Critical attention',
-              dot: 'bg-rose-500',
-              textColor: 'text-rose-700',
-              bgColor: 'bg-rose-50',
-          }
-        : needsAttention
-          ? {
-                label: 'Needs attention',
-                dot: 'bg-amber-500',
-                textColor: 'text-amber-700',
-                bgColor: 'bg-amber-50',
-            }
-          : {
-                label: 'All systems normal',
-                dot: 'bg-emerald-500',
-                textColor: 'text-emerald-700',
-                bgColor: 'bg-emerald-50/60',
-            };
 
     const initialsFor = (name: string) => {
         return name
@@ -149,23 +120,6 @@ export default function Dashboard({
                 badge: 'bg-slate-100 text-slate-600 border-slate-200',
             };
         }
-        if (item.type === 'confirmed') {
-            return {
-                label: 'Confirmed',
-                dot: 'bg-emerald-500',
-                badge: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-            };
-        }
-        if (item.is_active && organization.arrival_confirmation_required) {
-            const isWaiting = pending_arrivals.some((pa) => pa.visitor_name === item.name);
-            if (isWaiting) {
-                return {
-                    label: 'Waiting',
-                    dot: 'bg-amber-500',
-                    badge: 'bg-amber-50 text-amber-700 border-amber-100',
-                };
-            }
-        }
         return {
             label: 'Inside',
             dot: 'bg-emerald-500',
@@ -191,13 +145,14 @@ export default function Dashboard({
                         <h1 className="text-[26px] font-extrabold tracking-tight text-[#071f4b] leading-tight">
                             {organization.name}
                         </h1>
-                        <Link
-                            href="/org/access-list?action=add_person"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/access-list?action=add_person'))}
                             className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                         >
                             <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
                             Add person
-                        </Link>
+                        </button>
                     </div>
                     {organization.estate_name && (
                         <p className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-slate-500">
@@ -207,6 +162,12 @@ export default function Dashboard({
                         </p>
                     )}
                 </header>
+
+                {organization.needs_walk_in_hours && (
+                    <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />
+                )}
+
+
 
                 {/* ACCESS OVERVIEW CARD */}
                 <Link
@@ -236,9 +197,10 @@ export default function Dashboard({
                 <div className="flex flex-col mt-1">
                     <h2 className="text-[14px] font-bold text-[#071f4b] mb-2.5 px-1 tracking-tight">Quick actions</h2>
                     <div className="grid grid-cols-2 gap-3.5">
-                        <Link
-                            href="/org/access-list?action=add_person"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/access-list?action=add_person'))}
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
                                 <UserPlus className="h-5 w-5" strokeWidth={2.2} />
@@ -250,11 +212,12 @@ export default function Dashboard({
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
                             </div>
-                        </Link>
+                        </button>
 
-                        <Link
-                            href="/org/visitors"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        <button
+                            type="button"
+                            onClick={gated(() => router.get('/org/visitors?action=invite_visitor'))}
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-mint mb-3">
                                 <UserCircle className="h-5 w-5" strokeWidth={2.2} />
@@ -266,26 +229,28 @@ export default function Dashboard({
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
                             </div>
-                        </Link>
+                        </button>
 
-                        <Link
-                            href="/org/arrivals"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                        >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
-                                <Clock className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's on site</span>
+                        {organization.visitor_checkout_enabled && (
+                            <Link
+                                href="/org/on-site"
+                                className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                            >
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                                    <Clock className="h-5 w-5" strokeWidth={2.2} />
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
-                            </div>
-                        </Link>
+                                <div className="flex items-end justify-between w-full mt-auto">
+                                    <div className="flex flex-col">
+                                        <span className="text-[14px] font-bold text-[#071f4b] leading-tight">On-site</span>
+                                        <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's present</span>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                </div>
+                            </Link>
+                        )}
 
                         <Link
-                            href="/org/arrivals/history"
+                            href="/org/on-site/history"
                             className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
@@ -307,19 +272,22 @@ export default function Dashboard({
                     {/* Header row */}
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
-                        <div
-                            className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateConfig.bgColor} ${stateConfig.textColor}`}
+                        <Link
+                            href="/org/public-windows"
+                            className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                organization.walk_in.open ? 'bg-emerald-50/70 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                            }`}
                         >
-                            <span className={`h-1.5 w-1.5 rounded-full ${stateConfig.dot}`} />
-                            {stateConfig.label}
-                        </div>
+                            <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            Walk-ins · {organization.walk_in.label}
+                        </Link>
                     </div>
 
                     {/* Metrics row */}
                     <div className="flex items-stretch justify-between">
                         {/* Inside */}
                         <Link
-                            href="/org/arrivals"
+                            href="/org/on-site"
                             className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
                         >
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-mint mb-1.5">
@@ -336,47 +304,9 @@ export default function Dashboard({
 
                         <div className="w-px bg-slate-100 self-stretch mx-0.5" />
 
-                        {/* Waiting */}
-                        <Link
-                            href="/org/arrivals"
-                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
-                                <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
-                            </div>
-                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
-                                {waitingCount}
-                            </span>
-                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
-                                Waiting
-                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                            </span>
-                        </Link>
-
-                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                        {/* Needs attention */}
-                        <Link
-                            href="/org/arrivals"
-                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
-                                <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
-                            </div>
-                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
-                                {attentionCount}
-                            </span>
-                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
-                                Needs attention
-                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                            </span>
-                        </Link>
-
-                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
                         {/* Arrivals today */}
                         <Link
-                            href="/org/arrivals/history"
+                            href="/org/on-site/history"
                             className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
                         >
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-sky mb-1.5">
@@ -398,7 +328,7 @@ export default function Dashboard({
                     <div className="flex items-center justify-between mb-2.5 px-0.5">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
                         <Link
-                            href="/org/arrivals/history"
+                            href="/org/on-site/history"
                             className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition"
                         >
                             View all <ChevronRight className="h-3 w-3 ml-0.5" />
@@ -416,10 +346,9 @@ export default function Dashboard({
                                 const isOngoing = item.type !== 'checkout';
 
                                 return (
-                                    <Link
+                                    <div
                                         key={item.id}
-                                        href={`/org/arrivals/${item.id}`}
-                                        className="soft-card flex items-center justify-between px-3.5 py-3 transition active:scale-[0.98]"
+                                        className="soft-card flex items-center justify-between px-3.5 py-3"
                                     >
                                         <div className="flex min-w-0 items-center gap-3">
                                             <div
@@ -449,16 +378,14 @@ export default function Dashboard({
                                             <span className="text-[11px] font-medium text-slate-400">
                                                 {item.time_human}
                                             </span>
-                                            <span className="text-[10px] font-medium text-slate-300 flex items-center">
-                                                Gate <ChevronRight className="h-2.5 w-2.5 ml-0.5" />
-                                            </span>
                                         </div>
-                                    </Link>
+                                    </div>
                                 );
                             })}
                         </div>
                     )}
                 </div>
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );

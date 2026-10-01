@@ -1,20 +1,20 @@
 
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Search, Tag, Users, Copy, Share2, Check, X, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
+import PassTimingPicker, { defaultPassTiming, passStart, type PassTiming } from '@/Components/Organization/PassTimingPicker';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
-import { ChevronDown, ChevronRight, MapPin, Plus } from 'lucide-react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import Button from '@/Components/UI/Button';
 import TextInput from '@/Components/UI/TextInput';
 import { shareAccessCode } from '@/Utils/share';
-import BulkInviteModal from './BulkInviteModal';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface Organization {
     id: number;
@@ -65,19 +65,22 @@ interface Props {
     membership: { role: string; is_admin: boolean };
     visitors: PaginatedData<VisitorPass>;
     filters: { search: string | null };
+    durationOptions: { minutes: number; label: string }[];
+    durationConstraints: { min: number; max: number };
 }
 
-export default function Visitors({ organization, membership, visitors, filters }: Props) {
+export default function Visitors({ organization, membership, visitors, filters, durationOptions, durationConstraints }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
-    const [bulkInviteModalOpen, setBulkInviteModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
     const [selectedPass, setSelectedPass] = useState<VisitorPass | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [copiedAll, setCopiedAll] = useState(false);
-    const [isCustomTime, setIsCustomTime] = useState(false);
+    const initialDuration = durationOptions.find((o) => o.minutes === 60)?.minutes ?? durationOptions[0]?.minutes ?? durationConstraints.min;
+    const [timing, setTiming] = useState<PassTiming>(() => defaultPassTiming(initialDuration));
 
     const purposeOptions = [
         { value: 'meeting', label: 'Meeting' },
@@ -94,17 +97,15 @@ export default function Visitors({ organization, membership, visitors, filters }
         }
 
         const params = new URLSearchParams(window.location.search);
-        if (params.get('action') === 'invite_visitor') setInviteModalOpen(true);
-        if (params.get('action') === 'invite_multiple') setBulkInviteModalOpen(true);
-    }, [flash.bulk_passes]);
+        if (params.get('action') === 'invite_visitor') {
+            gated(() => setInviteModalOpen(true))();
+        }
+    }, [flash.bulk_passes, gated]);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         visitor_name: '',
         visitor_phone: '',
         purpose: '',
-        date: new Date().toISOString().split('T')[0],
-        start_time: '',
-        end_time: '',
     });
 
     const [copiedCode, setCopiedCode] = useState(false);
@@ -228,12 +229,17 @@ export default function Visitors({ organization, membership, visitors, filters }
 
     const handleInvite = (e: React.FormEvent) => {
         e.preventDefault();
+        transform((form) => ({
+            ...form,
+            starts_at: passStart(timing)?.toISOString() ?? null,
+            duration_minutes: timing.durationMinutes,
+        }));
         post('/org/visitors', {
             preserveScroll: true,
             onSuccess: () => {
                 setInviteModalOpen(false);
                 reset();
-                setIsCustomTime(false);
+                setTiming(defaultPassTiming(initialDuration));
             },
         });
     };
@@ -269,7 +275,12 @@ export default function Visitors({ organization, membership, visitors, filters }
         const startFormatted = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const endFormatted = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
-        return `${startFormatted} – ${endFormatted}`;
+        if (start.toDateString() !== end.toDateString()) {
+            const day = (d: Date) => d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+            return `${day(start)}, ${startFormatted} - ${day(end)}, ${endFormatted}`;
+        }
+
+        return `${startFormatted} - ${endFormatted}`;
     };
 
     return (
@@ -283,8 +294,8 @@ export default function Visitors({ organization, membership, visitors, filters }
                         membership.is_admin ? (
                             <button
                                 type="button"
-                                onClick={() => setInviteModalOpen(true)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
+                                onClick={gated(() => setInviteModalOpen(true))}
+                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                                 Invite
@@ -303,7 +314,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Search visitors..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
@@ -570,90 +581,19 @@ export default function Visitors({ organization, membership, visitors, filters }
                             label="Phone Number"
                             icon={Phone}
                             type="tel"
-                            placeholder="+1 234 567 8900"
-                            description="Optional. We'll send the pass to this number via SMS."
+                            placeholder="+234 801 234 5678"
                             value={data.visitor_phone}
                             onChange={(e) => setData('visitor_phone', e.target.value)}
                             error={errors.visitor_phone}
                         />
 
-                        <TextInput
-                            label="Date of Visit"
-                            icon={Calendar}
-                            type="date"
-                            required
-                            min={new Date().toISOString().split('T')[0]}
-                            value={data.date}
-                            onChange={(e) => setData('date', e.target.value)}
-                            error={errors.date}
+                        <PassTimingPicker
+                            value={timing}
+                            onChange={setTiming}
+                            durationOptions={durationOptions}
+                            constraints={durationConstraints}
+                            errors={errors as { starts_at?: string; duration_minutes?: string }}
                         />
-
-                        <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-700">Timeframe</label>
-                            <div className="relative flex rounded-xl border border-slate-200 bg-slate-50 p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsCustomTime(false);
-                                        setData((prev) => ({ ...prev, start_time: '', end_time: '' }));
-                                    }}
-                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                                        !isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    All Day
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCustomTime(true)}
-                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                                        isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    Specific Hours
-                                </button>
-                                {/* Active background pill */}
-                                <motion.div
-                                    className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-xs ring-1 ring-slate-900/5"
-                                    animate={{ left: isCustomTime ? 'calc(50% + 0.125rem)' : '0.25rem' }}
-                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                />
-                            </div>
-
-                            <AnimatePresence>
-                                {isCustomTime && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.25 }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="mt-4 grid grid-cols-2 gap-4">
-                                            <TextInput
-                                                label="Start Time"
-                                                icon={Clock}
-                                                type="time"
-                                                required={isCustomTime}
-                                                value={data.start_time}
-                                                onChange={(e) => setData('start_time', e.target.value)}
-                                                error={errors.start_time}
-                                            />
-                                            <TextInput
-                                                label="End Time"
-                                                icon={Clock}
-                                                type="time"
-                                                required={isCustomTime}
-                                                value={data.end_time}
-                                                onChange={(e) => setData('end_time', e.target.value)}
-                                                error={errors.end_time}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                            {!isCustomTime && <p className="mt-2 px-1 text-xs text-slate-400">Valid entire day (expires at 11:59 PM)</p>}
-                        </div>
 
                         <CustomSelect
                             label="Purpose"
@@ -673,9 +613,6 @@ export default function Visitors({ organization, membership, visitors, filters }
                         </div>
                     </form>
                 </ResponsiveSheet>
-
-                {/* Bulk Invite Modal */}
-                <BulkInviteModal isOpen={bulkInviteModalOpen} onClose={() => setBulkInviteModalOpen(false)} />
 
                 {/* Bulk Summary Modal */}
                 <ResponsiveSheet isOpen={bulkSummaryOpen && !!flash.bulk_passes} onClose={() => setBulkSummaryOpen(false)}>
@@ -718,6 +655,9 @@ export default function Visitors({ organization, membership, visitors, filters }
                         </>
                     )}
                 </ResponsiveSheet>
+
+                {/* Subscription Gate Sheet */}
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );

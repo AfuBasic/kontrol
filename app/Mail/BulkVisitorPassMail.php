@@ -4,13 +4,18 @@ namespace App\Mail;
 
 use App\Models\AccessCode;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class BulkVisitorPassMail extends Mailable implements ShouldQueue
+/**
+ * Sent synchronously from DeliverBulkVisitorPassJob, which is already queued and owns retries.
+ * It must not implement ShouldQueue: queuing it again detaches the send from the job, so the
+ * job would record "sent" before anything was sent, and the PDF would be gone before the mail went out.
+ */
+class BulkVisitorPassMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -20,7 +25,8 @@ class BulkVisitorPassMail extends Mailable implements ShouldQueue
      * Create a new message instance.
      */
     public function __construct(
-        public AccessCode $accessCode
+        public AccessCode $accessCode,
+        public ?string $pdfContents = null
     ) {
         $this->passUrl = route('public.pass', ['uuid' => $this->accessCode->pass_uuid]);
     }
@@ -35,7 +41,7 @@ class BulkVisitorPassMail extends Mailable implements ShouldQueue
             ?? 'Organization';
 
         return new Envelope(
-            subject: "Your Visitor Access Pass — {$orgName}",
+            subject: "Your Visitor Access Pass - {$orgName}",
         );
     }
 
@@ -55,5 +61,22 @@ class BulkVisitorPassMail extends Mailable implements ShouldQueue
                 'validUntil' => $this->accessCode->expires_at?->toFormattedDateString() ?? 'N/A',
             ],
         );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        if ($this->pdfContents) {
+            return [
+                Attachment::fromData(fn () => $this->pdfContents, "Visitor-Pass-{$this->accessCode->code}.pdf")
+                    ->withMime('application/pdf'),
+            ];
+        }
+
+        return [];
     }
 }

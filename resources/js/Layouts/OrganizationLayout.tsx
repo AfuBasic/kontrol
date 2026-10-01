@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Bell, ChevronDown, CreditCard, Home, KeyRound, LogOut, Megaphone, User } from 'lucide-react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 import PullToRefresh from '@/Components/PullToRefresh';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
 interface Props {
     children: ReactNode;
@@ -91,6 +92,9 @@ export default function OrganizationLayout({
         if (item.name === 'Access') {
             return (
                 url.startsWith('/org/access-list') ||
+                url.startsWith('/org/visitors') ||
+                url.startsWith('/org/bulk-invites') ||
+                url.startsWith('/org/on-site') ||
                 url.startsWith('/org/arrivals') ||
                 url.startsWith('/org/credentials') ||
                 url.startsWith('/org/public-windows')
@@ -207,6 +211,10 @@ export default function OrganizationLayout({
             >
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 px-3 sm:px-6 lg:px-10 ${contentClassName}`}>
+                        {user.resident_subscription && (
+                            <SubscriptionBanner subscription={user.resident_subscription} />
+                        )}
+
                         {props.flash?.success && (
                             <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xs sm:text-sm">
                                 <span>{props.flash.success}</span>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
-import { Car, Clock, LogOut, ShieldCheck, Tag, Users, X, AlertCircle, Building2, User, ChevronRight } from 'lucide-react';
+import { Car, LogOut, Tag, Users, X, AlertCircle, Building2, User, ChevronRight } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
 
 export type SecurityActiveVisit = {
@@ -166,16 +166,6 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
                                         {visit.is_overstayed && (
                                             <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-800 uppercase dark:bg-amber-900/50 dark:text-amber-300">
                                                 Overstayed
-                                            </span>
-                                        )}
-                                        {(visit as any).confirmation_state === 'CONFIRMED' && (
-                                            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                                Facility Confirmed
-                                            </span>
-                                        )}
-                                        {(visit as any).confirmation_state === 'OVERDUE' && (
-                                            <span className="animate-pulse rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-rose-700 uppercase ring-1 ring-rose-300/60 dark:bg-rose-950/40 dark:text-rose-300">
-                                                Confirmation Overdue
                                             </span>
                                         )}
                                     </div>

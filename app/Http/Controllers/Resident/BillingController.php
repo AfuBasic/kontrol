@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\CouponService;
 use App\Services\EstateContextService;
+use App\Services\OrganizationContextService;
 use App\Services\ResidentSubscriptionService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class BillingController extends Controller
     public function __construct(
         private EstateContextService $estateContext,
         private InvoiceGenerationService $invoiceGenerationService,
+        private OrganizationContextService $organizationContext,
     ) {}
 
     public function index(Request $request): Response|RedirectResponse
@@ -67,6 +69,13 @@ class BillingController extends Controller
         $openInvoices = (clone $invoicesQuery)->where('status', '!=', 'paid')->count();
         $latestInvoice = (clone $invoicesQuery)->latest()->first();
 
+        $bestCoupon = Coupon::query()
+            ->availableTo($user, $estate)
+            ->get()
+            ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
+            ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)
+            ->first();
+
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => $subData,
             'receiptSummary' => [
@@ -80,6 +89,14 @@ class BillingController extends Controller
                     'invoice_number' => $latestInvoice->invoice_number,
                 ] : null,
             ],
+            'autoAppliedCoupon' => $bestCoupon ? [
+                'id' => $bestCoupon->id,
+                'code' => $bestCoupon->code,
+                'campaign_name' => $bestCoupon->campaign_name,
+                'type' => $bestCoupon->type,
+                'value' => $bestCoupon->value,
+                'formatted_value' => $bestCoupon->type === 'percentage' ? "{$bestCoupon->value}%" : '₦'.number_format($bestCoupon->value / 100, 2),
+            ] : null,
         ]);
     }
 
@@ -167,9 +184,9 @@ class BillingController extends Controller
     public function downloadReceipt(Invoice $invoice): HttpResponse
     {
         $user = auth()->user();
-        abort_if(! $user || ! $user->contextHasRole(['resident', 'property_owner']), 403, 'Unauthorized.');
+        abort_if(! $user, 401, 'Unauthorized.');
 
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
 
         abort_if(
             $invoice->user_id !== $user->id || $invoice->estate_id !== $estate->id,
@@ -193,7 +210,7 @@ class BillingController extends Controller
     public function enableAutoRenew(): RedirectResponse
     {
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
 
         $subscription = ResidentSubscription::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
@@ -213,7 +230,7 @@ class BillingController extends Controller
     public function disableAutoRenew(): RedirectResponse
     {
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
 
         $subscription = ResidentSubscription::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
@@ -232,7 +249,7 @@ class BillingController extends Controller
     public function dismissAutoRenewSuggestion(): JsonResponse|RedirectResponse
     {
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
 
         $subscription = ResidentSubscription::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
@@ -264,7 +281,7 @@ class BillingController extends Controller
         ]);
 
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
         $plan = Plan::findOrFail($request->plan_id);
 
         $subscription = ResidentSubscription::where('user_id', $user->id)
@@ -307,7 +324,7 @@ class BillingController extends Controller
         ]);
 
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
         $plan = Plan::findOrFail($request->plan_id);
 
         $result = $couponService->validate($request->code, $user, $estate, $plan);
@@ -354,7 +371,7 @@ class BillingController extends Controller
     public function generateMagicUrl(Request $request, GenerateMagicLoginUrlAction $action): JsonResponse
     {
         $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
+        $estate = $this->resolveEstate();
         $params = [];
         if ($request->has('coupon')) {
             $params['coupon'] = $request->coupon;
@@ -368,8 +385,16 @@ class BillingController extends Controller
             default => route('resident.billing.index', $params, false),
         };
 
-        $assignment = $this->estateContext->getAssignment()
-            ?? app(ContextManager::class)->getValidAssignments($user)->firstWhere('estate_id', $estate->id);
+        $assignment = null;
+        try {
+            $assignment = $this->estateContext->getAssignment();
+        } catch (\Throwable) {
+            $assignment = null;
+        }
+
+        if (! $assignment) {
+            $assignment = app(ContextManager::class)->getValidAssignments($user)->firstWhere('estate_id', $estate->id);
+        }
 
         $url = $action->execute($user, $destinationRoute, $assignment);
 
@@ -380,14 +405,47 @@ class BillingController extends Controller
     }
 
     /**
+     * Resolve the current estate, falling back to organization context if necessary.
+     */
+    private function resolveEstate(): Estate
+    {
+        try {
+            return $this->estateContext->getEstate();
+        } catch (\Throwable) {
+            try {
+                $org = $this->organizationContext->getOrganization();
+                if ($org && $org->estate) {
+                    return $org->estate;
+                }
+            } catch (\Throwable) {
+                // Ignore and fall through to abort
+            }
+        }
+
+        abort(403, 'No active estate or organization context.');
+    }
+
+    /**
      * @return array{0: User, 1: Estate, 2: ?ResidentSubscription}
      */
     private function resolveSubscription(): array
     {
         $user = auth()->user();
-        abort_if(! $user->contextHasRole(['resident', 'property_owner']), 403, 'Only residents and property owners can manage billing.');
+        $hasResidentRole = $user->contextHasRole(['resident', 'property_owner']);
+        $hasOrgAccess = false;
 
-        $estate = $this->estateContext->getEstate();
+        if (! $hasResidentRole) {
+            try {
+                $org = $this->organizationContext->getOrganization();
+                $hasOrgAccess = (bool) ($org && $org->is_active);
+            } catch (\Throwable) {
+                $hasOrgAccess = false;
+            }
+        }
+
+        abort_if(! $hasResidentRole && ! $hasOrgAccess, 403, 'Only residents, property owners, and organization managers can manage billing.');
+
+        $estate = $this->resolveEstate();
 
         $subscription = ResidentSubscription::where('user_id', $user->id)
             ->where('estate_id', $estate->id)

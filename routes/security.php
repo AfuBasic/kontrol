@@ -47,7 +47,6 @@ Route::middleware('role:security')->group(function (): void {
 
         // Quick Entry (Gate Tool)
         Route::prefix('quick-entry')->name('security.quick-entry.')->group(function (): void {
-            Route::get('/reserve', [QuickEntryController::class, 'reserve'])->name('reserve');
             Route::post('/log', [QuickEntryController::class, 'store'])->name('store');
             Route::post('/sync', [QuickEntryController::class, 'sync'])->name('sync');
             Route::get('/lookup', [QuickEntryController::class, 'lookup'])->name('lookup');

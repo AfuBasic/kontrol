@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\ValidateAccessCodeRequest;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
+use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
 use App\Services\Security\CheckpointClaimService;
@@ -25,33 +26,42 @@ use Throwable;
 
 class VerifyController extends Controller
 {
-    public function __construct(
-        protected ValidateAccessCodeAction $validateAccessCodeAction,
-        protected RecordCheckInAction $recordCheckInAction,
-        protected RecordCheckOutAction $recordCheckOutAction,
-        protected CheckoutQuickEntryAction $checkoutQuickEntryAction,
-    ) {}
+    public function __construct(private CheckpointClaimService $checkpointClaim) {}
 
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
-        $estate = app(EstateContextService::class)->getEstate();
+        $estate = Estate::findOrFail($request->attributes->get('estate_id'));
+        $gateName = $this->checkpointClaim->getCurrentCheckpoint($estate->id, $user);
         $settings = EstateSettings::forEstate($estate->id);
-        $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
         $organizations = $estate->organizations()
-            ->quickEntryEnabled()
-            ->select(['id', 'name', 'type', 'operating_hours', 'hours_enforcement'])
+            ->where('is_active', true)
+            ->where('quick_entry_enabled', true)
+            ->select(['id', 'name', 'type', 'access_policy'])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($org) {
+                $status = $org->walkInStatus();
+
+                return [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'type' => $org->type,
+                    'access_policy' => $org->access_policy,
+                    'is_open' => $status['open'],
+                    'status_label' => $status['label'],
+                ];
+            })
+            ->values()
+            ->all();
 
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
-            'gateName' => $gateName,
+            'gateName' => $gateName ?? 'Main Entrance',
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
             'quickEntryEnabled' => (bool) $settings->quick_entry_enabled,
-            'quickEntryHoursEnforcement' => (string) ($settings->quick_entry_hours_enforcement ?: 'warn'),
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
             'organizations' => $organizations,
         ]);
@@ -60,26 +70,23 @@ class VerifyController extends Controller
     public function validate(ValidateAccessCodeRequest $request): RedirectResponse|JsonResponse
     {
         $user = $request->user();
-        $estate = app(EstateContextService::class)->getEstate();
+        $estate = Estate::findOrFail($request->attributes->get('estate_id'));
 
-        $result = $this->validateAccessCodeAction->execute(
-            code: $request->validated('code'),
+        $result = app(ValidateAccessCodeAction::class)->execute(
+            code: $request->input('code'),
             estateId: $estate->id,
         );
 
         if ($result['valid']) {
             if (isset($result['action']) && $result['action'] === 'checkout') {
                 try {
-                    $log = $this->recordCheckOutAction->execute(
-                        code: $request->validated('code'),
+                    $log = app(RecordCheckOutAction::class)->execute(
+                        code: $request->input('code'),
                         estateId: $estate->id,
                         verifiedBy: $user
                     );
-
-                    $result['access_log_id'] = $log->id;
-                    $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
-                    $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
                 } catch (ValidationException $e) {
+                    // e.g. checking out at a different gate than the one claimed for check-in.
                     $result['valid'] = false;
                     $result['status'] = 'checkout_mismatch';
                     $result['message'] = $e->getMessage();
@@ -93,16 +100,22 @@ class VerifyController extends Controller
 
                     return back()->with('validation_result', $result)->withErrors($e->errors());
                 }
+
+                $result['access_log_id'] = $log->id;
+                $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
+                $result['duration_minutes'] = $log->checked_out_at && $log->verified_at
+                    ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                    : 0;
             } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
-                // Do not auto check-in when checkout is pending
+                // The visitor is already inside: the guard confirms checkout via decision(),
+                // so this scan must not record a second check-in.
             } else {
-                // Check in immediately upon successful validation
-                $log = $this->recordCheckInAction->execute(
-                    code: $request->validated('code'),
+                $log = app(RecordCheckInAction::class)->execute(
+                    code: $request->input('code'),
                     estateId: $estate->id,
                     verifiedBy: $user,
                     vehicleData: [],
-                    verificationMethod: $request->validated('source')
+                    verificationMethod: $request->input('source')
                 );
 
                 $result['access_log_id'] = $log->id;
@@ -148,7 +161,7 @@ class VerifyController extends Controller
         ]);
 
         $user = $request->user();
-        $estate = app(EstateContextService::class)->getEstate();
+        $estate = Estate::findOrFail($request->attributes->get('estate_id'));
 
         activity()
             ->causedBy($user)
@@ -168,7 +181,7 @@ class VerifyController extends Controller
                     'vehicle_plate_number' => $request->input('vehicle_plate_number'),
                 ]);
             } else {
-                $this->recordCheckInAction->execute(
+                app(RecordCheckInAction::class)->execute(
                     code: $request->input('code'),
                     estateId: $estate->id,
                     verifiedBy: $user,
@@ -178,48 +191,33 @@ class VerifyController extends Controller
         }
 
         if ($request->input('decision') === 'checkout') {
+            $code = (string) $request->input('code');
+            $accessLogId = $request->input('access_log_id');
+            $targetLog = null;
+
+            if ($accessLogId) {
+                $targetLog = AccessLog::withoutGlobalScopes()
+                    ->where('estate_id', $estate->id)
+                    ->where('id', $accessLogId)
+                    ->first();
+            }
+
+            $isQuickEntry = ($targetLog && ($targetLog->meta['entry_type'] ?? null) === 'quick_entry')
+                || ($targetLog && empty($targetLog->access_code_id))
+                || (! AccessCode::query()->forEstate($estate->id)->where('code', $code)->exists() && ! str_starts_with($code, 'kontrol://pass/'));
+
             try {
-                $code = (string) $request->input('code');
-                $accessLogId = $request->input('access_log_id');
-                $targetLog = null;
-
-                if ($accessLogId) {
-                    $targetLog = AccessLog::withoutGlobalScopes()
-                        ->where('estate_id', $estate->id)
-                        ->where('id', $accessLogId)
-                        ->first();
-                }
-
-                $isQuickEntry = ($targetLog && ($targetLog->meta['entry_type'] ?? null) === 'quick_entry')
-                    || ($targetLog && empty($targetLog->access_code_id))
-                    || (! AccessCode::query()->forEstate($estate->id)->where('code', $code)->exists() && ! str_starts_with($code, 'kontrol://pass/'));
-
-                if ($isQuickEntry) {
-                    $tag = $targetLog->meta['tag'] ?? $code;
-                    $log = $this->checkoutQuickEntryAction->execute(
-                        tag: $tag,
+                $log = $isQuickEntry
+                    ? app(CheckoutQuickEntryAction::class)->execute(
+                        tag: $targetLog->meta['tag'] ?? $code,
                         estateId: $estate->id,
-                        verifiedBy: $user
-                    );
-                } else {
-                    $log = $this->recordCheckOutAction->execute(
+                        checkoutBy: $user
+                    )
+                    : app(RecordCheckOutAction::class)->execute(
                         code: $code,
                         estateId: $estate->id,
                         verifiedBy: $user
                     );
-                }
-
-                if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'decision' => 'checkout',
-                        'checked_in_at' => $log->verified_at?->toIso8601String(),
-                        'checked_out_at' => $log->checked_out_at?->toIso8601String(),
-                        'entry_point' => $log->entry_point ?? 'Main Gate',
-                        'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
-                        'duration_minutes' => $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0,
-                    ]);
-                }
             } catch (ValidationException $e) {
                 if ($request->wantsJson()) {
                     return response()->json([
@@ -231,13 +229,28 @@ class VerifyController extends Controller
 
                 return back()->withErrors($e->errors())->with('error', $e->getMessage());
             }
+
+            // The gate shows a check-out summary built from these fields.
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'decision' => 'checkout',
+                    'checked_in_at' => $log->verified_at?->toIso8601String(),
+                    'checked_out_at' => $log->checked_out_at?->toIso8601String(),
+                    'entry_point' => $log->entry_point ?? 'Main Gate',
+                    'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
+                    'duration_minutes' => $log->checked_out_at && $log->verified_at
+                        ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                        : 0,
+                ]);
+            }
         }
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
         }
 
-        return back();
+        return back()->with('success', 'Decision recorded successfully.');
     }
 
     /**
@@ -278,7 +291,7 @@ class VerifyController extends Controller
 
             $organizations = $estate->organizations()
                 ->quickEntryEnabled()
-                ->select(['id', 'name', 'type', 'operating_hours'])
+                ->select(['id', 'name', 'type', 'access_policy'])
                 ->orderBy('name')
                 ->get();
 
@@ -337,7 +350,7 @@ class VerifyController extends Controller
                         ->first();
 
                     if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
-                        $this->recordCheckInAction->execute(
+                        app(RecordCheckInAction::class)->execute(
                             code: $code,
                             estateId: $estate->id,
                             verifiedBy: $user,

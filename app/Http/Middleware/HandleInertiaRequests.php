@@ -11,8 +11,10 @@ use App\Models\Invoice;
 use App\Models\SosEvent;
 use App\Models\ZeusNotification;
 use App\Services\Notifications\NotificationContextService;
+use App\Services\OrganizationContextService;
 use App\Services\Platform\AndroidMigrationService;
 use App\Services\Resident\AccessCodeService;
+use App\Services\ResidentSubscriptionService;
 use App\Services\Security\CheckpointClaimService;
 use App\Services\Zeus\ImpersonationService;
 use Illuminate\Http\Request;
@@ -104,7 +106,18 @@ class HandleInertiaRequests extends Middleware
                         'zone_name' => $a->zone?->name,
                     ])->all();
             } else {
-                // If no active context, safely provide empty roles/permissions
+                // If no active context, check if user has an active organization context
+                $activeOrg = null;
+                try {
+                    $activeOrg = app(OrganizationContextService::class)->getOrganization();
+                } catch (\Throwable $e) {
+                    // No active organization
+                }
+
+                if ($activeOrg && $activeOrg->estate) {
+                    $estate = $activeOrg->estate;
+                }
+
                 $user->loadMissing('profile');
                 $permissions = [];
                 $roles = [];
@@ -194,13 +207,28 @@ class HandleInertiaRequests extends Middleware
                     })() : false,
                     'notifications' => $contextNotifications,
                     'resident_subscription' => ($estate) ? (function () use ($user, $estate) {
-                        if (! $user->contextHasRole(['resident', 'property_owner'])) {
+                        $hasRole = $user->contextHasRole(['resident', 'property_owner']);
+                        $hasOrgAccess = false;
+                        if (! $hasRole) {
+                            try {
+                                $org = app(OrganizationContextService::class)->getOrganization();
+                                $hasOrgAccess = $org && $org->estate_id === $estate->id;
+                            } catch (\Throwable $e) {
+                                $hasOrgAccess = false;
+                            }
+                        }
+
+                        if (! $hasRole && ! $hasOrgAccess) {
                             return null;
                         }
 
                         $subject = $user;
 
                         $sub = $subject->residentSubscription()->where('estate_id', $estate->id)->first();
+                        if (! $sub) {
+                            $sub = app(ResidentSubscriptionService::class)->createForUser($user, $estate);
+                        }
+
                         if (! $sub) {
                             return null;
                         }
@@ -240,8 +268,8 @@ class HandleInertiaRequests extends Middleware
             'billing_enabled' => fn () => $estate ? ($estate->settings->charge_type === 'estate') : false,
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
-            'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],
-            'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
+            'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions($estate) : [],
+            'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints($estate) : ['min' => 30, 'max' => 1440],
             'unreadCount' => fn () => $user ? app(NotificationContextService::class)->unreadCountForCurrentContext($user) : 0,
             'app_url' => url('/'),
             'app_subdomain_url' => config('domains.routing_enabled')

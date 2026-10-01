@@ -24,9 +24,15 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
  * PassCard HTML element as a PNG image, or fall back to fetching the QR Code,
  * and shares it via the native iOS/Android Share Sheet.
  */
-export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: string; estate_name?: string }, cardElement?: HTMLElement | null) {
-    // Record sharing event in background
-    axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
+export async function shareAccessCode(
+    accessCode: AccessCode & { pass_uuid?: string; estate_name?: string },
+    cardElement?: HTMLElement | null,
+    options: { trackShare?: boolean } = {},
+) {
+    // Record sharing event in background (resident visitor passes only)
+    if (options.trackShare ?? true) {
+        axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
+    }
 
     const formattedFrom = accessCode.starts_at
         ? new Date(accessCode.starts_at).toLocaleDateString('en-GB', {

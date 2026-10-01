@@ -58,6 +58,9 @@ class VisitorLogController extends Controller
             'hosts' => Inertia::defer(fn () => $this->hostsForFilters($estate)),
             'securityOfficers' => Inertia::defer(fn () => $this->securityOfficersForFilters($estate)),
             'checkoutEnabled' => $checkoutEnabled,
+            'currentlyInsideList' => $checkoutEnabled
+                ? $this->buildCurrentlyInsideList($estate->id)
+                : [],
             'activeVisitCount' => $checkoutEnabled
                 ? $this->activeVisitService->countEstateActiveVisits($estate->id)
                 : 0,

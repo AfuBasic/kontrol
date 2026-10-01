@@ -7,6 +7,7 @@ use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRenewal;
+use App\Notifications\BulkInviteRenewedNotification;
 use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -59,10 +60,7 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
         }
 
         // Subscription check
-        $sub = $estate?->subscriptionRecord;
-        $hasActiveSub = $sub && ($sub->isActive() || $sub->isOnTrial());
-
-        if (! $hasActiveSub) {
+        if (! $organization->hasActiveSubscription()) {
             $bulkInvite->update([
                 'renewal_blocked_reason' => 'subscription_required',
             ]);
@@ -76,7 +74,7 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
                 'blocked_reason' => 'subscription_required',
             ]);
 
-            Log::info("RenewBulkVisitorInvitesJob: Estate {$estate?->id} has no active subscription. Blocked renewal for bulk invite {$bulkInvite->id}.");
+            Log::info("RenewBulkVisitorInvitesJob: Organization {$organization->id} has no active subscription. Blocked renewal for bulk invite {$bulkInvite->id}.");
 
             return;
         }
@@ -183,10 +181,19 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
                     'updated_at' => now(),
                 ]);
 
-            DB::afterCommit(function () use ($dispatches) {
+            DB::afterCommit(function () use ($dispatches, $bulkInvite, $renewedCount, $blockedCount) {
                 foreach ($dispatches as $item) {
                     DeliverBulkVisitorPassJob::dispatch($item['accessCodeId'], $item['recipientId']);
                 }
+
+                // Notify list creator via mail + database + push
+                $creator = $bulkInvite->createdBy;
+                if ($creator) {
+                    $creator->notify(new BulkInviteRenewedNotification($bulkInvite, $renewedCount, $blockedCount));
+                }
+
+                // Schedule delivery error check delayed by 2 minutes
+                NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
             });
         });
     }

@@ -1,6 +1,5 @@
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import {
-    AlertCircle,
     AlertTriangle,
     BadgeCheck,
     Ban,
@@ -21,6 +20,7 @@ import {
     UserCircle,
     UserPlus,
     Users,
+    Trash2,
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
@@ -28,8 +28,11 @@ import { shareAccessCode } from '@/Utils/share';
 import FilterChips from '@/Components/Organization/FilterChips';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
+import WalkInHoursSetupCard from '@/Components/Organization/WalkInHoursSetupCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface Member {
     id: number;
@@ -61,10 +64,6 @@ interface PaginatedMembers {
 interface MetricProps {
     currently_inside: number;
     today_entries: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
 }
 
 interface ActivityItem {
@@ -73,7 +72,7 @@ interface ActivityItem {
     category: string;
     gate: string;
     time_human: string;
-    type: 'arrival' | 'confirmed' | 'checkout';
+    type: 'arrival' | 'checkout';
     is_active: boolean;
 }
 
@@ -82,10 +81,10 @@ interface Props {
         id: number;
         name: string;
         access_policy: string;
-        arrival_confirmation_required?: boolean;
-        confirmation_window_minutes?: number;
-        confirmation_escalation?: string;
+        walk_in?: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
         estate_name?: string;
+        visitor_checkout_enabled?: boolean;
     };
     membership: {
         role: string;
@@ -99,7 +98,6 @@ interface Props {
     };
     total_access_members?: number;
     metrics?: MetricProps;
-    pending_arrivals?: Array<{ confirmation_state: string }>;
     recent_activity?: ActivityItem[];
 }
 
@@ -135,7 +133,6 @@ export default function AccessList({
     filters,
     total_access_members = 0,
     metrics,
-    pending_arrivals = [],
     recent_activity = [],
 }: Props) {
     const page = usePage();
@@ -143,6 +140,7 @@ export default function AccessList({
     const user = auth.user || {};
 
     const [addPersonModalOpen, setAddPersonModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [shareCopied, setShareCopied] = useState(false);
@@ -152,7 +150,7 @@ export default function AccessList({
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [status, setStatus] = useState(filters.status ?? 'all');
 
-    type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | null;
+    type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | 'delete' | null;
     const [confirmAction, setConfirmAction] = useState<ConfirmActionType>(null);
 
     const {
@@ -174,16 +172,11 @@ export default function AccessList({
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('action') === 'add_person') {
-            setAddPersonModalOpen(true);
+            gated(() => setAddPersonModalOpen(true))();
         }
-    }, []);
+    }, [gated]);
 
     const currentlyHere = metrics?.currently_inside ?? 0;
-    const waitingCount = pending_arrivals.length;
-    const overdueTotal = metrics?.overdue_confirmation ?? 0;
-    const attentionCount = overdueTotal;
-    const needsAttention = attentionCount > 0 || waitingCount > 0;
-    const isCritical = overdueTotal >= 3;
     const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
 
     const getGreeting = () => {
@@ -192,12 +185,6 @@ export default function AccessList({
         if (hour < 17) return 'Good afternoon';
         return 'Good evening';
     };
-
-    const stateConfig = isCritical
-        ? { label: 'Critical attention', dot: 'bg-rose-500', textColor: 'text-rose-700', bgColor: 'bg-rose-50' }
-        : needsAttention
-          ? { label: 'Needs attention', dot: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50' }
-          : { label: 'All systems normal', dot: 'bg-emerald-500', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50/60' };
 
     const getMemberStatus = (member: Member) => {
         if (member.status === 'suspended') return { label: 'Suspended', color: 'rose' };
@@ -208,7 +195,6 @@ export default function AccessList({
 
     const getActivityStatus = (item: ActivityItem) => {
         if (item.type === 'checkout') return { label: 'Checked out', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
-        if (item.type === 'confirmed') return { label: 'Confirmed', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
         if (!item.is_active) return { label: 'Departed', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
         return { label: 'Inside', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
     };
@@ -251,6 +237,13 @@ export default function AccessList({
     const handleRevoke = (member: Member) => {
         if (!member.active_credential) return;
         router.post(`/org/credentials/${member.active_credential.id}/revoke`, {}, { preserveScroll: true, onSuccess: () => setSelectedMember(null) });
+    };
+
+    const handleDeleteMember = (member: Member) => {
+        router.delete(`/org/access-list/${member.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
+        });
     };
 
     const handleIssue = (member: Member) => {
@@ -321,7 +314,7 @@ export default function AccessList({
                         {membership.is_admin && (
                             <button
                                 type="button"
-                                onClick={() => setAddPersonModalOpen(true)}
+                                onClick={gated(() => setAddPersonModalOpen(true))}
                                 className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
                                 <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -337,6 +330,10 @@ export default function AccessList({
                         </p>
                     )}
                 </header>
+
+                {organization.needs_walk_in_hours && (
+                    <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />
+                )}
 
                 {/* ACCESS OVERVIEW CARD */}
                 <Link
@@ -362,8 +359,8 @@ export default function AccessList({
                 <div className="soft-card overflow-hidden p-0">
                     <AccessTabs
                         activeTab="people"
-                        pendingCount={waitingCount}
                         activeCount={currentlyHere}
+                        showOnSiteTab={organization.visitor_checkout_enabled}
                     />
                 </div>
 
@@ -373,7 +370,7 @@ export default function AccessList({
                     <div className="grid grid-cols-2 gap-3.5">
                         <button
                             type="button"
-                            onClick={() => setAddPersonModalOpen(true)}
+                            onClick={gated(() => setAddPersonModalOpen(true))}
                             className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
@@ -404,24 +401,26 @@ export default function AccessList({
                             </div>
                         </Link>
 
-                        <Link
-                            href="/org/arrivals"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                        >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
-                                <Clock className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's on site</span>
+                        {organization.visitor_checkout_enabled && (
+                            <Link
+                                href="/org/on-site"
+                                className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                            >
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                                    <Clock className="h-5 w-5" strokeWidth={2.2} />
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
-                            </div>
-                        </Link>
+                                <div className="flex items-end justify-between w-full mt-auto">
+                                    <div className="flex flex-col">
+                                        <span className="text-[14px] font-bold text-[#071f4b] leading-tight">On-site</span>
+                                        <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's present</span>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                </div>
+                            </Link>
+                        )}
 
                         <Link
-                            href="/org/arrivals/history"
+                            href="/org/on-site/history"
                             className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
                         >
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
@@ -443,14 +442,21 @@ export default function AccessList({
                     <div className="soft-card flex flex-col p-3.5">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
-                            <div className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateConfig.bgColor} ${stateConfig.textColor}`}>
-                                <span className={`h-1.5 w-1.5 rounded-full ${stateConfig.dot}`} />
-                                {stateConfig.label}
-                            </div>
+                            {organization.walk_in && (
+                                <Link
+                                    href="/org/public-windows"
+                                    className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                        organization.walk_in.open ? 'bg-emerald-50/70 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                                    }`}
+                                >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                    Walk-ins · {organization.walk_in.label}
+                                </Link>
+                            )}
                         </div>
 
                         <div className="flex items-stretch justify-between">
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-mint mb-1.5">
                                     <Users className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -462,31 +468,7 @@ export default function AccessList({
 
                             <div className="w-px bg-slate-100 self-stretch mx-0.5" />
 
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
-                                    <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{waitingCount}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
-                                    Waiting <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                                </span>
-                            </Link>
-
-                            <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                            <Link href="/org/arrivals" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
-                                    <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{attentionCount}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
-                                    Needs attention <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                                </span>
-                            </Link>
-
-                            <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                            <Link href="/org/arrivals/history" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
+                            <Link href="/org/on-site/history" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-sky mb-1.5">
                                     <Calendar className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
@@ -503,7 +485,7 @@ export default function AccessList({
                 <div className="flex flex-col">
                     <div className="flex items-center justify-between mb-2.5 px-0.5">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
-                        <Link href="/org/arrivals/history" className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition">
+                        <Link href="/org/on-site/history" className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition">
                             View all <ChevronRight className="h-3 w-3 ml-0.5" />
                         </Link>
                     </div>
@@ -515,10 +497,9 @@ export default function AccessList({
                             {recent_activity.slice(0, 5).map((item, index) => {
                                 const actStatus = getActivityStatus(item);
                                 return (
-                                    <Link
+                                    <div
                                         key={item.id}
-                                        href={`/org/arrivals/${item.id}`}
-                                        className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 active:bg-slate-100 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
+                                        className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
                                     >
                                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}>
                                             {initialsFor(item.name)}
@@ -537,9 +518,8 @@ export default function AccessList({
                                         </div>
                                         <div className="flex shrink-0 flex-col items-end gap-0.5">
                                             <span className="text-[11px] font-medium text-slate-400">{item.time_human}</span>
-                                            <ChevronRight className="h-3.5 w-3.5 text-slate-300" strokeWidth={2.5} />
                                         </div>
-                                    </Link>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -562,7 +542,7 @@ export default function AccessList({
                             onChange={(event) => setSearch(event.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                             placeholder="Search people..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
@@ -593,7 +573,7 @@ export default function AccessList({
                             {membership.is_admin && (
                                 <button
                                     type="button"
-                                    onClick={() => setAddPersonModalOpen(true)}
+                                    onClick={gated(() => setAddPersonModalOpen(true))}
                                     className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#0b4aa2] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0a408b] active:scale-[0.98]"
                                 >
                                     <Plus className="h-4 w-4" strokeWidth={2.25} />
@@ -777,7 +757,7 @@ export default function AccessList({
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">ID Number</dt>
-                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.identifier || '—'}</dd>
+                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.identifier || '-'}</dd>
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">Valid Until</dt>
@@ -879,7 +859,20 @@ export default function AccessList({
                                                         </div>
                                                     </div>
                                                 </button>
-                                            )}
+                                             )}
+
+                                            <button
+                                                onClick={() => setConfirmAction('delete')}
+                                                className="flex w-full items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 p-4 transition-colors hover:border-rose-300 hover:bg-rose-100/60"
+                                            >
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <Trash2 className="h-5 w-5 text-rose-600" />
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-rose-900">Delete person & access</p>
+                                                        <p className="text-xs text-rose-700">Permanently delete pass and access</p>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -894,18 +887,20 @@ export default function AccessList({
                         <div className="flex flex-col gap-5 pt-2 pb-4">
                             <div className="flex items-start gap-4">
                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${confirmAction === 'activate' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : confirmAction === 'delete' ? <Trash2 className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-900">
                                         {confirmAction === 'suspend' && 'Suspend Access?'}
                                         {confirmAction === 'activate' && 'Reactivate Access?'}
                                         {confirmAction === 'revoke' && 'Revoke Code?'}
+                                        {confirmAction === 'delete' && 'Delete Person & Access?'}
                                     </h3>
                                     <p className="mt-1.5 text-[15px] leading-snug text-slate-500">
                                         {confirmAction === 'suspend' && `Are you sure you want to suspend access for ${selectedMember.name}? Their code will be temporarily disabled.`}
                                         {confirmAction === 'activate' && `Are you sure you want to reactivate access for ${selectedMember.name}? Their previous code will be valid again.`}
                                         {confirmAction === 'revoke' && 'Are you sure you want to permanently revoke this code? You will need to issue a new code if they need access again.'}
+                                        {confirmAction === 'delete' && `Are you sure you want to permanently delete ${selectedMember.name}? This will remove their record and delete all associated access codes and passes permanently.`}
                                     </p>
                                 </div>
                             </div>
@@ -921,6 +916,7 @@ export default function AccessList({
                                         if (confirmAction === 'suspend') handleSuspend(selectedMember);
                                         if (confirmAction === 'activate') handleActivate(selectedMember);
                                         if (confirmAction === 'revoke') handleRevoke(selectedMember);
+                                        if (confirmAction === 'delete') handleDeleteMember(selectedMember);
                                         setConfirmAction(null);
                                     }}
                                     className={`flex h-12 flex-1 items-center justify-center rounded-2xl text-[15px] font-bold text-white shadow-xs ${confirmAction === 'activate' ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800' : 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800'}`}
@@ -928,11 +924,15 @@ export default function AccessList({
                                     {confirmAction === 'suspend' && 'Yes, Suspend'}
                                     {confirmAction === 'activate' && 'Yes, Reactivate'}
                                     {confirmAction === 'revoke' && 'Yes, Revoke'}
+                                    {confirmAction === 'delete' && 'Yes, Delete'}
                                 </button>
                             </div>
                         </div>
                     )}
                 </ResponsiveSheet>
+
+                {/* Subscription Gate Sheet */}
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );

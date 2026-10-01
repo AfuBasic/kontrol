@@ -32,10 +32,10 @@ export default function FilterChips({ options, value, onChange, variant = 'categ
                         key={option.id}
                         type="button"
                         onClick={() => onChange(option.id)}
-                        className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
+                        className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
                             isSelected
-                                ? 'bg-[#0b4aa2] font-semibold text-white'
-                                : 'border border-slate-200/80 bg-white font-medium text-slate-600 hover:bg-slate-50'
+                                ? 'bg-[#eef4ff] text-[#1a5dbf] border border-[#dce9ff] shadow-xs'
+                                : 'text-slate-500 hover:text-slate-700'
                         }`}
                     >
                         {!isSelected && variant === 'status' && option.color && (

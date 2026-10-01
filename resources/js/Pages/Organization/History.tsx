@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import FilterChips from '@/Components/Organization/FilterChips';
@@ -16,8 +16,6 @@ interface Log {
     verified_at_human: string | null;
     checked_out_at: string | null;
     checked_out_at_human: string | null;
-    confirmed_at: string | null;
-    confirmation_state: string;
 }
 
 interface PaginatedLogs {
@@ -52,7 +50,7 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/arrivals/history', { search }, { preserveState: true, preserveScroll: true });
+        router.get('/org/on-site/history', { search }, { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
@@ -118,7 +116,7 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search history..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 

@@ -11,7 +11,7 @@ class OrganizationBulkInviteValidityPolicy
     /**
      * Maximum number of recipients in a single bulk invite.
      */
-    public const MAX_RECIPIENTS = 20;
+    public const MAX_RECIPIENTS = 30;
 
     /**
      * Maximum validity period in days for a bulk invite cycle.

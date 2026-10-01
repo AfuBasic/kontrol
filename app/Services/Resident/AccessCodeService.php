@@ -656,9 +656,9 @@ class AccessCodeService
      *
      * @return array<int, array{minutes: int, label: string}>
      */
-    public function getDurationOptions(): array
+    public function getDurationOptions(?Estate $estate = null): array
     {
-        $estate = $this->estateContext->getEstate();
+        $estate = $estate ?? $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         $min = $settings->access_code_min_lifespan_minutes ?? 30;
@@ -725,9 +725,9 @@ class AccessCodeService
     /**
      * Get duration constraints for custom input.
      */
-    public function getDurationConstraints(): array
+    public function getDurationConstraints(?Estate $estate = null): array
     {
-        $estate = $this->estateContext->getEstate();
+        $estate = $estate ?? $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         return [

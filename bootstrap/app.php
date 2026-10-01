@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckEstateFeature;
+use App\Http\Middleware\EnsureCanManageResidentBilling;
 use App\Http\Middleware\EnsureOrganizationMembership;
 use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -134,6 +135,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
             'guest' => RedirectIfAuthenticated::class,
             'permission' => PermissionMiddleware::class,
+            'resident.billing' => EnsureCanManageResidentBilling::class,
             'resident.active' => EnsureResidentSubscriptionActive::class,
             'feature' => CheckEstateFeature::class,
             'check-estate-feature' => CheckEstateFeature::class,

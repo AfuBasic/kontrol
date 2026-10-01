@@ -35,7 +35,7 @@ class IntendedDestinationGuard
             $normalizedPath === 'resident/billing',
             str_starts_with($normalizedPath, 'resident/billing/'),
             $normalizedPath === 'resident/coupons',
-            str_starts_with($normalizedPath, 'resident/coupons/') => $user->contextHasRole(['resident', 'property_owner']),
+            str_starts_with($normalizedPath, 'resident/coupons/') => $user->contextHasRole(['resident', 'property_owner']) || $user->organizationMemberships()->where('is_active', true)->exists(),
             default => true,
         };
     }
@@ -121,6 +121,10 @@ class IntendedDestinationGuard
         }
 
         foreach ($route->gatherMiddleware() as $middleware) {
+            if ($middleware === 'resident.billing') {
+                return $user->contextHasRole(['resident', 'property_owner']) || $user->organizationMemberships()->where('is_active', true)->exists();
+            }
+
             if (! is_string($middleware) || ! str_starts_with($middleware, 'role:')) {
                 continue;
             }

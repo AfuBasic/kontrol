@@ -46,15 +46,4 @@ class OrganizationPolicy
     {
         return $this->update($user, $estateOrganization);
     }
-
-    /**
-     * Determine whether the user can confirm arrivals for this organization.
-     */
-    public function confirmArrival(User $user, EstateOrganization $estateOrganization): bool
-    {
-        return OrganizationMembership::where('user_id', $user->id)
-            ->where('organization_id', $estateOrganization->id)
-            ->where('is_active', true)
-            ->exists();
-    }
 }

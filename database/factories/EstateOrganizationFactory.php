@@ -22,7 +22,7 @@ class EstateOrganizationFactory extends Factory
             'estate_id' => Estate::factory(),
             'name' => fake()->company(),
             'type' => fake()->randomElement(['school', 'church', 'hospital', 'business', 'other']),
-            'operating_hours' => null,
+            'access_policy' => 'managed',
             'quick_entry_enabled' => true,
             'is_active' => true,
         ];
