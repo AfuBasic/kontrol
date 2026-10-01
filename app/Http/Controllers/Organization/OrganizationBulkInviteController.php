@@ -260,6 +260,9 @@ class OrganizationBulkInviteController extends Controller
                 'valid_from_label' => $this->shortDate($validFrom),
                 'valid_until_label' => $this->shortDate($validUntil),
                 'days_left' => $validUntil ? max(0, (int) ceil($now->diffInDays($validUntil, false))) : 0,
+                'elapsed_ratio' => $validFrom && $validUntil && $validUntil->gt($validFrom)
+                    ? round(min(1, max(0, $validFrom->diffInSeconds($now, false) / $validFrom->diffInSeconds($validUntil))), 4)
+                    : 0,
                 'auto_renew' => (bool) $bulkInvite->auto_renew,
                 'next_renewal_label' => $bulkInvite->auto_renew && $bulkInvite->next_renewal_at
                     ? $this->shortDate(Carbon::parse($bulkInvite->next_renewal_at))
