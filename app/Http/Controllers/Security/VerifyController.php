@@ -37,7 +37,6 @@ class VerifyController extends Controller
 
         $organizations = $estate->organizations()
             ->where('is_active', true)
-            ->where('quick_entry_enabled', true)
             ->select(['id', 'name', 'type', 'access_policy'])
             ->orderBy('name')
             ->get()
@@ -290,7 +289,7 @@ class VerifyController extends Controller
             });
 
             $organizations = $estate->organizations()
-                ->quickEntryEnabled()
+                ->where('is_active', true)
                 ->select(['id', 'name', 'type', 'access_policy'])
                 ->orderBy('name')
                 ->get();
