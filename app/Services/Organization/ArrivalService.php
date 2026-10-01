@@ -36,6 +36,8 @@ class ArrivalService
             $query->where('meta->admission_basis', $filters['admission_basis']);
         }
 
+        $this->applyEntryTypeFilter($query, $filters['entry_type'] ?? null);
+
         return $query->get()->map(fn (AccessLog $log) => $this->transformArrival($log, $organization));
     }
 
@@ -61,6 +63,8 @@ class ArrivalService
         if (! empty($filters['date'])) {
             $query->whereDate('verified_at', $filters['date']);
         }
+
+        $this->applyEntryTypeFilter($query, $filters['entry_type'] ?? null);
 
         if (! empty($filters['status'])) {
             if ($filters['status'] === 'active') {
@@ -96,6 +100,20 @@ class ArrivalService
     }
 
     /**
+     * Narrow a query to walk-ins (admitted with a tag) or to entries made with an access code.
+     *
+     * @param  Builder<AccessLog>  $query
+     */
+    private function applyEntryTypeFilter(Builder $query, ?string $entryType): void
+    {
+        if ($entryType === 'walk_in') {
+            $query->walkIn();
+        } elseif ($entryType === 'access_code') {
+            $query->viaAccessCode();
+        }
+    }
+
+    /**
      * Transform an AccessLog into an enriched payload.
      */
     public function transformArrival(AccessLog $log, ?EstateOrganization $organization = null): array
@@ -105,6 +123,8 @@ class ArrivalService
 
         return [
             'id' => $log->id,
+            // How this person got in: with an access code, or as a walk-in admitted with a tag.
+            'entry_type' => $log->isWalkIn() ? 'walk_in' : 'access_code',
             'tag' => $meta['tag'] ?? null,
             'visitor_name' => $meta['visitor_name'] ?? 'Visitor',
             'admission_basis' => $meta['admission_basis'] ?? ($meta['entry_type'] ?? 'unknown'),
