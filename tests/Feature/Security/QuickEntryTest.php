@@ -337,3 +337,30 @@ it('refuses walk-ins to an inactive organization', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['organization_id']);
 });
+
+it('refuses walk-in admission when the estate has switched quick entry off', function () {
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->admit)($this->hospital)->assertStatus(422)->assertJsonValidationErrors('organization_id');
+
+    expect(AccessLog::withoutGlobalScopes()->where('meta->entry_type', 'quick_entry')->count())->toBe(0);
+});
+
+it('still lets a guard check out a tag after quick entry is switched off', function () {
+    $tag = ($this->admit)($this->hospital)->assertOk()->json('tag');
+
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->asGuard)()->postJson(route('security.quick-entry.checkout'), ['tag' => $tag])->assertOk();
+});
+
+it('requires a plate for a reported vehicle when the estate requires vehicle information', function () {
+    EstateSettings::forEstate($this->estate->id)->update(['require_vehicle_information' => true]);
+
+    ($this->admit)($this->hospital, ['vehicle_make' => 'Toyota'])
+        ->assertStatus(422)->assertJsonValidationErrors('vehicle_plate_number');
+
+    // On foot, nothing is required.
+    ($this->admit)($this->hospital)->assertOk();
+    ($this->admit)($this->hospital, ['vehicle_make' => 'Toyota', 'vehicle_plate_number' => 'ABC-123-XY'])->assertOk();
+});
