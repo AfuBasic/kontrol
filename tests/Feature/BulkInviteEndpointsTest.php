@@ -72,7 +72,7 @@ test('organization admin can view bulk invites index and show pages', function (
     $showRes->assertOk();
 });
 
-test('bulk invites index provides server-computed validity, renewal, and delivery payload without eager-loading recipients', function () {
+test('bulk invites index provides server-computed validity, renewal, and delivery payload with a recipient preview', function () {
     $this->actingAs($this->orgAdmin);
 
     // 1. Upcoming
@@ -141,7 +141,7 @@ test('bulk invites index provides server-computed validity, renewal, and deliver
     // Ensure recipients collection is NOT eager-loaded on items
     foreach ($invites as $item) {
         expect(array_key_exists('recipients', $item))->toBeFalse();
-        expect($item)->toHaveKeys(['validity', 'renewal', 'delivery']);
+        expect($item)->toHaveKeys(['validity', 'renewal', 'delivery', 'recipient_preview']);
     }
 
     $byName = collect($invites)->keyBy('name');
@@ -151,6 +151,73 @@ test('bulk invites index provides server-computed validity, renewal, and deliver
         ->and($byName['Past Due Group']['validity']['state'])->toBe('expired')
         ->and($byName['Cancelled Group']['validity']['state'])->toBe('cancelled')
         ->and($byName['Blocked Renewal Group']['renewal']['blocked_reason_label'])->toBe('subscription required');
+});
+
+test('bulk invites index formats dates without weekday and hides the default purpose', function () {
+    $this->actingAs($this->orgAdmin);
+
+    $validUntil = now()->addDays(20);
+
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Default Purpose Group',
+        'purpose' => "{$this->org->name} - Visitor Pass",
+        'valid_from' => now()->toDateString(),
+        'valid_until' => $validUntil->toDateString(),
+        'status' => 'active',
+    ]);
+
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Custom Purpose Group',
+        'purpose' => 'Parents',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => $validUntil->toDateString(),
+        'status' => 'active',
+    ]);
+
+    $invites = collect($this->get(route('org.bulk-invites.index'))
+        ->assertOk()
+        ->inertiaPage()['props']['bulkInvites']['data'])
+        ->keyBy('name');
+
+    $expectedLabel = $validUntil->year === now()->year
+        ? $validUntil->isoFormat('D MMM')
+        : $validUntil->isoFormat('D MMM YYYY');
+
+    expect($invites['Default Purpose Group']['purpose_label'])->toBeNull()
+        ->and($invites['Custom Purpose Group']['purpose_label'])->toBe('Parents')
+        ->and($invites['Custom Purpose Group']['validity']['ends_on_label'])->toBe($expectedLabel);
+});
+
+test('bulk invites index previews the first three recipient emails per group', function () {
+    $this->actingAs($this->orgAdmin);
+
+    $invite = OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Preview Group',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(10)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    foreach (['a@example.com', 'b@example.com', 'c@example.com', 'd@example.com', 'e@example.com'] as $email) {
+        $invite->recipients()->create(['email' => $email, 'status' => 'active', 'delivery_status' => 'sent']);
+    }
+
+    $item = collect($this->get(route('org.bulk-invites.index'))
+        ->assertOk()
+        ->inertiaPage()['props']['bulkInvites']['data'])
+        ->firstWhere('name', 'Preview Group');
+
+    expect($item['recipient_preview'])->toBe(['a@example.com', 'b@example.com', 'c@example.com'])
+        ->and($item['recipients_count'])->toBe(5);
 });
 
 test('delivery-status endpoint returns summary and recipient details', function () {
