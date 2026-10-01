@@ -69,13 +69,12 @@ class PublicWindowController extends Controller
 
         if ($this->policyLock($organization) !== null) {
             throw ValidationException::withMessages([
-                'access_policy' => [$organization->type === 'hospital'
-                    ? 'Hospitals and clinics always admit walk-ins; this cannot be changed.'
-                    : 'Walk-ins any time was set by the estate admin. Ask them to change it.'],
+                'access_policy' => ['Hospitals and clinics always admit walk-ins; this cannot be changed.'],
             ]);
         }
 
-        // "Any time" is the estate's decision: an organization may only choose between the two below.
+        // "Any time" is the estate's decision: an organization may only choose between the two below,
+        // including one that the estate has set to "any time" (it can step down, never back up).
         $validated = $request->validate([
             'access_policy' => ['required', 'string', 'in:managed,public_window'],
         ], [
@@ -100,15 +99,11 @@ class PublicWindowController extends Controller
     /**
      * Why this organization cannot change its own walk-in policy, or null when it can.
      *
-     * Hospitals are never blocked, and "any time" is only ever granted by the estate admin.
+     * Hospitals are never blocked, so theirs is fixed at "any time".
      */
     private function policyLock(EstateOrganization $organization): ?string
     {
-        if ($organization->type === 'hospital') {
-            return 'hospital';
-        }
-
-        return $organization->access_policy === 'unrestricted' ? 'estate' : null;
+        return $organization->type === 'hospital' ? 'hospital' : null;
     }
 
     public function store(Request $request): RedirectResponse
