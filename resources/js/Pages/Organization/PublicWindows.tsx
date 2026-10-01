@@ -67,6 +67,8 @@ export default function PublicWindows({ organization, membership, windows }: Pro
     const openAdd = () => {
         addForm.reset();
         addForm.clearErrors();
+        // First time: most organizations open on weekdays, so start there.
+        if (windows.length === 0) addForm.setData('days', [1, 2, 3, 4, 5]);
         setSheet('add');
     };
 
@@ -163,6 +165,27 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                 </div>
 
                 {policyNote && <p className="mt-3 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[12.5px] text-amber-800 ring-1 ring-amber-100">{policyNote}</p>}
+
+                {windows.length === 0 && organization.access_policy === 'public_window' && (
+                    <div className="mt-6 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 px-5 py-6 text-center">
+                        <p className="text-[16px] font-semibold text-amber-950">No walk-in hours yet</p>
+                        <p className="mx-auto mt-1 max-w-xs text-[13px] text-amber-900/80">
+                            Until you add them, security turns away anyone who arrives for {organization.name} without a pass.
+                        </p>
+                        {membership.is_admin ? (
+                            <button
+                                type="button"
+                                onClick={openAdd}
+                                className="mt-4 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#071f4b] px-5 text-[15px] font-medium text-white active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                                Add your hours
+                            </button>
+                        ) : (
+                            <p className="mt-3 text-[13px] text-amber-900">Ask an organization admin to add them.</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Week */}
                 <section className="mt-6">
