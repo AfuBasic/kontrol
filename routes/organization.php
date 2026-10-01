@@ -68,6 +68,8 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/{bulkInvite}/delivery-status', [OrganizationBulkInviteController::class, 'deliveryStatus'])->name('delivery-status');
         Route::post('/{bulkInvite}/retry-failed', [OrganizationBulkInviteController::class, 'retryFailed'])->name('retry-failed');
         Route::post('/{bulkInvite}/cancel', [OrganizationBulkInviteController::class, 'cancel'])->name('cancel');
+        Route::delete('/{bulkInvite}/recipients/{recipient}', [OrganizationBulkInviteController::class, 'removeRecipient'])->name('recipients.destroy');
+        Route::post('/{bulkInvite}/recipients/{recipient}/resend', [OrganizationBulkInviteController::class, 'resendRecipient'])->name('recipients.resend');
 
         // Requires active subscription
         Route::middleware('resident.active:force')->group(function () {
