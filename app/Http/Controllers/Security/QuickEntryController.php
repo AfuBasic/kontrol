@@ -26,6 +26,7 @@ class QuickEntryController
         $estateId = $request->attributes->get('estate_id');
 
         $validated = $request->validate([
+            'tag' => ['nullable', 'string', 'size:4', 'alpha_num'],
             'organization_id' => ['required', 'exists:estate_organizations,id'],
             'visitor_name' => ['nullable', 'string', 'max:255'],
             'id_photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
