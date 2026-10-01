@@ -264,3 +264,29 @@ it('explains when no visitor inside holds the tag', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['tag']);
 });
+
+it('lists every active organization on the gate, with walk-in status, so closed ones can be explained', function () {
+    EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Dormant Org',
+        'is_active' => false,
+        'access_policy' => 'unrestricted',
+    ]);
+
+    $props = ($this->asGuard)()->get(route('security.verify'))->assertOk()->inertiaPage()['props'];
+    $byName = collect($props['organizations'])->keyBy('name');
+
+    expect($byName)->toHaveKeys(['Grace Chapel', 'City Hospital', 'Lounge Bar'])
+        ->and($byName)->not->toHaveKey('Dormant Org')
+        ->and($byName['City Hospital']['is_open'])->toBeTrue()
+        ->and($byName['Lounge Bar']['is_open'])->toBeFalse()
+        ->and($byName['Lounge Bar']['status_label'])->toBe('Closed to walk-ins');
+});
+
+it('refuses walk-ins to an inactive organization', function () {
+    $this->hospital->update(['is_active' => false]);
+
+    ($this->admit)($this->hospital)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['organization_id']);
+});
