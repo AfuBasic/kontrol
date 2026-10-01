@@ -56,7 +56,7 @@ beforeEach(function () {
         name: 'Staff',
     );
 
-    $this->logVisit = function (string $email, $at, $checkedOutAt = null, ?string $gate = null): AccessLog {
+    $this->logVisit = function (string $email, $at, $checkedOutAt = null, ?string $gate = null, ?string $exitGate = null): AccessLog {
         $recipient = $this->bulkInvite->recipients()->where('email', $email)->firstOrFail();
 
         return AccessLog::create([
@@ -67,6 +67,7 @@ beforeEach(function () {
             'verified_at' => $at,
             'checked_out_at' => $checkedOutAt,
             'entry_point' => $gate,
+            'meta' => $exitGate ? ['exit_point' => $exitGate] : null,
         ]);
     };
 });
@@ -108,7 +109,7 @@ test('an entry from a previous day without check-out does not count as inside no
 test('person visit history is newest first with gate and times', function () {
     $this->actingAs($this->orgAdmin);
 
-    ($this->logVisit)('ada@example.com', now()->subDays(3)->setTime(9, 15), now()->subDays(3)->setTime(17, 5), 'North Gate');
+    ($this->logVisit)('ada@example.com', now()->subDays(3)->setTime(9, 15), now()->subDays(3)->setTime(17, 5), 'North Gate', 'South Gate');
     ($this->logVisit)('ada@example.com', now()->setTime(0, 30), null, 'Main Gate');
     ($this->logVisit)('bayo@example.com', now()->subHour());
 
@@ -125,6 +126,8 @@ test('person visit history is newest first with gate and times', function () {
         ->and($json['data'][1]['entered_at_label'])->toBe('9:15 AM')
         ->and($json['data'][1]['left_at_label'])->toBe('5:05 PM')
         ->and($json['data'][1]['is_inside'])->toBeFalse()
+        ->and($json['data'][1]['exit_point'])->toBe('South Gate')
+        ->and($json['data'][0]['exit_point'])->toBeNull()
         ->and($json['next_cursor'])->toBeNull();
 });
 
