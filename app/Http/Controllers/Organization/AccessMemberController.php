@@ -35,10 +35,6 @@ class AccessMemberController extends Controller
         $metrics = $this->arrivalService->getMetrics($organization);
         $activeArrivals = $this->arrivalService->getActiveArrivals($organization);
 
-        $pendingArrivals = $activeArrivals
-            ->filter(fn (array $arr) => in_array($arr['confirmation_state'], ['PENDING', 'OVERDUE'], true))
-            ->values();
-
         $recentLogs = AccessLog::withoutGlobalScope(ZoneScope::class)
             ->where('organization_id', $organization->id)
             ->with(['accessCode.organizationMember'])
@@ -56,9 +52,6 @@ class AccessMemberController extends Controller
             if ($log->checked_out_at) {
                 $type = 'checkout';
                 $timestamp = $log->checked_out_at->format('g:i A');
-            } elseif ($log->confirmed_at) {
-                $type = 'confirmed';
-                $timestamp = $log->confirmed_at->format('g:i A');
             } else {
                 $type = 'arrival';
                 $timestamp = $log->verified_at ? $log->verified_at->format('g:i A') : 'Just now';
@@ -80,10 +73,8 @@ class AccessMemberController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
-                'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
-                'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
-                'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
                 'estate_name' => $organization->estate?->name,
+                'walk_in' => $organization->walkInStatus(),
                 'visitor_checkout_enabled' => (bool) ($organization->estate?->settings?->visitor_checkout_enabled ?? false),
             ],
             'membership' => [
@@ -95,7 +86,6 @@ class AccessMemberController extends Controller
             'initialTab' => $request->query('tab', 'people'),
             'total_access_members' => OrganizationAccessMember::where('organization_id', $organization->id)->count(),
             'metrics' => $metrics,
-            'pending_arrivals' => $pendingArrivals,
             'recent_activity' => $recentActivity,
         ]);
     }
