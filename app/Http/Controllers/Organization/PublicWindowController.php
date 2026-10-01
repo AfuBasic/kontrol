@@ -9,6 +9,7 @@ use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,8 @@ class PublicWindowController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
+                // A hospital is never blocked, so its policy cannot be changed from here.
+                'policy_locked' => $organization->type === 'hospital',
                 'walk_in' => $organization->walkInStatus(),
             ],
             'membership' => [
@@ -52,6 +55,41 @@ class PublicWindowController extends Controller
             ],
             'windows' => $windows,
         ]);
+    }
+
+    public function updatePolicy(Request $request): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'access_policy' => ['required', 'string', 'in:managed,public_window,unrestricted'],
+        ]);
+
+        if ($organization->type === 'hospital' && $validated['access_policy'] !== 'unrestricted') {
+            throw ValidationException::withMessages([
+                'access_policy' => ['Hospitals and clinics always admit walk-ins; this cannot be changed.'],
+            ]);
+        }
+
+        $previous = $organization->access_policy;
+
+        if ($previous !== $validated['access_policy']) {
+            $organization->update(['access_policy' => $validated['access_policy']]);
+
+            activity('access')
+                ->causedBy($request->user())
+                ->performedOn($organization)
+                ->withProperties(['from' => $previous, 'to' => $validated['access_policy']])
+                ->log("Walk-in policy for {$organization->name} changed from {$previous} to {$validated['access_policy']}");
+        }
+
+        return back()->with('success', 'Walk-in policy updated.');
     }
 
     public function store(Request $request): RedirectResponse
