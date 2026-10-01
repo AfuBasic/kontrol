@@ -63,6 +63,13 @@ class VerifyController extends Controller
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
             'quickEntryEnabled' => (bool) $settings->quick_entry_enabled,
+            // Tags already issued must stay checkable-out even after the estate switches walk-ins off.
+            'walkInsInside' => AccessLog::withoutGlobalScopes()
+                ->where('estate_id', $estate->id)
+                ->whereNull('access_code_id')
+                ->where('meta->entry_type', 'quick_entry')
+                ->whereNull('checked_out_at')
+                ->count(),
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
             'organizations' => $organizations,
         ]);
