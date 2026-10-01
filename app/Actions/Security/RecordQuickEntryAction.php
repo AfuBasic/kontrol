@@ -83,7 +83,8 @@ class RecordQuickEntryAction
 
             // The guard photographs the visitor's ID for every walk-in.
             $visitorProfile = $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId);
-            $displayName = $visitorProfile->name;
+            // The name typed for this visit wins; otherwise fall back to the name saved for this ID.
+            $displayName = $visitorName ?? $visitorProfile->name;
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
