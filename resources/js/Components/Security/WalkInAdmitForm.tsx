@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Car, CheckCircle2, Loader2, RotateCcw, ShieldAlert, Tag, User, X } from 'lucide-react';
+import { Camera, Car, CheckCircle2, Loader2, Maximize2, RotateCcw, ShieldAlert, Tag, User, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import DestinationPicker, { readRecentDestinations, rememberDestination, type WalkInDestination } from '@/Components/Security/DestinationPicker';
 import { SyncEngine } from '@/Resilience/SyncEngine';
@@ -69,15 +69,14 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
     const [destination, setDestination] = useState<WalkInDestination | null>(() => initialDestination(destinations));
     const [idPhoto, setIdPhoto] = useState<IdPhoto | null>(null);
     const [processingPhoto, setProcessingPhoto] = useState(false);
+    const [zoomPhoto, setZoomPhoto] = useState(false);
     const [visitorName, setVisitorName] = useState('');
     const [hasVehicle, setHasVehicle] = useState(false);
     const [plateNumber, setPlateNumber] = useState('');
     const [vehicleMake, setVehicleMake] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [issued, setIssued] = useState<{ tag: string; orgName: string; timestamp: string; isOffline: boolean; isReturning: boolean } | null>(
-        null,
-    );
+    const [issued, setIssued] = useState<{ tag: string; orgName: string; timestamp: string; isOffline: boolean; isReturning: boolean } | null>(null);
 
     const cameraInput = useRef<HTMLInputElement>(null);
     const canAdmit = !!destination?.is_open && !!idPhoto && !submitting && !processingPhoto;
@@ -194,12 +193,18 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black tracking-wide text-emerald-900 uppercase dark:text-emerald-300">Admitted</span>
+                                        <span className="text-xs font-black tracking-wide text-emerald-900 uppercase dark:text-emerald-300">
+                                            Admitted
+                                        </span>
                                         {issued.isOffline && (
-                                            <span className="rounded-md bg-amber-200 px-1.5 py-0.5 text-[9px] font-black text-amber-900">Will sync</span>
+                                            <span className="rounded-md bg-amber-200 px-1.5 py-0.5 text-[9px] font-black text-amber-900">
+                                                Will sync
+                                            </span>
                                         )}
                                         {issued.isReturning && (
-                                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[9px] font-black text-sky-800">Returning visitor</span>
+                                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[9px] font-black text-sky-800">
+                                                Returning visitor
+                                            </span>
                                         )}
                                     </div>
                                     <p className="text-xs font-semibold text-emerald-800/80 dark:text-emerald-400">
@@ -254,21 +259,33 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
             <span className={`${label} mt-5`}>2. Photo of their ID</span>
             <input ref={cameraInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoCaptured} />
             {idPhoto ? (
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900">
-                    <img src={idPhoto.dataUrl} alt="Visitor ID" className="h-16 w-24 rounded-xl object-cover" />
-                    <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> ID captured
-                        </p>
-                        <p className="text-[11px] text-slate-500">Check it is sharp and readable.</p>
-                    </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900">
                     <button
                         type="button"
-                        onClick={() => cameraInput.current?.click()}
-                        className="flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300"
+                        onClick={() => setZoomPhoto(true)}
+                        className="relative block w-full bg-slate-900"
+                        aria-label="Enlarge ID photo"
                     >
-                        <RotateCcw className="h-3.5 w-3.5" /> Retake
+                        <img src={idPhoto.dataUrl} alt="Visitor ID" className="mx-auto block max-h-64 w-full object-contain" />
+                        <span className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
+                            <Maximize2 className="h-3.5 w-3.5" /> Tap to enlarge
+                        </span>
                     </button>
+                    <div className="flex items-center justify-between gap-3 px-4 py-3">
+                        <div className="min-w-0">
+                            <p className="flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                                <CheckCircle2 className="h-4 w-4 shrink-0" /> ID captured
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-500">Make sure the name and number are readable.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => cameraInput.current?.click()}
+                            className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl px-3 text-sm font-bold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300"
+                        >
+                            <RotateCcw className="h-4 w-4" /> Retake
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <button
@@ -284,7 +301,7 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
 
             {/* Optional details */}
             <span className={`${label} mt-5`}>
-                Name <span className="text-[10px] font-normal normal-case text-slate-400">(optional)</span>
+                Name <span className="text-[10px] font-normal text-slate-400 normal-case">(optional)</span>
             </span>
             <div className="relative">
                 <User className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -312,7 +329,9 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                             hasVehicle ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
                         }`}
                     >
-                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition ${hasVehicle ? 'translate-x-5' : 'translate-x-0'}`} />
+                        <span
+                            className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition ${hasVehicle ? 'translate-x-5' : 'translate-x-0'}`}
+                        />
                     </button>
                 </div>
 
@@ -355,6 +374,54 @@ export default function WalkInAdmitForm({ destinations, isOnline, requireVehicle
                         ? 'Take the ID photo to continue'
                         : `Admitting to ${destination.name}`}
             </p>
+            {/* Full-screen ID preview: pinch to zoom in on the text */}
+            <AnimatePresence>
+                {zoomPhoto && idPhoto && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[120] flex flex-col bg-black"
+                        style={{ touchAction: 'pinch-zoom' }}
+                        role="dialog"
+                        aria-label="ID photo"
+                    >
+                        <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),16px)] pb-3">
+                            <p className="text-sm font-semibold text-white/80">Pinch to zoom</p>
+                            <button
+                                type="button"
+                                onClick={() => setZoomPhoto(false)}
+                                aria-label="Close"
+                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2">
+                            <img src={idPhoto.dataUrl} alt="Visitor ID" className="max-h-full max-w-full object-contain" />
+                        </div>
+                        <div className="flex gap-3 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setZoomPhoto(false);
+                                    cameraInput.current?.click();
+                                }}
+                                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-white/15 text-sm font-bold text-white"
+                            >
+                                <RotateCcw className="h-4 w-4" /> Retake
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setZoomPhoto(false)}
+                                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-white text-sm font-black text-slate-900"
+                            >
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Looks good
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
