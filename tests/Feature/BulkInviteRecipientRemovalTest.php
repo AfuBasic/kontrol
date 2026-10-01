@@ -87,6 +87,7 @@ test('show page provides human date labels instead of raw timestamps', function 
     $expected = $until->year === now()->year ? $until->isoFormat('D MMM') : $until->isoFormat('D MMM YYYY');
 
     expect($show['valid_until_label'])->toBe($expected)
+        ->and($show['elapsed_ratio'])->toBeGreaterThanOrEqual(0)->toBeLessThanOrEqual(1)
         ->and($show)->not->toHaveKey('next_renewal_at');
 });
 
