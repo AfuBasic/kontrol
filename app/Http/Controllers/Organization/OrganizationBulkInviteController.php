@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Actions\Organization\CreateBulkVisitorInviteAction;
+use App\Actions\Organization\RemoveBulkInviteRecipientAction;
+use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\DeliverBulkVisitorPassJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
+use App\Models\OrganizationBulkInviteRecipient;
 use App\Services\OrganizationContextService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,12 +39,13 @@ class OrganizationBulkInviteController extends Controller
             $query = OrganizationBulkInvite::where('organization_id', $organization->id)
                 ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                 ->withCount([
-                    'recipients',
+                    'recipients' => fn ($q) => $q->where('status', 'active'),
                     'renewals',
-                    'recipients as sent_recipients_count' => fn ($q) => $q->where('delivery_status', 'sent'),
-                    'recipients as pending_recipients_count' => fn ($q) => $q->whereIn('delivery_status', ['pending', 'queued']),
-                    'recipients as failed_recipients_count' => fn ($q) => $q->where('delivery_status', 'failed'),
-                ]);
+                    'recipients as sent_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'sent'),
+                    'recipients as pending_recipients_count' => fn ($q) => $q->where('status', 'active')->whereIn('delivery_status', ['pending', 'queued']),
+                    'recipients as failed_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'failed'),
+                ])
+                ->with(['recipients' => fn ($q) => $q->select(['id', 'bulk_invite_id', 'email'])->where('status', 'active')->oldest('id')->limit(3)]);
 
             if ($status === 'active') {
                 $query->where('status', 'active');
@@ -55,7 +60,9 @@ class OrganizationBulkInviteController extends Controller
                 ->paginate(15)
                 ->withQueryString();
 
-            return $paginator->through(function (OrganizationBulkInvite $invite) use ($now) {
+            $defaultPurpose = "{$organization->name} - Visitor Pass";
+
+            return $paginator->through(function (OrganizationBulkInvite $invite) use ($now, $defaultPurpose) {
                 $status = $invite->status;
                 $validFrom = $invite->valid_from ? Carbon::parse($invite->valid_from)->startOfDay() : null;
                 $validUntil = $invite->valid_until ? Carbon::parse($invite->valid_until)->endOfDay() : null;
@@ -83,8 +90,8 @@ class OrganizationBulkInviteController extends Controller
                     }
 
                     return $date->year === $currentYear
-                        ? $date->isoFormat('ddd D MMM')
-                        : $date->isoFormat('ddd D MMM YYYY');
+                        ? $date->isoFormat('D MMM')
+                        : $date->isoFormat('D MMM YYYY');
                 };
 
                 $startsOnLabel = $formatDateLabel($validFrom);
@@ -109,11 +116,13 @@ class OrganizationBulkInviteController extends Controller
                     'id' => $invite->id,
                     'name' => $invite->name,
                     'purpose' => $invite->purpose,
+                    'purpose_label' => filled($invite->purpose) && $invite->purpose !== $defaultPurpose ? $invite->purpose : null,
                     'role' => $invite->role,
                     'valid_from' => $invite->valid_from?->toDateString(),
                     'valid_until' => $invite->valid_until?->toDateString(),
                     'status' => $invite->status,
                     'recipients_count' => (int) $invite->recipients_count,
+                    'recipient_preview' => $invite->recipients->pluck('email')->values()->all(),
                     'renewals_count' => (int) $invite->renewals_count,
                     'validity' => [
                         'state' => $state,
@@ -213,9 +222,20 @@ class OrganizationBulkInviteController extends Controller
         }
 
         $bulkInvite->load([
-            'recipients.lastAccessCode',
+            'recipients' => fn ($q) => $q->where('status', 'active')->with('lastAccessCode')->oldest('id'),
             'renewals' => fn ($q) => $q->latest(),
         ]);
+
+        $validFrom = $bulkInvite->valid_from ? Carbon::parse($bulkInvite->valid_from)->startOfDay() : null;
+        $validUntil = $bulkInvite->valid_until ? Carbon::parse($bulkInvite->valid_until)->endOfDay() : null;
+        $now = Carbon::now();
+
+        $state = match (true) {
+            $bulkInvite->status === 'cancelled' => 'cancelled',
+            $validUntil !== null && $now->isAfter($validUntil) => 'expired',
+            $validFrom !== null && $now->isBefore($validFrom) => 'upcoming',
+            default => 'active',
+        };
 
         return Inertia::render('Organization/BulkInvites/Show', [
             'organization' => [
@@ -226,8 +246,129 @@ class OrganizationBulkInviteController extends Controller
                 'role' => $membership->role,
                 'is_admin' => $membership->isAdmin(),
             ],
-            'bulkInvite' => $bulkInvite,
+            'bulkInvite' => [
+                'id' => $bulkInvite->id,
+                'name' => $bulkInvite->name,
+                'purpose_label' => filled($bulkInvite->purpose) && $bulkInvite->purpose !== "{$organization->name} - Visitor Pass" ? $bulkInvite->purpose : null,
+                'role' => $bulkInvite->role,
+                'status' => $bulkInvite->status,
+                'state' => $state,
+                'valid_from_label' => $this->shortDate($validFrom),
+                'valid_until_label' => $this->shortDate($validUntil),
+                'days_left' => $validUntil ? max(0, (int) ceil($now->diffInDays($validUntil, false))) : 0,
+                'auto_renew' => (bool) $bulkInvite->auto_renew,
+                'next_renewal_label' => $bulkInvite->auto_renew && $bulkInvite->next_renewal_at
+                    ? $this->shortDate(Carbon::parse($bulkInvite->next_renewal_at))
+                    : null,
+                'renewal_blocked_reason_label' => match ($bulkInvite->renewal_blocked_reason) {
+                    null => null,
+                    'subscription_required' => 'Subscription required',
+                    'manual_intervention_required' => 'Manual review required',
+                    default => ucfirst(str_replace('_', ' ', $bulkInvite->renewal_blocked_reason)),
+                },
+                'recipients' => $bulkInvite->recipients->map(fn (OrganizationBulkInviteRecipient $recipient) => [
+                    'id' => $recipient->id,
+                    'email' => $recipient->email,
+                    'delivery_status' => $recipient->delivery_status,
+                    'delivery_error' => $recipient->delivery_error,
+                    'delivered_label' => $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
+                    'code' => $recipient->lastAccessCode?->code,
+                    'pass_uuid' => $recipient->lastAccessCode?->pass_uuid,
+                    'can_resend' => $this->isResendable($recipient),
+                ])->values(),
+                'renewals' => $bulkInvite->renewals->map(fn ($renewal) => [
+                    'id' => $renewal->id,
+                    'period_label' => trim($this->shortDate(Carbon::parse($renewal->valid_from)).' – '.$this->shortDate(Carbon::parse($renewal->valid_until)), ' –'),
+                    'processed_label' => $this->shortDate($renewal->created_at ? Carbon::parse($renewal->created_at) : null),
+                    'status' => $renewal->status,
+                    'recipients_renewed' => (int) $renewal->recipients_renewed,
+                ])->values(),
+            ],
         ]);
+    }
+
+    public function removeRecipient(
+        Request $request,
+        OrganizationBulkInvite $bulkInvite,
+        OrganizationBulkInviteRecipient $recipient,
+        RemoveBulkInviteRecipientAction $action,
+    ): RedirectResponse {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        abort_unless($recipient->bulk_invite_id === $bulkInvite->id, 404);
+
+        $action->execute($recipient);
+
+        return back()->with('success', "{$recipient->email} was removed and their pass no longer works.");
+    }
+
+    public function resendRecipient(
+        Request $request,
+        OrganizationBulkInvite $bulkInvite,
+        OrganizationBulkInviteRecipient $recipient,
+    ): RedirectResponse {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        abort_unless($recipient->bulk_invite_id === $bulkInvite->id && $recipient->status === 'active', 404);
+
+        if (! $this->isResendable($recipient)) {
+            return back()->with('error', 'This pass is no longer valid. Renew the group to issue a new one.');
+        }
+
+        // Each resend is a slow external email call; cap it so a repeated tap can't flood an inbox.
+        $limiterKey = "bulk-pass-resend:{$recipient->id}";
+        if (RateLimiter::tooManyAttempts($limiterKey, 3)) {
+            $minutes = (int) ceil(RateLimiter::availableIn($limiterKey) / 60);
+
+            return back()->with('error', "This pass was resent recently. Try again in {$minutes} min.");
+        }
+        RateLimiter::hit($limiterKey, 600);
+
+        $recipient->update([
+            'delivery_status' => 'queued',
+            'delivery_error' => null,
+        ]);
+
+        DeliverBulkVisitorPassJob::dispatch($recipient->last_access_code_id, $recipient->id);
+
+        return back()->with('success', "Pass resent to {$recipient->email}.");
+    }
+
+    /**
+     * A pass can be resent only while its current code can still open the gate.
+     */
+    private function isResendable(OrganizationBulkInviteRecipient $recipient): bool
+    {
+        $code = $recipient->lastAccessCode;
+
+        return $recipient->status === 'active'
+            && $code !== null
+            && in_array($code->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled], true)
+            && ($code->expires_at === null || $code->expires_at->isFuture());
+    }
+
+    /**
+     * Human date for mobile: "16 Oct", with the year only when it differs from now.
+     */
+    private function shortDate(?Carbon $date): string
+    {
+        if (! $date) {
+            return '';
+        }
+
+        return $date->year === now()->year ? $date->isoFormat('D MMM') : $date->isoFormat('D MMM YYYY');
     }
 
     public function renew(Request $request, OrganizationBulkInvite $bulkInvite): RedirectResponse
@@ -281,6 +422,7 @@ class OrganizationBulkInviteController extends Controller
         }
 
         $failedRecipients = $bulkInvite->recipients()
+            ->where('status', 'active')
             ->where('delivery_status', 'failed')
             ->whereNotNull('last_access_code_id')
             ->get();
