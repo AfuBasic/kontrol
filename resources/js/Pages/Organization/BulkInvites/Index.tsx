@@ -1,12 +1,9 @@
-import { Head, Link, router, usePage, WhenVisible } from '@inertiajs/react';
+import { Head, Link, router, WhenVisible } from '@inertiajs/react';
 import {
     ChevronRight,
     Mail,
     Plus,
-    RefreshCw,
     Users,
-    AlertCircle,
-    CheckCircle2,
     Search,
     Loader2,
 } from 'lucide-react';
@@ -43,15 +40,51 @@ interface BulkInviteItem {
     id: number;
     name: string | null;
     purpose: string | null;
+    purpose_label: string | null;
     role: string | null;
     valid_from: string;
     valid_until: string;
     status: string;
     recipients_count: number;
+    recipient_preview?: string[];
     renewals_count: number;
     validity?: ValidityData;
     renewal?: RenewalData;
     delivery?: DeliveryData;
+}
+
+type FieldTone = 'default' | 'positive' | 'warning' | 'muted';
+
+interface Field {
+    label: string;
+    value: string;
+    hint?: string;
+    tone: FieldTone;
+}
+
+const FIELD_TONE: Record<FieldTone, string> = {
+    default: 'text-[#071f4b]',
+    positive: 'text-emerald-700',
+    warning: 'text-amber-700',
+    muted: 'text-slate-500',
+};
+
+const NOTICE_TONE = {
+    warning: 'text-amber-700',
+    error: 'text-rose-600',
+    muted: 'text-slate-500',
+} as const;
+
+function FieldBlock({ field }: { field: Field }) {
+    return (
+        <div className="min-w-0">
+            <p className="text-[11px] text-slate-500">{field.label}</p>
+            <p className={`mt-0.5 truncate text-[14px] ${FIELD_TONE[field.tone]}`}>
+                {field.value}
+                {field.hint && <span> · {field.hint}</span>}
+            </p>
+        </div>
+    );
 }
 
 interface PaginatedData<T> {
@@ -95,9 +128,6 @@ export default function BulkInvitesIndex({
         return () => clearTimeout(timeout);
     }, [search]);
 
-    const page = usePage();
-    const auth = (page.props as any).auth || {};
-    const subscription = auth?.user?.resident_subscription;
 
     return (
         <OrganizationLayout
@@ -144,13 +174,19 @@ export default function BulkInvitesIndex({
                 {!bulkInvites ? (
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex min-h-[56px] animate-pulse items-center justify-between p-4">
-                                <div className="min-w-0 flex-1 space-y-2">
-                                    <div className="h-4 w-40 rounded bg-slate-100" />
-                                    <div className="h-3 w-28 rounded bg-slate-100" />
-                                    <div className="h-3.5 w-52 rounded bg-slate-100" />
+                            <div key={i} className="animate-pulse px-4 py-3.5">
+                                <div className="h-4 w-36 rounded bg-slate-100" />
+                                <div className="mt-2 h-3 w-24 rounded bg-slate-100" />
+                                <div className="mt-3.5 grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <div className="h-2.5 w-14 rounded bg-slate-100" />
+                                        <div className="h-3.5 w-16 rounded bg-slate-100" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="h-2.5 w-14 rounded bg-slate-100" />
+                                        <div className="h-3.5 w-8 rounded bg-slate-100" />
+                                    </div>
                                 </div>
-                                <div className="h-4 w-4 rounded bg-slate-100" />
                             </div>
                         ))}
                     </div>
@@ -177,121 +213,113 @@ export default function BulkInvitesIndex({
                 ) : (
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
                         {bulkInvites.data.map((invite) => {
-                            const name = invite.name || invite.purpose || 'Untitled group';
+                            const name = invite.name || invite.purpose_label || 'Untitled group';
                             const totalPeople = invite.recipients_count || 0;
-                            const peopleLabel = `${totalPeople} ${totalPeople === 1 ? 'person' : 'people'}`;
-                            const tag = invite.role || (invite.name ? invite.purpose : null);
+                            const preview = invite.recipient_preview ?? [];
+                            const othersCount = Math.max(0, totalPeople - preview.length);
+                            const meta = [invite.name ? invite.purpose_label : null, invite.role].filter(Boolean);
 
                             const validity = invite.validity;
                             const state = validity?.state ?? 'active';
                             const renewal = invite.renewal;
                             const delivery = invite.delivery;
-
-                            // Validity sentence
-                            let validityText = '';
-                            let validityColorClass = 'text-slate-600';
-
-                            if (state === 'cancelled') {
-                                validityText = 'Cancelled';
-                                validityColorClass = 'text-slate-400';
-                            } else if (state === 'expired') {
-                                validityText = `Expired ${validity?.ends_on_label || ''}`.trim();
-                                validityColorClass = 'text-slate-400';
-                            } else if (state === 'upcoming') {
-                                validityText = `Starts ${validity?.starts_on_label || ''}`.trim();
-                                validityColorClass = 'text-slate-600';
-                            } else if (renewal?.blocked_reason_label) {
-                                validityText = `Won't renew: ${renewal.blocked_reason_label}`;
-                                validityColorClass = 'text-amber-600 font-medium';
-                            } else if (renewal?.auto) {
-                                validityText = `Valid until ${validity?.ends_on_label || ''} · renews automatically`;
-                                validityColorClass = 'text-slate-600';
-                            } else if (state === 'expiring') {
-                                const days = validity?.days_left ?? 0;
-                                const dayStr = days === 1 ? '1 day' : `${days} days`;
-                                validityText = `Expires in ${dayStr} · ${validity?.ends_on_label || ''}`;
-                                validityColorClass = 'text-amber-600 font-medium';
-                            } else {
-                                const days = validity?.days_left ?? 0;
-                                const dayStr = days === 1 ? '1 day left' : `${days} days left`;
-                                validityText = `Valid until ${validity?.ends_on_label || ''} · ${dayStr}`;
-                                validityColorClass = 'text-slate-600';
-                            }
-
-                            // Active progress hairline (active or expiring)
-                            const showProgress = state === 'active' || state === 'expiring';
-                            const progressRatio = Math.max(0, Math.min(1, validity?.elapsed_ratio ?? 0));
-                            const progressColor = (state === 'expiring' && !renewal?.auto) ? 'bg-amber-500' : 'bg-[#1a5dbf]';
-
-                            // Delivery notice (only when not fully delivered)
-                            let deliveryNotice: { text: string; isError: boolean } | null = null;
-                            if (delivery) {
-                                if (delivery.failed > 0) {
-                                    deliveryNotice = {
-                                        text: `${delivery.failed} not delivered`,
-                                        isError: true,
-                                    };
-                                } else if (delivery.pending > 0) {
-                                    deliveryNotice = {
-                                        text: `Sending to ${delivery.pending}…`,
-                                        isError: false,
-                                    };
-                                }
-                            }
-
                             const isDeemphasized = state === 'expired' || state === 'cancelled';
+                            const isRenewalBlocked = !isDeemphasized && !!renewal?.blocked_reason_label;
+
+                            const validityField = ((): Field | null => {
+                                switch (state) {
+                                    case 'cancelled':
+                                        return { label: 'Status', value: 'Cancelled', tone: 'muted' };
+                                    case 'expired':
+                                        return { label: 'Ended', value: validity?.ends_on_label ?? '', tone: 'muted' };
+                                    case 'upcoming':
+                                        return { label: 'Starts', value: validity?.starts_on_label ?? '', tone: 'default' };
+                                    case 'expiring': {
+                                        const days = validity?.days_left ?? 0;
+                                        return {
+                                            label: 'Expires',
+                                            value: validity?.ends_on_label ?? '',
+                                            hint: days <= 0 ? 'Today' : days === 1 ? '1 day left' : `${days} days left`,
+                                            tone: 'warning',
+                                        };
+                                    }
+                                    default:
+                                        return { label: 'Valid until', value: validity?.ends_on_label ?? '', tone: 'default' };
+                                }
+                            })();
+
+                            const renewalField: Field | null =
+                                state === 'cancelled'
+                                    ? null
+                                    : isRenewalBlocked
+                                      ? { label: 'Auto-renew', value: 'Paused', tone: 'warning' }
+                                      : {
+                                            label: 'Auto-renew',
+                                            value: renewal?.auto ? 'On' : 'Off',
+                                            tone: isDeemphasized ? 'muted' : renewal?.auto ? 'positive' : 'default',
+                                        };
+
+                            let notice: { text: string; tone: 'warning' | 'error' | 'muted' } | null = null;
+                            if (isRenewalBlocked && renewal?.blocked_reason_label) {
+                                const reason = renewal.blocked_reason_label;
+                                notice = { text: reason.charAt(0).toUpperCase() + reason.slice(1), tone: 'warning' };
+                            } else if (delivery && delivery.failed > 0) {
+                                notice = { text: `${delivery.failed} not delivered`, tone: 'error' };
+                            } else if (delivery && delivery.pending > 0) {
+                                notice = { text: `Sending to ${delivery.pending}…`, tone: 'muted' };
+                            }
 
                             return (
                                 <Link
                                     key={invite.id}
                                     href={`/org/bulk-invites/${invite.id}`}
-                                    className={`block min-h-[56px] p-4 transition hover:bg-slate-50 active:bg-slate-100 ${
-                                        isDeemphasized ? 'opacity-60' : ''
-                                    }`}
+                                    className="block px-4 py-3.5 transition active:bg-slate-50"
                                 >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="min-w-0 flex-1 space-y-1">
-                                            {/* 1. Name */}
-                                            <div className="truncate text-[15px] font-medium text-slate-900">
+                                    <div className={isDeemphasized ? 'opacity-60' : undefined}>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="truncate text-[16px] font-semibold tracking-[-0.01em] text-[#071f4b]">
                                                 {name}
-                                            </div>
-
-                                            {/* 2. Who */}
-                                            <div className="text-[12px] text-slate-500">
-                                                <span>{peopleLabel}</span>
-                                                {tag && <span> · {tag}</span>}
-                                            </div>
-
-                                            {/* 3. Validity Line */}
-                                            <div className={`text-[13px] ${validityColorClass}`}>
-                                                {validityText}
-                                            </div>
-
-                                            {/* 4. Validity progress hairline */}
-                                            {showProgress && (
-                                                <div className="pt-0.5">
-                                                    <div className="h-[2px] w-full overflow-hidden bg-slate-100">
-                                                        <div
-                                                            className={`h-full ${progressColor} transition-all duration-300`}
-                                                            style={{ width: `${progressRatio * 100}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* 5. Delivery notice (only if not fully delivered) */}
-                                            {deliveryNotice && (
-                                                <div
-                                                    className={`pt-0.5 text-[12px] font-medium ${
-                                                        deliveryNotice.isError ? 'text-rose-600' : 'text-slate-500'
-                                                    }`}
-                                                >
-                                                    {deliveryNotice.text}
-                                                </div>
-                                            )}
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" strokeWidth={2.25} />
                                         </div>
 
-                                        <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                                        {preview.length > 0 ? (
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                {preview.map((email) => (
+                                                    <span
+                                                        key={email}
+                                                        className="inline-flex max-w-full items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
+                                                    >
+                                                        <Mail className="h-3 w-3 shrink-0 text-slate-400" />
+                                                        <span className="truncate">{email}</span>
+                                                    </span>
+                                                ))}
+                                                {othersCount > 0 && (
+                                                    <span className="self-center text-[11px] font-medium text-slate-400">
+                                                        +{othersCount} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="mt-1 text-[13px] text-slate-500">
+                                                {totalPeople > 0 ? `${totalPeople} ${totalPeople === 1 ? 'person' : 'people'}` : 'No people yet'}
+                                            </p>
+                                        )}
+
+                                        {meta.length > 0 && (
+                                            <p className="mt-0.5 truncate text-[12px] text-slate-500">{meta.join(' · ')}</p>
+                                        )}
+
+                                        <div className="mt-3 grid grid-cols-2 gap-4">
+                                            {validityField && <FieldBlock field={validityField} />}
+                                            {renewalField && <FieldBlock field={renewalField} />}
+                                        </div>
+
+                                        {notice && (
+                                            <p className={`mt-2.5 text-[12px] font-medium ${NOTICE_TONE[notice.tone]}`}>
+                                                {notice.text}
+                                            </p>
+                                        )}
                                     </div>
                                 </Link>
                             );
