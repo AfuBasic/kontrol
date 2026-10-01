@@ -5,7 +5,9 @@ use App\Enums\AssignmentScope;
 use App\Http\Middleware\ValidateEstateContext;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateOrganization;
 use App\Models\Incident;
+use App\Models\OrganizationMembership;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -210,4 +212,13 @@ test('Test H - Switching context from Admin to Resident clears role cache and re
 
     $response = $this->get(route('admin.dashboard'));
     $response->assertRedirect(route('resident.home'));
+});
+
+test('Test F2 - An organization member with no estate role is sent to the org area, not the admin dashboard', function () {
+    $estate = Estate::factory()->create();
+    $org = EstateOrganization::factory()->create(['estate_id' => $estate->id, 'is_active' => true]);
+    $orgUser = User::factory()->create();
+    OrganizationMembership::create(['user_id' => $orgUser->id, 'organization_id' => $org->id, 'role' => 'admin', 'is_active' => true]);
+
+    $this->actingAs($orgUser)->get(route('admin.dashboard'))->assertRedirect(route('org.dashboard'));
 });
