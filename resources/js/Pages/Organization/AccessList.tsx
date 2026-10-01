@@ -30,6 +30,7 @@ import AccessTabs from '@/Components/Organization/AccessTabs';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import PassCard from '@/Components/Resident/PassCard';
+import WalkInHoursSetupCard from '@/Components/Organization/WalkInHoursSetupCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
@@ -81,6 +82,7 @@ interface Props {
         name: string;
         access_policy: string;
         walk_in?: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
         estate_name?: string;
         visitor_checkout_enabled?: boolean;
     };
@@ -328,6 +330,10 @@ export default function AccessList({
                         </p>
                     )}
                 </header>
+
+                {organization.needs_walk_in_hours && (
+                    <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />
+                )}
 
                 {/* ACCESS OVERVIEW CARD */}
                 <Link
