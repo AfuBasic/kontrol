@@ -30,7 +30,7 @@ class CheckoutQuickEntryAction
             $log->update([
                 'checked_out_at' => now(),
                 'checked_out_by' => $checkoutBy->id,
-                'exit_point' => $updatedMeta['exit_point'],
+                // Exit gate lives in meta: access_logs has no exit_point column.
                 'meta' => $updatedMeta,
             ]);
 
