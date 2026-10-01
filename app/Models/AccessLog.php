@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -96,6 +97,30 @@ class AccessLog extends Model
     public function checkedOutBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'checked_out_by');
+    }
+
+    /**
+     * A walk-in: admitted at the gate with a tag and an ID photo, with no access code involved.
+     */
+    public function isWalkIn(): bool
+    {
+        return ($this->meta['entry_type'] ?? null) === 'quick_entry';
+    }
+
+    /**
+     * @param  Builder<AccessLog>  $query
+     */
+    public function scopeWalkIn($query)
+    {
+        return $query->where('access_logs.meta->entry_type', 'quick_entry');
+    }
+
+    /**
+     * @param  Builder<AccessLog>  $query
+     */
+    public function scopeViaAccessCode($query)
+    {
+        return $query->whereNotNull('access_logs.access_code_id');
     }
 
     public function scopeActive($query)
