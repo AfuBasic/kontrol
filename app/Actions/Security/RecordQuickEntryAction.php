@@ -23,6 +23,7 @@ class RecordQuickEntryAction
 
     /**
      * @param  array{
+     *     tag?: string|null,
      *     visitor_name?: string|null,
      *     id_photo?: UploadedFile|null,
      *     organization_id: int,
@@ -44,7 +45,19 @@ class RecordQuickEntryAction
 
         $entryPoint = $data['entry_point'] ?? app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
 
-        $tag = $this->tagGenerator->generateUnique($estateId);
+        // The gate issues tags from its pre-allocated pool (also offline), and the visitor leaves
+        // holding that tag, so it must be recorded as-is. Generate one only when none was sent.
+        if (! empty($data['tag'])) {
+            $tag = strtoupper(trim($data['tag']));
+
+            if ($this->tagGenerator->isInUse($estateId, $tag)) {
+                throw ValidationException::withMessages([
+                    'tag' => ["Tag {$tag} is already held by a visitor who has not checked out."],
+                ]);
+            }
+        } else {
+            $tag = $this->tagGenerator->generateUnique($estateId);
+        }
 
         $idPhotoFile = $data['id_photo'] ?? null;
         $visitorName = ! empty($data['visitor_name']) ? trim($data['visitor_name']) : null;
@@ -73,13 +86,17 @@ class RecordQuickEntryAction
                 $outsideHours = true;
             }
 
-            $visitorProfile = $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId);
-            $displayName = $visitorProfile->name;
+            // Photo is optional, as in ReserveQuickEntryAction: rush-mode and offline-synced
+            // entries have no photo, and must still be admitted.
+            $visitorProfile = $idPhotoFile
+                ? $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId)
+                : null;
+            $displayName = $visitorProfile?->name ?? ($visitorName ?? 'Unknown Visitor');
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
                 'organization_id' => $organization->id,
-                'visitor_profile_id' => $visitorProfile->id,
+                'visitor_profile_id' => $visitorProfile?->id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => null,
                 'verified_by' => $verifiedBy->id,
@@ -95,7 +112,7 @@ class RecordQuickEntryAction
                     'organization_type' => $organization->type,
                     'admission_basis' => $organization->access_policy === 'public_window' ? 'public_window' : ($organization->isUnrestricted() ? 'unrestricted' : 'quick_entry'),
                     'visitor_name' => $displayName,
-                    'visitor_profile_id' => $visitorProfile->id,
+                    'visitor_profile_id' => $visitorProfile?->id,
                     'entry_point' => $entryPoint,
                     'outside_hours' => $outsideHours,
                 ],
@@ -107,7 +124,7 @@ class RecordQuickEntryAction
                     'visitor_name' => $displayName,
                     'tag' => $tag,
                     'organization' => $organization->name,
-                    'visitor_profile_id' => $visitorProfile->id,
+                    'visitor_profile_id' => $visitorProfile?->id,
                 ])
                 ->log("Quick Entry admitted for {$organization->name} (Tag: {$tag})");
 
