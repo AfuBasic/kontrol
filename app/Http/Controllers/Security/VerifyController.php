@@ -41,13 +41,18 @@ class VerifyController extends Controller
             ->select(['id', 'name', 'type', 'access_policy'])
             ->orderBy('name')
             ->get()
-            ->map(fn ($org) => [
-                'id' => $org->id,
-                'name' => $org->name,
-                'type' => $org->type,
-                'access_policy' => $org->access_policy,
-                'is_open' => $org->isWithinPublicWindow(),
-            ])
+            ->map(function ($org) {
+                $status = $org->walkInStatus();
+
+                return [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'type' => $org->type,
+                    'access_policy' => $org->access_policy,
+                    'is_open' => $status['open'],
+                    'status_label' => $status['label'],
+                ];
+            })
             ->values()
             ->all();
 
