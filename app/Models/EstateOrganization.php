@@ -142,6 +142,15 @@ class EstateOrganization extends Model
     }
 
     /**
+     * True when walk-ins depend on hours the organization has not set yet, so every
+     * walk-in is turned away until an admin adds them.
+     */
+    public function needsWalkInHours(): bool
+    {
+        return $this->access_policy === 'public_window' && ! $this->hasPublicWindows();
+    }
+
+    /**
      * Walk-in status for the gate's destination picker.
      *
      * @return array{open: bool, label: string}
@@ -158,6 +167,10 @@ class EstateOrganization extends Model
 
         $now = CarbonImmutable::now();
         $windows = $this->publicWindows()->where('is_active', true)->get();
+
+        if ($windows->isEmpty()) {
+            return ['open' => false, 'label' => 'No walk-in hours set'];
+        }
 
         $current = $windows->first(fn ($window) => $window->isOpenAt($now));
         if ($current) {
