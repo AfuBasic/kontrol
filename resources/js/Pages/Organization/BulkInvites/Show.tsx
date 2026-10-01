@@ -77,6 +77,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     const [retainedSelected, setRetainedSelected] = useState<Recipient | null>(null);
     const [copied, setCopied] = useState(false);
     const [confirming, setConfirming] = useState<PendingAction>(null);
+    const [retainedConfirming, setRetainedConfirming] = useState<PendingAction>(null);
     const [processing, setProcessing] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
     const [isResending, setIsResending] = useState(false);
@@ -86,6 +87,12 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             setRetainedSelected(selected);
         }
     }, [selected]);
+    
+    useEffect(() => {
+        if (confirming) {
+            setRetainedConfirming(confirming);
+        }
+    }, [confirming]);
 
     const recipients = bulkInvite.recipients;
     const total = recipients.length;
@@ -213,7 +220,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             type: 'danger' as const,
         },
     };
-    const activeConfirm = confirming ? confirmCopy[confirming] : null;
+    const activeConfirm = retainedConfirming ? confirmCopy[retainedConfirming] : null;
 
     return (
         <OrganizationLayout title="Access - Group" transparentHeader contentClassName="w-full relative min-h-screen">
@@ -533,18 +540,16 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 )}
             </MobileSheet>
 
-            {activeConfirm && (
-                <ConfirmationSheet
-                    isOpen
-                    onClose={() => !processing && setConfirming(null)}
-                    onConfirm={runConfirmed}
-                    title={activeConfirm.title}
-                    message={activeConfirm.message}
-                    confirmLabel={activeConfirm.confirmLabel}
-                    type={activeConfirm.type}
-                    isLoading={processing}
-                />
-            )}
+            <ConfirmationSheet
+                isOpen={!!confirming}
+                onClose={() => !processing && setConfirming(null)}
+                onConfirm={runConfirmed}
+                title={activeConfirm?.title || ''}
+                message={activeConfirm?.message || ''}
+                confirmLabel={activeConfirm?.confirmLabel || 'Confirm'}
+                type={activeConfirm?.type || 'danger'}
+                isLoading={processing}
+            />
         </OrganizationLayout>
     );
 }
