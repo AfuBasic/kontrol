@@ -17,7 +17,6 @@ type SettingsProps = {
         allow_residents_to_extend_visitor_passes: boolean;
         visitor_checkout_enabled: boolean;
         quick_entry_enabled: boolean;
-        quick_entry_hours_enforcement: 'off' | 'warn' | 'block';
         entry_point_checkout_enforced: boolean;
         entry_points: string[];
 
@@ -406,7 +405,6 @@ export default function Settings({ settings }: SettingsProps) {
         allow_residents_to_extend_visitor_passes: settings.allow_residents_to_extend_visitor_passes,
         visitor_checkout_enabled: settings.visitor_checkout_enabled,
         quick_entry_enabled: settings.quick_entry_enabled ?? false,
-        quick_entry_hours_enforcement: settings.quick_entry_hours_enforcement || 'warn',
         entry_point_checkout_enforced: settings.entry_point_checkout_enforced,
         entry_points: settings.entry_points || [],
 
@@ -831,34 +829,6 @@ export default function Settings({ settings }: SettingsProps) {
                                             </label>
                                         </div>
 
-                                        {data.quick_entry_enabled && (
-                                            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-700/60">
-                                                <label
-                                                    htmlFor="hours_enforcement"
-                                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
-                                                >
-                                                    Default Operating Hours Enforcement
-                                                </label>
-                                                <div className="mt-2 max-w-sm">
-                                                    <CustomSelect
-                                                        value={data.quick_entry_hours_enforcement}
-                                                        onChange={(val) => setData('quick_entry_hours_enforcement', val as any)}
-                                                        options={[
-                                                            { value: 'warn', label: 'Warn (Recommended)', description: 'Security confirms to admit' },
-                                                            {
-                                                                value: 'block',
-                                                                label: 'Block',
-                                                                description: 'Hard disallow entry outside operating hours',
-                                                            },
-                                                            { value: 'off', label: 'Off', description: 'Hours are informational only' },
-                                                        ]}
-                                                    />
-                                                </div>
-                                                <p className="mt-1.5 text-xs text-slate-400">
-                                                    Individual organizations can override this setting (e.g. 24/7 hospitals set to Off).
-                                                </p>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>
