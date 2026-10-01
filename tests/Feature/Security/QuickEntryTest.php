@@ -228,12 +228,12 @@ it('reports offline entries that were made to a closed destination', function ()
 });
 
 it('looks up a visitor inside by tag', function () {
-    $tag = ($this->admit)($this->hospital, ['visitor_name' => 'Ada'])->json('tag');
+    $tag = ($this->admit)($this->hospital, ['visitor_name' => 'Ada', 'vehicle_plate_number' => 'LAG-123-XY'])->json('tag');
 
     ($this->asGuard)()
         ->getJson(route('security.quick-entry.lookup', ['tag' => strtolower($tag)]))
         ->assertOk()
-        ->assertJson(['found' => true, 'tag' => $tag, 'organization_name' => 'City Hospital']);
+        ->assertJson(['found' => true, 'tag' => $tag, 'organization_name' => 'City Hospital', 'vehicle_plate_number' => 'LAG-123-XY']);
 
     ($this->asGuard)()
         ->getJson(route('security.quick-entry.lookup', ['tag' => 'ZZZZ']))
