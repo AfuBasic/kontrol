@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Copy, Loader2, MoreHorizontal, Search, Send, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, Loader2, MoreHorizontal, Search, Send, Trash2, Users } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
@@ -54,6 +54,7 @@ interface BulkInvite {
     valid_from_label: string;
     valid_until_label: string;
     days_left: number;
+    elapsed_ratio: number;
     auto_renew: boolean;
     next_renewal_label: string | null;
     renewal_blocked_reason_label: string | null;
@@ -210,6 +211,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     return (
         <OrganizationLayout title="Access - Group" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - ${title}`} />
+            <div className="app-atmosphere" />
 
             <div className="mx-auto flex max-w-[560px] flex-col px-4 pt-1 pb-28">
                 <Link
@@ -221,105 +223,139 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 </Link>
 
                 {/* Group overview */}
-                <section className="mt-1 rounded-[22px] border border-slate-200/70 bg-white px-5 pt-4 pb-5 shadow-[0_1px_2px_rgba(7,31,75,0.04)]">
-                    <div className="flex items-center justify-between gap-3">
-                        <span className="inline-flex items-center gap-1.5 text-[12px] text-slate-600">
-                            <span className={`h-1.5 w-1.5 rounded-full ${STATUS[bulkInvite.state].dot}`} />
-                            {bulkInvite.state === 'upcoming'
-                                ? `Starts ${bulkInvite.valid_from_label}`
-                                : STATUS[bulkInvite.state].label}
-                        </span>
-                        {bulkInvite.visits.inside_now > 0 && (
-                            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
-                                <span className="relative flex h-1.5 w-1.5">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <section
+                    className={`brand-card brand-card-glow mt-1 !rounded-[22px] px-5 pt-5 pb-5 text-white ${STATUS[bulkInvite.state].card}`}
+                >
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="brand-card-icon flex h-10 w-10 items-center justify-center rounded-[12px]">
+                                <Users className="h-[18px] w-[18px] text-white" strokeWidth={2.1} />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {bulkInvite.visits.inside_now > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-medium text-emerald-200 ring-1 ring-emerald-300/25">
+                                        <span className="relative flex h-1.5 w-1.5">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-70" />
+                                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                                        </span>
+                                        {bulkInvite.visits.inside_now} inside now
+                                    </span>
+                                )}
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/15">
+                                    <span className={`h-1.5 w-1.5 rounded-full ${STATUS[bulkInvite.state].dot}`} />
+                                    {bulkInvite.state === 'upcoming'
+                                        ? `Starts ${bulkInvite.valid_from_label}`
+                                        : STATUS[bulkInvite.state].label}
                                 </span>
-                                {bulkInvite.visits.inside_now} inside now
-                            </span>
-                        )}
-                    </div>
-
-                    <h1 className="mt-2 text-[24px] leading-tight font-semibold tracking-[-0.02em] text-[#071f4b]">
-                        {title}
-                    </h1>
-                    <p className="mt-0.5 text-[13px] text-slate-500">{meta.join(' · ')}</p>
-
-                    {bulkInvite.visits.total > 0 ? (
-                        <dl className="mt-5 grid grid-cols-3 divide-x divide-slate-100">
-                            <Stat value={String(bulkInvite.visits.total)} label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'} />
-                            <Stat value={`${bulkInvite.visits.visited_count} of ${total}`} label="Came in" />
-                            <Stat value={bulkInvite.visits.last_visit_label ?? '—'} label="Last visit" />
-                        </dl>
-                    ) : (
-                        <p className="mt-5 text-[13px] text-slate-500">
-                            {isLive ? 'No one has used their pass yet.' : 'No one used their pass.'}
-                        </p>
-                    )}
-
-                    <dl className={`mt-5 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 ${isLive ? '' : 'opacity-60'}`}>
-                        <div className="min-w-0">
-                            <dt className="text-[11px] text-slate-500">Valid</dt>
-                            <dd className="mt-0.5 text-[15px] text-[#071f4b]">
-                                {bulkInvite.valid_from_label} – {bulkInvite.valid_until_label}
-                            </dd>
-                            <dd className={`mt-0.5 text-[12px] ${validityWarn ? 'text-amber-700' : 'text-slate-500'}`}>
-                                {validityHint}
-                            </dd>
+                            </div>
                         </div>
-                        {bulkInvite.state !== 'cancelled' && (
-                            <div className="min-w-0">
-                                <dt className="text-[11px] text-slate-500">Auto-renew</dt>
-                                <dd
-                                    className={`mt-0.5 text-[15px] ${
-                                        renewalValue === 'Paused'
-                                            ? 'text-amber-700'
-                                            : renewalValue === 'On' && isLive
-                                              ? 'text-emerald-700'
-                                              : 'text-[#071f4b]'
-                                    }`}
-                                >
-                                    {renewalValue}
-                                </dd>
-                                {renewalHint && (
-                                    <dd
-                                        className={`mt-0.5 truncate text-[12px] ${
-                                            renewalValue === 'Paused' ? 'text-amber-700' : 'text-slate-500'
-                                        }`}
-                                    >
-                                        {renewalHint}
-                                    </dd>
+
+                        <h1 className="mt-4 text-[26px] leading-tight font-semibold tracking-[-0.02em]">{title}</h1>
+                        <p className="mt-0.5 text-[13px] text-blue-100/70">{meta.join(' · ')}</p>
+
+                        {bulkInvite.visits.total > 0 ? (
+                            <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10">
+                                <Stat tone="dark" value={String(bulkInvite.visits.total)} label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'} />
+                                <Stat tone="dark" value={`${bulkInvite.visits.visited_count} of ${total}`} label="Came in" />
+                                <Stat tone="dark" value={bulkInvite.visits.last_visit_label ?? '—'} label="Last visit" />
+                            </dl>
+                        ) : (
+                            <p className="mt-5 text-[13px] text-blue-100/75">
+                                {isLive ? 'No one has used their pass yet.' : 'No one used their pass.'}
+                            </p>
+                        )}
+
+                        {/* Validity window */}
+                        <div className="mt-5 rounded-2xl bg-white/[0.07] px-4 py-3.5 ring-1 ring-white/10">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-blue-100/60">Valid</p>
+                                    <p className="mt-0.5 text-[15px] font-medium">
+                                        {bulkInvite.valid_from_label} – {bulkInvite.valid_until_label}
+                                    </p>
+                                </div>
+                                {bulkInvite.state !== 'cancelled' && (
+                                    <div className="min-w-0 text-right">
+                                        <p className="text-[11px] text-blue-100/60">Auto-renew</p>
+                                        <p
+                                            className={`mt-0.5 text-[15px] font-medium ${
+                                                renewalValue === 'Paused'
+                                                    ? 'text-amber-300'
+                                                    : renewalValue === 'On' && isLive
+                                                      ? 'text-emerald-300'
+                                                      : 'text-white'
+                                            }`}
+                                        >
+                                            {renewalValue}
+                                        </p>
+                                    </div>
                                 )}
                             </div>
-                        )}
-                    </dl>
+
+                            {bulkInvite.state === 'active' && (
+                                <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+                                    <div
+                                        className={`h-full rounded-full ${validityWarn ? 'bg-amber-300' : 'bg-gradient-to-r from-sky-300 to-blue-400'}`}
+                                        style={{ width: `${Math.max(4, Math.round(bulkInvite.elapsed_ratio * 100))}%` }}
+                                    />
+                                </div>
+                            )}
+
+                            <div className="mt-2 flex items-center justify-between gap-3 text-[12px]">
+                                <span className={validityWarn ? 'text-amber-300' : 'text-blue-100/70'}>{validityHint}</span>
+                                {renewalHint && (
+                                    <span
+                                        className={`truncate ${renewalValue === 'Paused' ? 'text-amber-300' : 'text-blue-100/70'}`}
+                                    >
+                                        {renewalHint}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
-                {/* Delivery summary: one line, only loud when something failed */}
+                {/* Delivery summary */}
                 {total > 0 && (
-                    <div className="mt-5 flex min-h-[44px] items-center justify-between gap-3 border-y border-slate-200/70 py-2.5">
-                        <p className={`text-[13px] ${failed > 0 ? 'text-rose-600' : 'text-slate-600'}`}>
-                            {failed > 0
-                                ? `${failed} of ${total} not delivered`
-                                : sending > 0
-                                  ? `Sending… ${sent} of ${total} delivered`
-                                  : total === 1
-                                    ? 'Pass delivered'
-                                    : `All ${total} passes delivered`}
-                        </p>
-                        {failed > 0 && membership.is_admin ? (
+                    <div className="soft-card mt-3 flex min-h-[56px] items-center gap-3 px-3.5 py-3">
+                        <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${
+                                failed > 0 ? 'icon-tile-rose' : sending > 0 ? 'icon-tile-amber' : 'icon-tile-mint'
+                            }`}
+                        >
+                            {failed > 0 ? (
+                                <AlertTriangle className="h-4 w-4" strokeWidth={2.2} />
+                            ) : sending > 0 ? (
+                                <Clock className="h-4 w-4" strokeWidth={2.2} />
+                            ) : (
+                                <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
+                            )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[14px] text-[#071f4b]">
+                                {failed > 0
+                                    ? `${failed} of ${total} not delivered`
+                                    : sending > 0
+                                      ? `Sending passes…`
+                                      : total === 1
+                                        ? 'Pass delivered'
+                                        : `All ${total} passes delivered`}
+                            </p>
+                            <p className="mt-0.5 text-[12px] text-slate-500">
+                                {failed > 0 ? 'Check the addresses, then retry.' : `${sent} of ${total} emails sent with PDF pass`}
+                            </p>
+                        </div>
+                        {failed > 0 && membership.is_admin && (
                             <button
                                 type="button"
                                 onClick={handleRetryFailed}
                                 disabled={isRetrying}
-                                className="inline-flex min-h-[36px] items-center gap-1.5 text-[13px] font-medium text-[#1a5dbf] disabled:opacity-50"
+                                className="inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full bg-rose-50 px-3 text-[13px] font-medium text-rose-700 ring-1 ring-rose-100 disabled:opacity-50"
                             >
                                 {isRetrying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                 Retry
                             </button>
-                        ) : failed === 0 && sending === 0 ? (
-                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
-                        ) : null}
+                        )}
                     </div>
                 )}
 
@@ -441,9 +477,9 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             <p className="-mt-3 text-[12px] text-rose-600">{selected.delivery_error}</p>
                         )}
 
-                        <dl className="grid grid-cols-2 divide-x divide-slate-100 rounded-2xl bg-slate-50 py-3">
-                            <Stat value={String(selected.visits_count)} label={selected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
-                            <Stat value={selected.last_visit_label ?? '—'} label="Last visit" inset />
+                        <dl className="icon-tile-blue grid grid-cols-2 divide-x divide-[#c9dcfb] rounded-2xl py-3">
+                            <Stat tone="tint" value={String(selected.visits_count)} label={selected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
+                            <Stat tone="tint" value={selected.last_visit_label ?? '—'} label="Last visit" inset />
                         </dl>
 
                         <VisitHistory
@@ -524,18 +560,34 @@ function RecipientStatus({ recipient }: { recipient: Recipient }) {
     }
 }
 
-const STATUS: Record<BulkInvite['state'], { label: string; dot: string }> = {
-    active: { label: 'Active', dot: 'bg-emerald-500' },
-    upcoming: { label: 'Upcoming', dot: 'bg-[#1a5dbf]' },
-    expired: { label: 'Ended', dot: 'bg-slate-400' },
-    cancelled: { label: 'Cancelled', dot: 'bg-slate-400' },
+const STATUS: Record<BulkInvite['state'], { label: string; dot: string; card: string }> = {
+    active: { label: 'Active', dot: 'bg-emerald-300', card: '' },
+    upcoming: { label: 'Upcoming', dot: 'bg-sky-300', card: 'brand-card--upcoming' },
+    expired: { label: 'Ended', dot: 'bg-slate-300', card: 'brand-card--muted' },
+    cancelled: { label: 'Cancelled', dot: 'bg-rose-300', card: 'brand-card--muted' },
 };
 
-function Stat({ value, label, inset = false }: { value: string; label: string; inset?: boolean }) {
+const STAT_TONE = {
+    dark: { value: 'text-white', label: 'text-blue-100/60' },
+    light: { value: 'text-[#071f4b]', label: 'text-slate-500' },
+    tint: { value: 'text-[#0b3b8c]', label: 'text-[#1a5dbf]/70' },
+} as const;
+
+function Stat({
+    value,
+    label,
+    inset = false,
+    tone = 'light',
+}: {
+    value: string;
+    label: string;
+    inset?: boolean;
+    tone?: keyof typeof STAT_TONE;
+}) {
     return (
         <div className={`flex min-w-0 flex-col-reverse ${inset ? 'px-4' : 'px-3 first:pl-0 last:pr-0'}`}>
-            <dt className="mt-0.5 text-[11px] text-slate-500">{label}</dt>
-            <dd className="truncate text-[20px] leading-tight font-semibold tracking-[-0.01em] text-[#071f4b] tabular-nums">
+            <dt className={`mt-0.5 text-[11px] ${STAT_TONE[tone].label}`}>{label}</dt>
+            <dd className={`truncate text-[20px] leading-tight font-semibold tracking-[-0.01em] tabular-nums ${STAT_TONE[tone].value}`}>
                 {value}
             </dd>
         </div>
