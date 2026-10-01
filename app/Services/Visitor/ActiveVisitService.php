@@ -315,8 +315,6 @@ class ActiveVisitService
             'can_checkout' => $canCheckout,
             'checkout_constraint' => $checkoutConstraint,
             'organization_id' => $log->organization_id,
-            'confirmation_state' => $log->confirmationState(),
-            'confirmed_at' => $log->confirmed_at?->toIso8601String(),
         ];
     }
 }
