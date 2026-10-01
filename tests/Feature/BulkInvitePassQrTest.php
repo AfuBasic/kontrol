@@ -65,6 +65,7 @@ test('after an early renewal the sheet shows the pass that works today, not the 
 
     expect($person['code'])->toBe($this->todayPass->code)
         ->and($person['pass_starts_later'])->toBeFalse()
+        ->and($person['pass_expires_at'])->toBe($this->todayPass->expires_at->toISOString())
         ->and($person['qr_url'])->toBe(route('org.bulk-invites.recipients.qr', [$this->bulkInvite, $this->recipient]));
 });
 
