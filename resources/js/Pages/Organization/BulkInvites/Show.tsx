@@ -32,6 +32,7 @@ interface Visit {
     left_at_label: string | null;
     left_another_day: boolean;
     entry_point: string | null;
+    exit_point: string | null;
     is_inside: boolean;
 }
 
@@ -589,6 +590,7 @@ function VisitHistory({ url, hasVisits }: { url: string; hasVisits: boolean }) {
                                 <p className="text-[14px] text-[#071f4b]">{visit.day_label}</p>
                                 <p className="mt-0.5 truncate text-[12px] text-slate-500">
                                     {visit.entry_point ?? 'Gate not recorded'}
+                                    {visit.exit_point && visit.exit_point !== visit.entry_point && ` → ${visit.exit_point}`}
                                 </p>
                             </div>
                             <p className="shrink-0 text-right text-[13px] text-slate-600 tabular-nums">
