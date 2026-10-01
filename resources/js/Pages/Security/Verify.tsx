@@ -26,6 +26,7 @@ interface Organization {
     type: string;
     access_policy: string;
     is_open: boolean;
+    status_label?: string;
 }
 
 interface PageProps {
@@ -749,6 +750,7 @@ export default function SecurityVerify() {
                                 gateName={gateName}
                                 isOnline={isOnline}
                                 requireVehicleInformation={requireVehicleInformation}
+                                checkoutEnabled={visitorCheckoutEnabled}
                             />
                         </motion.div>
                     ) : verifyMode === 'quick_checkout' ? (
