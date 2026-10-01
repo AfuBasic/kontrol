@@ -221,17 +221,24 @@ test('an organization cannot give itself walk-ins at any time; only the estate c
     expect($page['policy_lock'])->toBeNull();
 });
 
-test('an organization the estate set to any time cannot change it from its profile', function () {
+test('an organization the estate set to any time can step down but never back up', function () {
     $this->org->update(['access_policy' => 'unrestricted']);
 
+    $page = $this->actingAs($this->admin)->get(route('org.public-windows.index'))->inertiaPage()['props']['organization'];
+    expect($page['policy_lock'])->toBeNull()
+        ->and($page['access_policy'])->toBe('unrestricted');
+
     $this->actingAs($this->admin)
-        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'managed'])
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'public_window'])
+        ->assertSessionHasNoErrors();
+
+    expect($this->org->fresh()->access_policy)->toBe('public_window');
+
+    $this->actingAs($this->admin)
+        ->patch(route('org.walk-in-policy.update'), ['access_policy' => 'unrestricted'])
         ->assertSessionHasErrors('access_policy');
 
-    expect($this->org->fresh()->access_policy)->toBe('unrestricted');
-
-    $page = $this->actingAs($this->admin)->get(route('org.public-windows.index'))->inertiaPage()['props']['organization'];
-    expect($page['policy_lock'])->toBe('estate');
+    expect($this->org->fresh()->access_policy)->toBe('public_window');
 });
 
 test('an unknown policy value is rejected', function () {
