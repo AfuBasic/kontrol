@@ -30,7 +30,9 @@ class OrganizationVisitorController extends Controller
         $search = $request->input('search');
 
         $visitorsQuery = AccessCode::where('organization_id', $organization->id)
-            ->whereIn('type', ['single_use', 'event', 'bulk_visitor'])
+            ->whereIn('type', ['single_use', 'event'])
+            // Group (bulk invite) passes are managed on the Groups tab, not as individual visitors.
+            ->whereNull('bulk_invite_recipient_id')
             ->with(['accessLogs' => fn ($q) => $q->latest()->limit(1)])
             ->latest('created_at');
 
