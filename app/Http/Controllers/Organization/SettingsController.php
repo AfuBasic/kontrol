@@ -48,6 +48,7 @@ class SettingsController extends Controller
                 'is_unrestricted' => $organization->isUnrestricted(),
                 'estate_name' => $organization->estate?->name,
                 'walk_in' => $organization->walkInStatus(),
+                'needs_walk_in_hours' => $organization->needsWalkInHours(),
                 'walk_in_windows' => $organization->publicWindows()
                     ->where('is_active', true)
                     ->orderBy('day_of_week')
