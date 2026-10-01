@@ -8,6 +8,7 @@ use App\Models\OrganizationPublicWindow;
 use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,6 +44,7 @@ class PublicWindowController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
+                'walk_in' => $organization->walkInStatus(),
             ],
             'membership' => [
                 'role' => $membership->role,
@@ -63,17 +65,32 @@ class PublicWindowController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'day_of_week' => 'required|integer|between:0,6',
+            'name' => 'nullable|string|max:255',
+            // One window per selected day, so "Mon–Fri 7:30–8:30" is a single action.
+            'days' => 'required|array|min:1',
+            'days.*' => 'integer|between:0,6|distinct',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'is_active' => 'boolean',
             'notes' => 'nullable|string|max:255',
+        ], [
+            'days.required' => 'Pick at least one day.',
+            'end_time.after' => 'Closing time must be after opening time.',
         ]);
 
-        $organization->publicWindows()->create($validated);
+        DB::transaction(function () use ($organization, $validated) {
+            foreach ($validated['days'] as $day) {
+                $organization->publicWindows()->create([
+                    'name' => ($validated['name'] ?? null) ?: 'Walk-in hours',
+                    'day_of_week' => $day,
+                    'start_time' => $validated['start_time'],
+                    'end_time' => $validated['end_time'],
+                    'is_active' => true,
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            }
+        });
 
-        return back()->with('success', 'Public access window created.');
+        return back()->with('success', count($validated['days']) === 1 ? 'Walk-in hours added.' : 'Walk-in hours added for '.count($validated['days']).' days.');
     }
 
     public function update(Request $request, OrganizationPublicWindow $window): RedirectResponse
@@ -87,17 +104,19 @@ class PublicWindowController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'day_of_week' => 'required|integer|between:0,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'is_active' => 'boolean',
             'notes' => 'nullable|string|max:255',
+        ], [
+            'end_time.after' => 'Closing time must be after opening time.',
         ]);
 
-        $window->update($validated);
+        $window->update([...$validated, 'name' => ($validated['name'] ?? null) ?: 'Walk-in hours']);
 
-        return back()->with('success', 'Public access window updated.');
+        return back()->with('success', 'Walk-in hours updated.');
     }
 
     public function destroy(Request $request, OrganizationPublicWindow $window): RedirectResponse
@@ -112,6 +131,6 @@ class PublicWindowController extends Controller
 
         $window->delete();
 
-        return back()->with('success', 'Public access window deleted.');
+        return back()->with('success', 'Walk-in hours removed.');
     }
 }
