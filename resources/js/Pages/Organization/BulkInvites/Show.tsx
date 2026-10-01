@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 
 interface Recipient {
     id: number;
@@ -14,6 +15,9 @@ interface Recipient {
     code: string | null;
     pass_uuid: string | null;
     can_resend: boolean;
+    pass_valid_label: string | null;
+    pass_starts_later: boolean;
+    qr_url: string | null;
     visits_count: number;
     last_visit_label: string | null;
 }
@@ -469,17 +473,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email ?? retainedSelected?.email}>
                 {retainedSelected && (
                     <div className="flex flex-col gap-5 pb-2">
-                        <div className="flex items-end justify-between gap-3">
-                            <div>
-                                <p className="text-[11px] text-slate-500">Pass code</p>
-                                <p className="mt-0.5 font-mono text-[22px] tracking-[0.12em] text-[#071f4b]">
-                                    {retainedSelected.code ?? '-'}
-                                </p>
-                            </div>
-                            <p className="pb-1 text-right text-[12px] text-slate-500">
-                                <RecipientStatus recipient={retainedSelected} />
-                            </p>
-                        </div>
+                        <PassTicket key={retainedSelected.id} recipient={retainedSelected} />
                         {retainedSelected.delivery_error && (
                             <p className="-mt-3 text-[12px] text-rose-600">{retainedSelected.delivery_error}</p>
                         )}
@@ -699,5 +693,65 @@ function VisitHistory({ url, hasVisits }: { url: string; hasVisits: boolean }) {
                 </ul>
             )}
         </section>
+    );
+}
+
+/**
+ * The person's gate pass, styled like the visitor PassCard: QR on a blue field,
+ * a perforated divider, and the typed fallback code underneath.
+ */
+function PassTicket({ recipient }: { recipient: Recipient }) {
+    const [loaded, setLoaded] = useState(false);
+
+    return (
+        <div className="overflow-hidden rounded-[24px] border border-blue-100 bg-white">
+            <div className="flex flex-col items-center bg-blue-50/50 px-5 pt-5 pb-4">
+                <div className="relative rounded-2xl border border-blue-100 bg-white p-3 shadow-xs">
+                    {recipient.qr_url ? (
+                        <>
+                            {!loaded && <div className="absolute inset-3 animate-pulse rounded-lg bg-slate-100" />}
+                            <img
+                                src={recipient.qr_url}
+                                alt={`Gate QR for ${recipient.email}`}
+                                onLoad={() => setLoaded(true)}
+                                className={`block h-40 w-40 transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {loaded && (
+                                <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg bg-white p-1">
+                                    <img src={KONTROL_LOGO_BASE64} alt="" className="h-6 w-6 object-contain" />
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="flex h-40 w-40 items-center justify-center text-center text-[12px] text-slate-500">
+                            No valid pass
+                        </div>
+                    )}
+                </div>
+                <p className={`mt-2.5 text-[11px] ${recipient.pass_starts_later ? 'text-amber-700' : 'text-slate-500'}`}>
+                    {recipient.pass_starts_later
+                        ? `Works from ${recipient.pass_valid_label?.split(' – ')[0] ?? 'a later date'}`
+                        : 'Scan at the gate for fast entry'}
+                </p>
+            </div>
+
+            <div className="relative flex items-end justify-between gap-3 border-t-2 border-dashed border-blue-100 px-5 py-4">
+                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-blue-100 bg-white" />
+                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-blue-100 bg-white" />
+
+                <div className="min-w-0">
+                    <p className="text-[11px] text-slate-500">Pass code</p>
+                    <p className="mt-0.5 font-mono text-[22px] tracking-[0.16em] text-[#1a5dbf] select-text">
+                        {recipient.code ?? '-'}
+                    </p>
+                </div>
+                <div className="shrink-0 pb-1 text-right text-[12px] text-slate-500">
+                    {recipient.pass_valid_label && <p className="text-[#071f4b]">{recipient.pass_valid_label}</p>}
+                    <p className="mt-0.5">
+                        <RecipientStatus recipient={recipient} />
+                    </p>
+                </div>
+            </div>
+        </div>
     );
 }
