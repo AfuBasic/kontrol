@@ -147,6 +147,8 @@ class QuickEntryController
             'organization_name' => $log->meta['organization_name'] ?? null,
             'verified_at' => $log->verified_at?->toIso8601String(),
             'entry_point' => $log->entry_point,
+            // Lets the guard match the car at the exit.
+            'vehicle_plate_number' => $log->vehicle_plate_number,
         ]);
     }
 
