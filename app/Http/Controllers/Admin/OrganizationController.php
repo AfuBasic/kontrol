@@ -100,9 +100,6 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
             'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
-            'arrival_confirmation_required' => ['boolean'],
-            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
-            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
             'admin_email' => ['nullable', 'email', 'max:255'],
@@ -121,9 +118,6 @@ class OrganizationController extends Controller
                 'name' => $validated['name'],
                 'type' => $validated['type'],
                 'access_policy' => $policy,
-                'arrival_confirmation_required' => $policy === 'unrestricted' ? false : ($validated['arrival_confirmation_required'] ?? false),
-                'confirmation_window_minutes' => $validated['confirmation_window_minutes'] ?? 15,
-                'confirmation_escalation' => $validated['confirmation_escalation'] ?? 'alert_only',
                 'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
                 'is_active' => $validated['is_active'] ?? true,
             ]);
@@ -188,18 +182,11 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
             'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
-            'arrival_confirmation_required' => ['boolean'],
-            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
-            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_phone' => ['nullable', 'string', 'max:50'],
         ]);
-
-        if (isset($validated['access_policy']) && $validated['access_policy'] === 'unrestricted') {
-            $validated['arrival_confirmation_required'] = false;
-        }
 
         DB::transaction(function () use ($organization, $validated, $request) {
             $organization->update($validated);
