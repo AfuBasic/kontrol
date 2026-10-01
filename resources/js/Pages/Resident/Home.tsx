@@ -74,7 +74,7 @@ export default function Home({
     const duesAmount = totalUnpaidDuesAmount ?? 0;
     const totalExpectedToday = activePassesCount + upcomingPassesCount;
 
-    // Build attention items — operational things that need action
+    // Build attention items - operational things that need action
     const attentionItems: Array<{
         title: string;
         desc: string;
@@ -166,7 +166,7 @@ export default function Home({
                     </section>
                 )}
 
-                {/* ACTIVE VISITORS — quick list if there are people currently here */}
+                {/* ACTIVE VISITORS - quick list if there are people currently here */}
                 {codes.length > 0 && (
                     <section className="mt-5">
                         <div className="space-y-1">
@@ -189,7 +189,7 @@ export default function Home({
                     </section>
                 )}
 
-                {/* RECENT UPDATES — feed-style, not a card */}
+                {/* RECENT UPDATES - feed-style, not a card */}
                 {hasEstateBoard && announcements.length > 0 && (
                     <section className="mt-5">
                         <div className="flex items-center justify-between px-1">

@@ -68,7 +68,7 @@ function FeedPost({ post, estateName }: { post: EstateBoardPost; estateName: str
                     <span className="shrink-0 text-[11px] font-medium text-slate-400">{timeAgo}</span>
                 </div>
 
-                {/* Title — strong */}
+                {/* Title - strong */}
                 <h2
                     className={`mt-1 text-[15px] leading-snug font-bold [overflow-wrap:anywhere] break-words transition-colors sm:text-base ${
                         isUnread ? 'text-slate-900' : 'text-slate-800'
@@ -77,7 +77,7 @@ function FeedPost({ post, estateName }: { post: EstateBoardPost; estateName: str
                     {post.title || 'Untitled Announcement'}
                 </h2>
 
-                {/* Excerpt — quiet */}
+                {/* Excerpt - quiet */}
                 {bodyPreview && (
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500 [overflow-wrap:anywhere] break-words">
                         {bodyPreview}
@@ -103,7 +103,7 @@ function FeedPost({ post, estateName }: { post: EstateBoardPost; estateName: str
                 </div>
             </Link>
 
-            {/* Media preview — if present, inline within the stream row */}
+            {/* Media preview - if present, inline within the stream row */}
             {post.media && post.media.length > 0 && (
                 <div className="mt-3 overflow-hidden rounded-xl bg-slate-100">
                     <div className="relative aspect-[21/9] w-full overflow-hidden">

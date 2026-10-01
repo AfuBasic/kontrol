@@ -74,11 +74,18 @@ type PendingAction = 'renew' | 'cancel' | 'remove' | null;
 export default function BulkInvitesShow({ organization, membership, bulkInvite }: Props) {
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<Recipient | null>(null);
+    const [retainedSelected, setRetainedSelected] = useState<Recipient | null>(null);
     const [copied, setCopied] = useState(false);
     const [confirming, setConfirming] = useState<PendingAction>(null);
     const [processing, setProcessing] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
     const [isResending, setIsResending] = useState(false);
+
+    useEffect(() => {
+        if (selected) {
+            setRetainedSelected(selected);
+        }
+    }, [selected]);
 
     const recipients = bulkInvite.recipients;
     const total = recipients.length;
@@ -257,7 +264,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10">
                                 <Stat tone="dark" value={String(bulkInvite.visits.total)} label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'} />
                                 <Stat tone="dark" value={`${bulkInvite.visits.visited_count} of ${total}`} label="Came in" />
-                                <Stat tone="dark" value={bulkInvite.visits.last_visit_label ?? '—'} label="Last visit" />
+                                <Stat tone="dark" value={bulkInvite.visits.last_visit_label ?? '-'} label="Last visit" />
                             </dl>
                         ) : (
                             <p className="mt-5 text-[13px] text-blue-100/75">
@@ -459,40 +466,40 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             </div>
 
             {/* Person details */}
-            <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email}>
-                {selected && (
+            <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email ?? retainedSelected?.email}>
+                {retainedSelected && (
                     <div className="flex flex-col gap-5 pb-2">
                         <div className="flex items-end justify-between gap-3">
                             <div>
                                 <p className="text-[11px] text-slate-500">Pass code</p>
                                 <p className="mt-0.5 font-mono text-[22px] tracking-[0.12em] text-[#071f4b]">
-                                    {selected.code ?? '—'}
+                                    {retainedSelected.code ?? '-'}
                                 </p>
                             </div>
                             <p className="pb-1 text-right text-[12px] text-slate-500">
-                                <RecipientStatus recipient={selected} />
+                                <RecipientStatus recipient={retainedSelected} />
                             </p>
                         </div>
-                        {selected.delivery_error && (
-                            <p className="-mt-3 text-[12px] text-rose-600">{selected.delivery_error}</p>
+                        {retainedSelected.delivery_error && (
+                            <p className="-mt-3 text-[12px] text-rose-600">{retainedSelected.delivery_error}</p>
                         )}
 
                         <dl className="icon-tile-blue grid grid-cols-2 divide-x divide-[#c9dcfb] rounded-2xl py-3">
-                            <Stat tone="tint" value={String(selected.visits_count)} label={selected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
-                            <Stat tone="tint" value={selected.last_visit_label ?? '—'} label="Last visit" inset />
+                            <Stat tone="tint" value={String(retainedSelected.visits_count)} label={retainedSelected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
+                            <Stat tone="tint" value={retainedSelected.last_visit_label ?? '-'} label="Last visit" inset />
                         </dl>
 
                         <VisitHistory
-                            key={selected.id}
-                            url={`/org/bulk-invites/${bulkInvite.id}/recipients/${selected.id}/visits`}
-                            hasVisits={selected.visits_count > 0}
+                            key={retainedSelected.id}
+                            url={`/org/bulk-invites/${bulkInvite.id}/recipients/${retainedSelected.id}/visits`}
+                            hasVisits={retainedSelected.visits_count > 0}
                         />
 
                         <div className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70">
-                            {selected.pass_uuid && (
+                            {retainedSelected.pass_uuid && (
                                 <button
                                     type="button"
-                                    onClick={() => copyPassLink(selected)}
+                                    onClick={() => copyPassLink(retainedSelected)}
                                     className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50"
                                 >
                                     {copied ? (
@@ -503,10 +510,10 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                     {copied ? 'Link copied' : 'Copy pass link'}
                                 </button>
                             )}
-                            {canManage && selected.can_resend && (
+                            {canManage && retainedSelected.can_resend && (
                                 <button
                                     type="button"
-                                    onClick={() => resendPass(selected)}
+                                    onClick={() => resendPass(retainedSelected)}
                                     disabled={isResending}
                                     className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50 disabled:opacity-60"
                                 >
