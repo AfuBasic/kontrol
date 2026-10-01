@@ -1,3 +1,4 @@
+import EntryTypeBadge from './EntryTypeBadge';
 import { formatStayDuration, type VisitorRecord } from './types';
 
 type Props = {
@@ -52,6 +53,7 @@ export default function OnPropertyNow({ visitors, checkoutEnabled, expectedToday
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         <p className="truncate text-sm font-semibold text-gray-900">{visitor.visitor.name}</p>
+                                        <EntryTypeBadge record={visitor} />
                                         {visitor.is_overstayed && (
                                             <span className="inline-flex items-center rounded-md bg-warning-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-warning-700 uppercase">
                                                 Overstay
