@@ -156,7 +156,6 @@ const TYPE_CONFIG = {
     },
 } as const;
 
-
 /** Format 24h time 'HH:mm' to 'h:mm A' */
 function formatTime(timeStr?: string | null): string {
     if (!timeStr) return '';
@@ -834,8 +833,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             {form.data.type !== 'hospital' && form.data.access_policy === 'public_window' && (
                                 <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-600">
                                     <span className="mb-0.5 block font-semibold text-slate-900">Walk-in hours</span>
-                                    The organization's admin sets its walk-in hours, and can change this policy, from their Profile. Until hours are
-                                    set, walk-ins are turned away.
+                                    The organization's admin sets its walk-in hours from their Profile, and can switch between no walk-ins and
+                                    walk-ins during their hours. Only you can allow walk-ins at any time. Until hours are set, walk-ins are turned
+                                    away.
                                 </div>
                             )}
 
