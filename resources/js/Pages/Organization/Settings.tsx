@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, CreditCard, Crown, LogOut, Plus, Trash2, X } from 'lucide-react';
+import { ChevronRight, CreditCard, Crown, LogOut, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -23,11 +23,10 @@ interface Props {
         name: string;
         type: string;
         access_policy: string;
-        arrival_confirmation_required: boolean;
-        confirmation_window_minutes: number;
-        confirmation_escalation: string;
         is_unrestricted: boolean;
         estate_name?: string;
+        walk_in: { open: boolean; label: string };
+        walk_in_windows: { id: number; name: string; day_of_week: number; start_time: string; end_time: string }[];
     };
     membership: {
         role: string;
@@ -209,6 +208,21 @@ export default function Settings({ organization, membership, staff }: Props) {
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{organization.name}</h2>
                     <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <Link
+                            href="/org/public-windows"
+                            className="group flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <div className="min-w-0">
+                                <span className="block text-sm font-bold text-slate-900">Walk-in hours</span>
+                                <span
+                                    className={`mt-0.5 flex items-center gap-1.5 text-xs ${organization.walk_in.open ? 'text-emerald-700' : 'text-slate-500'}`}
+                                >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                    {organization.walk_in.label}
+                                </span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
+                        </Link>
                         <button
                             type="button"
                             onClick={() => setActiveModal('details')}
@@ -267,10 +281,27 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{organization.type}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Policy Setup</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Walk-ins</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">
-                                {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
+                                {organization.access_policy === 'unrestricted'
+                                    ? 'Always admitted'
+                                    : organization.access_policy === 'public_window'
+                                      ? 'Admitted during walk-in hours'
+                                      : 'Not admitted'}
                             </p>
+                            {organization.access_policy === 'public_window' && (
+                                <ul className="mt-2 space-y-1 text-sm text-slate-600">
+                                    {organization.walk_in_windows.length === 0 ? (
+                                        <li>No hours set, so walk-ins are turned away.</li>
+                                    ) : (
+                                        organization.walk_in_windows.map((w) => (
+                                            <li key={w.id}>
+                                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][w.day_of_week]} · {w.start_time} – {w.end_time}
+                                            </li>
+                                        ))
+                                    )}
+                                </ul>
+                            )}
                         </div>
                     </div>
 
