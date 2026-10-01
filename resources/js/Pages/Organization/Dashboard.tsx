@@ -1,6 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
     Calendar,
     ChevronRight,
     Clock,
@@ -21,10 +20,6 @@ import { router } from '@inertiajs/react';
 interface MetricProps {
     currently_inside: number;
     today_entries: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
 }
 
 interface Arrival {
@@ -35,8 +30,6 @@ interface Arrival {
     vehicle_plate_number: string | null;
     entry_point: string | null;
     verified_at_human: string | null;
-    confirmation_state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE';
-    is_overdue: boolean;
 }
 
 interface ActivityItem {
@@ -44,7 +37,7 @@ interface ActivityItem {
     name: string;
     description: string;
     time_human: string;
-    type: 'arrival' | 'confirmed' | 'checkout';
+    type: 'arrival' | 'checkout';
     is_active: boolean;
 }
 
@@ -54,9 +47,8 @@ interface Props {
         name: string;
         type: string;
         access_policy: string;
-        arrival_confirmation_required: boolean;
-        confirmation_window_minutes: number;
         estate_name: string;
+        walk_in: { open: boolean; label: string };
         visitor_checkout_enabled?: boolean;
     };
     membership: {
@@ -66,7 +58,6 @@ interface Props {
     total_access_members?: number;
     metrics: MetricProps;
     recent_arrivals: Arrival[];
-    pending_arrivals: Arrival[];
     recent_activity: ActivityItem[];
 }
 
@@ -75,7 +66,6 @@ export default function Dashboard({
     total_access_members = 0,
     metrics,
     recent_arrivals = [],
-    pending_arrivals = [],
     recent_activity = [],
 }: Props) {
     const page = usePage();
@@ -84,13 +74,6 @@ export default function Dashboard({
     const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
 
     const currentlyHere = metrics.currently_inside ?? 0;
-    const pendingTotal = pending_arrivals.length;
-    const overdueTotal = metrics.overdue_confirmation ?? 0;
-    const waitingCount = pendingTotal;
-    const attentionCount = overdueTotal;
-
-    const needsAttention = attentionCount > 0 || waitingCount > 0;
-    const isCritical = overdueTotal >= 3;
 
     const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
 
@@ -100,27 +83,6 @@ export default function Dashboard({
         if (hour < 17) return 'Good afternoon';
         return 'Good evening';
     };
-
-    const stateConfig = isCritical
-        ? {
-              label: 'Critical attention',
-              dot: 'bg-rose-500',
-              textColor: 'text-rose-700',
-              bgColor: 'bg-rose-50',
-          }
-        : needsAttention
-          ? {
-                label: 'Needs attention',
-                dot: 'bg-amber-500',
-                textColor: 'text-amber-700',
-                bgColor: 'bg-amber-50',
-            }
-          : {
-                label: 'All systems normal',
-                dot: 'bg-emerald-500',
-                textColor: 'text-emerald-700',
-                bgColor: 'bg-emerald-50/60',
-            };
 
     const initialsFor = (name: string) => {
         return name
@@ -154,23 +116,6 @@ export default function Dashboard({
                 dot: 'bg-slate-400',
                 badge: 'bg-slate-100 text-slate-600 border-slate-200',
             };
-        }
-        if (item.type === 'confirmed') {
-            return {
-                label: 'Confirmed',
-                dot: 'bg-emerald-500',
-                badge: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-            };
-        }
-        if (item.is_active && organization.arrival_confirmation_required) {
-            const isWaiting = pending_arrivals.some((pa) => pa.visitor_name === item.name);
-            if (isWaiting) {
-                return {
-                    label: 'Waiting',
-                    dot: 'bg-amber-500',
-                    badge: 'bg-amber-50 text-amber-700 border-amber-100',
-                };
-            }
         }
         return {
             label: 'Inside',
@@ -320,12 +265,15 @@ export default function Dashboard({
                     {/* Header row */}
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
-                        <div
-                            className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateConfig.bgColor} ${stateConfig.textColor}`}
+                        <Link
+                            href="/org/public-windows"
+                            className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                organization.walk_in.open ? 'bg-emerald-50/70 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                            }`}
                         >
-                            <span className={`h-1.5 w-1.5 rounded-full ${stateConfig.dot}`} />
-                            {stateConfig.label}
-                        </div>
+                            <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            Walk-ins · {organization.walk_in.label}
+                        </Link>
                     </div>
 
                     {/* Metrics row */}
@@ -343,44 +291,6 @@ export default function Dashboard({
                             </span>
                             <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
                                 Inside
-                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                            </span>
-                        </Link>
-
-                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                        {/* Waiting */}
-                        <Link
-                            href="/org/on-site"
-                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
-                                <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
-                            </div>
-                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
-                                {waitingCount}
-                            </span>
-                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
-                                Waiting
-                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                            </span>
-                        </Link>
-
-                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                        {/* Needs attention */}
-                        <Link
-                            href="/org/on-site"
-                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
-                                <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
-                            </div>
-                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
-                                {attentionCount}
-                            </span>
-                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
-                                Needs attention
                                 <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
                             </span>
                         </Link>
