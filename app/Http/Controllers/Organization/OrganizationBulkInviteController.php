@@ -8,9 +8,11 @@ use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\DeliverBulkVisitorPassJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
+use App\Models\AccessLog;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRecipient;
+use App\Services\Organization\BulkInviteVisitService;
 use App\Services\OrganizationContextService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -211,7 +213,7 @@ class OrganizationBulkInviteController extends Controller
             ]);
     }
 
-    public function show(Request $request, OrganizationBulkInvite $bulkInvite): Response
+    public function show(Request $request, OrganizationBulkInvite $bulkInvite, BulkInviteVisitService $visits): Response
     {
         /** @var EstateOrganization $organization */
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
@@ -229,6 +231,8 @@ class OrganizationBulkInviteController extends Controller
         $validFrom = $bulkInvite->valid_from ? Carbon::parse($bulkInvite->valid_from)->startOfDay() : null;
         $validUntil = $bulkInvite->valid_until ? Carbon::parse($bulkInvite->valid_until)->endOfDay() : null;
         $now = Carbon::now();
+
+        $visitStats = $visits->groupStats($bulkInvite, $bulkInvite->recipients);
 
         $state = match (true) {
             $bulkInvite->status === 'cancelled' => 'cancelled',
@@ -275,7 +279,15 @@ class OrganizationBulkInviteController extends Controller
                     'code' => $recipient->lastAccessCode?->code,
                     'pass_uuid' => $recipient->lastAccessCode?->pass_uuid,
                     'can_resend' => $this->isResendable($recipient),
+                    'visits_count' => $visitStats['by_recipient'][$recipient->id]['visits'] ?? 0,
+                    'last_visit_label' => $visits->recencyLabel($visitStats['by_recipient'][$recipient->id]['last_visit_at'] ?? null),
                 ])->values(),
+                'visits' => [
+                    'total' => $visitStats['total_visits'],
+                    'visited_count' => $visitStats['visited_count'],
+                    'inside_now' => $visitStats['inside_now'],
+                    'last_visit_label' => $visits->recencyLabel($visitStats['last_visit_at']),
+                ],
                 'renewals' => $bulkInvite->renewals->map(fn ($renewal) => [
                     'id' => $renewal->id,
                     'period_label' => trim($this->shortDate(Carbon::parse($renewal->valid_from)).' – '.$this->shortDate(Carbon::parse($renewal->valid_until)), ' –'),
@@ -306,6 +318,45 @@ class OrganizationBulkInviteController extends Controller
         $action->execute($recipient);
 
         return back()->with('success', "{$recipient->email} was removed and their pass no longer works.");
+    }
+
+    public function recipientVisits(
+        Request $request,
+        OrganizationBulkInvite $bulkInvite,
+        OrganizationBulkInviteRecipient $recipient,
+        BulkInviteVisitService $visits,
+    ): JsonResponse {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+
+        abort_unless(
+            $bulkInvite->organization_id === $organization->id && $recipient->bulk_invite_id === $bulkInvite->id,
+            404
+        );
+
+        $page = $visits->recipientVisits($recipient);
+
+        return response()->json([
+            'data' => collect($page->items())->map(function (AccessLog $log) {
+                $enteredAt = $log->verified_at;
+                $leftAt = $log->checked_out_at;
+
+                return [
+                    'id' => $log->id,
+                    'day_label' => $enteredAt->isToday()
+                        ? 'Today'
+                        : ($enteredAt->isYesterday()
+                            ? 'Yesterday'
+                            : $enteredAt->isoFormat($enteredAt->year === now()->year ? 'ddd D MMM' : 'ddd D MMM YYYY')),
+                    'entered_at_label' => $enteredAt->isoFormat('h:mm A'),
+                    'left_at_label' => $leftAt?->isoFormat('h:mm A'),
+                    'left_another_day' => $leftAt !== null && ! $leftAt->isSameDay($enteredAt),
+                    'entry_point' => $log->entry_point,
+                    'is_inside' => $leftAt === null && $enteredAt->isToday(),
+                ];
+            })->values(),
+            'next_cursor' => $page->nextCursor()?->encode(),
+        ]);
     }
 
     public function resendRecipient(
