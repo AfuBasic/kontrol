@@ -1,6 +1,5 @@
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import {
-    AlertCircle,
     AlertTriangle,
     BadgeCheck,
     Ban,
@@ -64,10 +63,6 @@ interface PaginatedMembers {
 interface MetricProps {
     currently_inside: number;
     today_entries: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
 }
 
 interface ActivityItem {
@@ -76,7 +71,7 @@ interface ActivityItem {
     category: string;
     gate: string;
     time_human: string;
-    type: 'arrival' | 'confirmed' | 'checkout';
+    type: 'arrival' | 'checkout';
     is_active: boolean;
 }
 
@@ -85,9 +80,7 @@ interface Props {
         id: number;
         name: string;
         access_policy: string;
-        arrival_confirmation_required?: boolean;
-        confirmation_window_minutes?: number;
-        confirmation_escalation?: string;
+        walk_in?: { open: boolean; label: string };
         estate_name?: string;
         visitor_checkout_enabled?: boolean;
     };
@@ -103,7 +96,6 @@ interface Props {
     };
     total_access_members?: number;
     metrics?: MetricProps;
-    pending_arrivals?: Array<{ confirmation_state: string }>;
     recent_activity?: ActivityItem[];
 }
 
@@ -139,7 +131,6 @@ export default function AccessList({
     filters,
     total_access_members = 0,
     metrics,
-    pending_arrivals = [],
     recent_activity = [],
 }: Props) {
     const page = usePage();
@@ -184,11 +175,6 @@ export default function AccessList({
     }, [gated]);
 
     const currentlyHere = metrics?.currently_inside ?? 0;
-    const waitingCount = pending_arrivals.length;
-    const overdueTotal = metrics?.overdue_confirmation ?? 0;
-    const attentionCount = overdueTotal;
-    const needsAttention = attentionCount > 0 || waitingCount > 0;
-    const isCritical = overdueTotal >= 3;
     const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
 
     const getGreeting = () => {
@@ -197,12 +183,6 @@ export default function AccessList({
         if (hour < 17) return 'Good afternoon';
         return 'Good evening';
     };
-
-    const stateConfig = isCritical
-        ? { label: 'Critical attention', dot: 'bg-rose-500', textColor: 'text-rose-700', bgColor: 'bg-rose-50' }
-        : needsAttention
-          ? { label: 'Needs attention', dot: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50' }
-          : { label: 'All systems normal', dot: 'bg-emerald-500', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50/60' };
 
     const getMemberStatus = (member: Member) => {
         if (member.status === 'suspended') return { label: 'Suspended', color: 'rose' };
@@ -213,7 +193,6 @@ export default function AccessList({
 
     const getActivityStatus = (item: ActivityItem) => {
         if (item.type === 'checkout') return { label: 'Checked out', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
-        if (item.type === 'confirmed') return { label: 'Confirmed', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
         if (!item.is_active) return { label: 'Departed', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
         return { label: 'Inside', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
     };
@@ -374,7 +353,6 @@ export default function AccessList({
                 <div className="soft-card overflow-hidden p-0">
                     <AccessTabs
                         activeTab="people"
-                        pendingCount={waitingCount}
                         activeCount={currentlyHere}
                         showOnSiteTab={organization.visitor_checkout_enabled}
                     />
@@ -458,10 +436,17 @@ export default function AccessList({
                     <div className="soft-card flex flex-col p-3.5">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
-                            <div className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateConfig.bgColor} ${stateConfig.textColor}`}>
-                                <span className={`h-1.5 w-1.5 rounded-full ${stateConfig.dot}`} />
-                                {stateConfig.label}
-                            </div>
+                            {organization.walk_in && (
+                                <Link
+                                    href="/org/public-windows"
+                                    className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                        organization.walk_in.open ? 'bg-emerald-50/70 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                                    }`}
+                                >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                    Walk-ins · {organization.walk_in.label}
+                                </Link>
+                            )}
                         </div>
 
                         <div className="flex items-stretch justify-between">
@@ -472,30 +457,6 @@ export default function AccessList({
                                 <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{currentlyHere}</span>
                                 <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
                                     Inside <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                                </span>
-                            </Link>
-
-                            <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
-                                    <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{waitingCount}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
-                                    Waiting <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
-                                </span>
-                            </Link>
-
-                            <div className="w-px bg-slate-100 self-stretch mx-0.5" />
-
-                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
-                                    <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{attentionCount}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
-                                    Needs attention <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
                                 </span>
                             </Link>
 
