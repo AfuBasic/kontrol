@@ -6,6 +6,7 @@ use App\Models\AccessCode;
 use App\Models\OrganizationBulkInviteRecipient;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\Result\ResultInterface;
 use Illuminate\Support\Facades\Storage;
 use PdfStudio\Laravel\Facades\Pdf;
 
@@ -23,7 +24,8 @@ class BulkInvitePdfService
         $estate = $bulkInvite->estate;
 
         $passUrl = route('public.pass', ['uuid' => $accessCode->pass_uuid]);
-        $qrBase64 = $this->generateQrBase64($passUrl);
+        // The QR is scanned at the gate, so it must carry the scanner payload, not the web link.
+        $qrBase64 = $this->generateQrBase64($accessCode->gateQrPayload());
 
         $relativeDir = 'temp/bulk-passes';
         $fileName = "pass-{$accessCode->code}-{$recipient->id}.pdf";
@@ -53,11 +55,19 @@ class BulkInvitePdfService
      */
     public function generateQrBase64(string $url): string
     {
-        $qrCode = new QrCode($url);
-        $writer = new PngWriter;
+        return $this->writeQr($url)->getDataUri();
+    }
 
-        $result = $writer->write($qrCode);
+    /**
+     * Raw PNG bytes for a QR code, for serving as an image response.
+     */
+    public function generateQrPng(string $data): string
+    {
+        return $this->writeQr($data)->getString();
+    }
 
-        return $result->getDataUri();
+    private function writeQr(string $data): ResultInterface
+    {
+        return (new PngWriter)->write(new QrCode($data));
     }
 }
