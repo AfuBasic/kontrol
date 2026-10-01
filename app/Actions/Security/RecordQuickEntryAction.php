@@ -5,7 +5,6 @@ namespace App\Actions\Security;
 use App\Actions\Visitor\ResolveVisitorIdentityAction;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
-use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use App\Services\Visitor\TagGeneratorService;
@@ -39,14 +38,15 @@ class RecordQuickEntryAction
         User $verifiedBy,
         array $data
     ): AccessLog {
+        // Offline entries send their admission time in UTC; window checks need app-local time.
         $timestamp = isset($data['verified_at'])
-            ? CarbonImmutable::parse($data['verified_at'])
+            ? CarbonImmutable::parse($data['verified_at'])->setTimezone(config('app.timezone'))
             : now();
 
         $entryPoint = $data['entry_point'] ?? app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
 
-        // The gate issues tags from its pre-allocated pool (also offline), and the visitor leaves
-        // holding that tag, so it must be recorded as-is. Generate one only when none was sent.
+        // Offline, the gate device issues the tag and the visitor leaves holding it, so it must be
+        // recorded as-is. Online entries send no tag and get one generated here.
         if (! empty($data['tag'])) {
             $tag = strtoupper(trim($data['tag']));
 
@@ -73,30 +73,22 @@ class RecordQuickEntryAction
                 ]);
             }
 
-            $settings = EstateSettings::forEstate($estateId);
-            $enforcement = $organization->resolvedEnforcement($settings);
-            $outsideHours = false;
-
-            if ($organization->hasPublicWindows() && ! $organization->isWithinPublicWindow()) {
-                if ($enforcement === 'block') {
-                    throw ValidationException::withMessages([
-                        'organization_id' => ['Quick Entry is not permitted outside operating hours for this organization.'],
-                    ]);
-                }
-                $outsideHours = true;
+            // Closed means no entry. Judge at the admission time so offline entries synced later
+            // are held to the rule that applied when the guard admitted them.
+            if (! $organization->acceptsWalkInsAt($timestamp)) {
+                throw ValidationException::withMessages([
+                    'organization_id' => ["{$organization->name} is closed to walk-ins right now. No entry."],
+                ]);
             }
 
-            // Photo is optional, as in ReserveQuickEntryAction: rush-mode and offline-synced
-            // entries have no photo, and must still be admitted.
-            $visitorProfile = $idPhotoFile
-                ? $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId)
-                : null;
-            $displayName = $visitorProfile?->name ?? ($visitorName ?? 'Unknown Visitor');
+            // The guard photographs the visitor's ID for every walk-in.
+            $visitorProfile = $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId);
+            $displayName = $visitorProfile->name;
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
                 'organization_id' => $organization->id,
-                'visitor_profile_id' => $visitorProfile?->id,
+                'visitor_profile_id' => $visitorProfile->id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => null,
                 'verified_by' => $verifiedBy->id,
@@ -110,11 +102,10 @@ class RecordQuickEntryAction
                     'organization_id' => $organization->id,
                     'organization_name' => $organization->name,
                     'organization_type' => $organization->type,
-                    'admission_basis' => $organization->access_policy === 'public_window' ? 'public_window' : ($organization->isUnrestricted() ? 'unrestricted' : 'quick_entry'),
+                    'admission_basis' => $organization->access_policy,
                     'visitor_name' => $displayName,
-                    'visitor_profile_id' => $visitorProfile?->id,
+                    'visitor_profile_id' => $visitorProfile->id,
                     'entry_point' => $entryPoint,
-                    'outside_hours' => $outsideHours,
                 ],
             ]);
 
@@ -124,7 +115,7 @@ class RecordQuickEntryAction
                     'visitor_name' => $displayName,
                     'tag' => $tag,
                     'organization' => $organization->name,
-                    'visitor_profile_id' => $visitorProfile?->id,
+                    'visitor_profile_id' => $visitorProfile->id,
                 ])
                 ->log("Quick Entry admitted for {$organization->name} (Tag: {$tag})");
 
