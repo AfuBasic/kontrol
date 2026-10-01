@@ -21,7 +21,7 @@ interface Props {
         id: number;
         name: string;
         access_policy: string;
-        policy_locked: boolean;
+        policy_lock: 'hospital' | 'estate' | null;
         walk_in: { open: boolean; label: string };
     };
     membership: { role: string; is_admin: boolean };
@@ -43,8 +43,13 @@ const formatTime = (hhmm: string) => {
 const POLICY_OPTIONS = [
     { value: 'managed', title: 'No walk-ins', description: 'Only members and visitors with a pass are admitted.' },
     { value: 'public_window', title: 'During our hours', description: 'Walk-ins are admitted only during the hours you set below.' },
-    { value: 'unrestricted', title: 'Any time', description: 'Anyone can walk in at any hour, with no hours to manage.' },
 ] as const;
+
+// "Any time" is granted by the estate admin only, so it is never offered as a choice here.
+const LOCKED_COPY = {
+    hospital: 'Hospitals and clinics always admit walk-ins. This cannot be changed.',
+    estate: 'The estate admin allows walk-ins at any hour for this organization. Ask them if you need to change it.',
+} as const;
 
 export default function PublicWindows({ organization, membership, windows }: Props) {
     const [sheet, setSheet] = useState<'add' | 'edit' | null>(null);
@@ -69,7 +74,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
     const [policy, setPolicy] = useState(organization.access_policy);
     const [savingPolicy, setSavingPolicy] = useState(false);
     const policyChanged = policy !== organization.access_policy;
-    const canEditPolicy = membership.is_admin && !organization.policy_locked;
+    const canEditPolicy = membership.is_admin && organization.policy_lock === null;
 
     const savePolicy = () => {
         setSavingPolicy(true);
@@ -182,12 +187,10 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                         Who can walk in
                     </h2>
 
-                    {organization.policy_locked ? (
+                    {organization.policy_lock ? (
                         <p className="rounded-2xl border border-slate-200/60 bg-white px-4 py-3.5 text-[14px] text-[#071f4b]">
-                            Always open
-                            <span className="mt-0.5 block text-[12px] text-slate-500">
-                                Hospitals and clinics always admit walk-ins. This cannot be changed.
-                            </span>
+                            Any time
+                            <span className="mt-0.5 block text-[12px] text-slate-500">{LOCKED_COPY[organization.policy_lock]}</span>
                         </p>
                     ) : (
                         <div
@@ -224,7 +227,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                         </div>
                     )}
 
-                    {!canEditPolicy && !organization.policy_locked && (
+                    {!canEditPolicy && !organization.policy_lock && (
                         <p className="mt-2 px-0.5 text-[12px] text-slate-500">Only organization admins can change this.</p>
                     )}
 
@@ -233,9 +236,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                             <p className="text-[12px] text-slate-500">
                                 {policy === 'managed'
                                     ? 'Security will turn away everyone without a pass.'
-                                    : policy === 'unrestricted'
-                                      ? 'Security will admit anyone who walks in, at any hour.'
-                                      : 'Security will admit walk-ins only during your hours.'}
+                                    : 'Security will admit walk-ins only during your hours.'}
                             </p>
                             <div className="flex shrink-0 gap-2">
                                 <button
