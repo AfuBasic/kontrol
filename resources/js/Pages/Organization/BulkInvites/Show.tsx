@@ -1,60 +1,42 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    CheckCircle2,
-    Clock,
-    Copy,
-    RefreshCw,
-    AlertCircle,
-    AlertTriangle,
-    XCircle,
-    Loader2,
-} from 'lucide-react';
-import React, { useState } from 'react';
+import { CheckCircle2, ChevronLeft, Copy, Loader2, MoreHorizontal, Search, Send, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
+import MobileSheet from '@/Components/MobileSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
-import AccessHeader from '@/Components/Organization/AccessHeader';
-
-interface AccessCode {
-    id: number;
-    code: string;
-    pass_uuid: string;
-    status: string;
-}
 
 interface Recipient {
     id: number;
     email: string;
-    status: string;
     delivery_status: 'pending' | 'queued' | 'sent' | 'failed';
     delivery_error: string | null;
-    last_delivered_at: string | null;
-    last_access_code: AccessCode | null;
+    delivered_label: string;
+    code: string | null;
+    pass_uuid: string | null;
+    can_resend: boolean;
 }
 
 interface Renewal {
     id: number;
-    cycle_key: string;
-    valid_from: string;
-    valid_until: string;
+    period_label: string;
+    processed_label: string;
     status: string;
     recipients_renewed: number;
-    recipients_blocked: number;
-    created_at: string;
 }
 
 interface BulkInvite {
     id: number;
     name: string | null;
-    purpose: string | null;
+    purpose_label: string | null;
     role: string | null;
-    valid_from: string;
-    valid_until: string;
-    auto_renew: boolean;
-    send_immediately: boolean;
     status: string;
-    renewal_blocked_reason: string | null;
-    last_renewed_at: string | null;
-    next_renewal_at: string | null;
+    state: 'upcoming' | 'active' | 'expired' | 'cancelled';
+    valid_from_label: string;
+    valid_until_label: string;
+    days_left: number;
+    auto_renew: boolean;
+    next_renewal_label: string | null;
+    renewal_blocked_reason_label: string | null;
     recipients: Recipient[];
     renewals: Renewal[];
 }
@@ -65,17 +47,77 @@ interface Props {
     bulkInvite: BulkInvite;
 }
 
-export default function BulkInvitesShow({ organization, membership, bulkInvite }: Props) {
-    const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
-    const [isRetrying, setIsRetrying] = useState(false);
-    const [isCancelling, setIsCancelling] = useState(false);
-    const [isRenewing, setIsRenewing] = useState(false);
+type PendingAction = 'renew' | 'cancel' | 'remove' | null;
 
-    const copyPassUrl = (uuid: string, recipientId: number) => {
-        const url = `${window.location.origin}/pass/${uuid}`;
-        navigator.clipboard.writeText(url);
-        setCopiedCodeId(recipientId);
-        setTimeout(() => setCopiedCodeId(null), 2000);
+export default function BulkInvitesShow({ organization, membership, bulkInvite }: Props) {
+    const [query, setQuery] = useState('');
+    const [selected, setSelected] = useState<Recipient | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [confirming, setConfirming] = useState<PendingAction>(null);
+    const [processing, setProcessing] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+
+    const recipients = bulkInvite.recipients;
+    const total = recipients.length;
+    const sent = recipients.filter((r) => r.delivery_status === 'sent').length;
+    const failed = recipients.filter((r) => r.delivery_status === 'failed').length;
+    const sending = total - sent - failed;
+
+    const filtered = useMemo(() => {
+        const needle = query.trim().toLowerCase();
+        return needle ? recipients.filter((r) => r.email.toLowerCase().includes(needle)) : recipients;
+    }, [query, recipients]);
+
+    const isLive = bulkInvite.state === 'active' || bulkInvite.state === 'upcoming';
+    const canManage = membership.is_admin && bulkInvite.status === 'active';
+    const title = bulkInvite.name || bulkInvite.purpose_label || 'Untitled group';
+    const meta = [
+        `${total} ${total === 1 ? 'person' : 'people'}`,
+        bulkInvite.name ? bulkInvite.purpose_label : null,
+        bulkInvite.role,
+    ].filter(Boolean);
+
+    const validityHint = (() => {
+        switch (bulkInvite.state) {
+            case 'cancelled':
+                return 'Cancelled';
+            case 'expired':
+                return 'Ended';
+            case 'upcoming':
+                return 'Not started yet';
+            default:
+                if (bulkInvite.days_left <= 0) return 'Ends today';
+                return bulkInvite.days_left === 1 ? '1 day left' : `${bulkInvite.days_left} days left`;
+        }
+    })();
+    const validityWarn = bulkInvite.state === 'active' && bulkInvite.days_left <= 3 && !bulkInvite.auto_renew;
+
+    const renewalValue = bulkInvite.renewal_blocked_reason_label ? 'Paused' : bulkInvite.auto_renew ? 'On' : 'Off';
+    const renewalHint = bulkInvite.renewal_blocked_reason_label
+        ? bulkInvite.renewal_blocked_reason_label
+        : bulkInvite.next_renewal_label
+          ? `Next on ${bulkInvite.next_renewal_label}`
+          : null;
+
+    const copyPassLink = (recipient: Recipient) => {
+        if (!recipient.pass_uuid) return;
+        navigator.clipboard.writeText(`${window.location.origin}/pass/${recipient.pass_uuid}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+    };
+
+    const resendPass = (recipient: Recipient) => {
+        setIsResending(true);
+        router.post(
+            `/org/bulk-invites/${bulkInvite.id}/recipients/${recipient.id}/resend`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelected(null),
+                onFinish: () => setIsResending(false),
+            },
+        );
     };
 
     const handleRetryFailed = async () => {
@@ -100,280 +142,321 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
         }
     };
 
-    const handleRenewNow = () => {
-        if (!confirm('Are you sure you want to renew this bulk invite cycle now?')) return;
-        setIsRenewing(true);
-        router.post(
-            `/org/bulk-invites/${bulkInvite.id}/renew`,
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => setIsRenewing(false),
+    const runConfirmed = () => {
+        const done = {
+            preserveScroll: true,
+            onFinish: () => {
+                setProcessing(false);
+                setConfirming(null);
             },
-        );
+        };
+        setProcessing(true);
+
+        if (confirming === 'renew') {
+            router.post(`/org/bulk-invites/${bulkInvite.id}/renew`, {}, done);
+        } else if (confirming === 'cancel') {
+            router.post(`/org/bulk-invites/${bulkInvite.id}/cancel`, {}, done);
+        } else if (confirming === 'remove' && selected) {
+            router.delete(`/org/bulk-invites/${bulkInvite.id}/recipients/${selected.id}`, {
+                ...done,
+                onSuccess: () => setSelected(null),
+            });
+        }
     };
 
-    const handleCancelInvite = () => {
-        if (!confirm('Are you sure you want to cancel this bulk invite? Active passes will no longer renew.')) return;
-        setIsCancelling(true);
-        router.post(
-            `/org/bulk-invites/${bulkInvite.id}/cancel`,
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => setIsCancelling(false),
-            },
-        );
+    const confirmCopy = {
+        renew: {
+            title: 'Renew now?',
+            message: 'Everyone in this group gets a new pass for the next cycle, sent by email.',
+            confirmLabel: 'Renew now',
+            type: 'info' as const,
+        },
+        cancel: {
+            title: 'Cancel this group?',
+            message: 'Passes stop renewing. Passes already sent stay valid until they expire.',
+            confirmLabel: 'Cancel group',
+            type: 'danger' as const,
+        },
+        remove: {
+            title: 'Remove from group?',
+            message: `${selected?.email ?? 'This person'} will lose access immediately and won't get future renewals.`,
+            confirmLabel: 'Remove',
+            type: 'danger' as const,
+        },
     };
-
-    const recipients = bulkInvite.recipients || [];
-    const totalRecipients = recipients.length;
-    const sentCount = recipients.filter((r) => r.delivery_status === 'sent').length;
-    const queuedCount = recipients.filter((r) => r.delivery_status === 'queued' || r.delivery_status === 'pending').length;
-    const failedCount = recipients.filter((r) => r.delivery_status === 'failed').length;
-
-    // Delivery progress calculation
-    const progressPercent = totalRecipients > 0 ? Math.round((sentCount / totalRecipients) * 100) : 0;
+    const activeConfirm = confirming ? confirmCopy[confirming] : null;
 
     return (
-        <OrganizationLayout title="Access - Bulk Invite Details" transparentHeader contentClassName="w-full relative min-h-screen">
-            <Head title={`${organization.name} - ${bulkInvite.name || 'Bulk Invite'} Details`} />
+        <OrganizationLayout title="Access - Group" transparentHeader contentClassName="w-full relative min-h-screen">
+            <Head title={`${organization.name} - ${title}`} />
 
-            <div className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 pt-1 pb-24">
-                <AccessHeader activeTab="bulk_invites" />
+            <div className="mx-auto flex max-w-[560px] flex-col px-4 pt-1 pb-28">
+                <Link
+                    href="/org/bulk-invites"
+                    className="-ml-1.5 inline-flex min-h-[44px] items-center gap-0.5 self-start pr-3 text-[14px] text-[#1a5dbf]"
+                >
+                    <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
+                    Groups
+                </Link>
 
-                {/* Back navigation */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/org/bulk-invites"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Bulk Invites
-                    </Link>
+                {/* Identity */}
+                <header className="mt-1">
+                    <h1 className="text-[22px] font-semibold tracking-[-0.015em] text-[#071f4b]">{title}</h1>
+                    <p className="mt-0.5 text-[13px] text-slate-500">{meta.join(' · ')}</p>
+                </header>
 
-                    {membership.is_admin && bulkInvite.status === 'active' && (
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={handleRenewNow}
-                                disabled={isRenewing}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 disabled:opacity-50"
-                            >
-                                <RefreshCw className={`h-3.5 w-3.5 ${isRenewing ? 'animate-spin' : ''}`} />
-                                Renew Now
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCancelInvite}
-                                disabled={isCancelling}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 shadow-xs hover:bg-rose-100 active:scale-95 disabled:opacity-50"
-                            >
-                                <XCircle className="h-3.5 w-3.5" />
-                                Cancel Group
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Main Card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-xs">
-                    <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-900">
-                                {bulkInvite.name || `Batch #${bulkInvite.id}`}
-                            </h2>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                                Issued by {organization.name}
-                            </p>
-                        </div>
-                        <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${
-                                bulkInvite.status === 'active'
-                                    ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                                    : bulkInvite.status === 'cancelled'
-                                    ? 'border border-rose-200 bg-rose-50 text-rose-700'
-                                    : 'border border-slate-200 bg-slate-100 text-slate-600'
-                            }`}
-                        >
-                            {bulkInvite.status}
-                        </span>
+                {/* Validity + renewal */}
+                <dl className={`mt-5 grid grid-cols-2 gap-4 ${isLive ? '' : 'opacity-60'}`}>
+                    <div className="min-w-0">
+                        <dt className="text-[11px] text-slate-500">Valid</dt>
+                        <dd className="mt-0.5 text-[15px] text-[#071f4b]">
+                            {bulkInvite.valid_from_label} – {bulkInvite.valid_until_label}
+                        </dd>
+                        <dd className={`mt-0.5 text-[12px] ${validityWarn ? 'text-amber-700' : 'text-slate-500'}`}>
+                            {validityHint}
+                        </dd>
                     </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-xs">
-                        <div>
-                            <span className="text-slate-400">Validity Window</span>
-                            <div className="mt-0.5 font-bold text-slate-800">
-                                {bulkInvite.valid_from ? bulkInvite.valid_from.split('T')[0] : ''} - {bulkInvite.valid_until ? bulkInvite.valid_until.split('T')[0] : ''}
-                            </div>
-                        </div>
-                        <div>
-                            <span className="text-slate-400">Auto-Renewal</span>
-                            <div className="mt-0.5 font-bold text-slate-800">
-                                {bulkInvite.auto_renew ? 'Active on Expiry' : 'Disabled'}
-                            </div>
-                            {bulkInvite.next_renewal_at && bulkInvite.auto_renew && (
-                                <p className="mt-0.5 text-[10px] text-indigo-600">
-                                    Next cycle: {bulkInvite.next_renewal_at}
-                                </p>
+                    {bulkInvite.state !== 'cancelled' && (
+                        <div className="min-w-0">
+                            <dt className="text-[11px] text-slate-500">Auto-renew</dt>
+                            <dd
+                                className={`mt-0.5 text-[15px] ${
+                                    renewalValue === 'Paused'
+                                        ? 'text-amber-700'
+                                        : renewalValue === 'On' && isLive
+                                          ? 'text-emerald-700'
+                                          : 'text-[#071f4b]'
+                                }`}
+                            >
+                                {renewalValue}
+                            </dd>
+                            {renewalHint && (
+                                <dd
+                                    className={`mt-0.5 truncate text-[12px] ${
+                                        renewalValue === 'Paused' ? 'text-amber-700' : 'text-slate-500'
+                                    }`}
+                                >
+                                    {renewalHint}
+                                </dd>
                             )}
                         </div>
-                    </div>
-                </div>
+                    )}
+                </dl>
 
-                {/* Delivery Progress Bar */}
-                <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-xs">
-                    <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-700">
-                        <span>Email Delivery Progress</span>
-                        <span>{progressPercent}% Complete</span>
+                {/* Delivery summary: one line, only loud when something failed */}
+                {total > 0 && (
+                    <div className="mt-5 flex min-h-[44px] items-center justify-between gap-3 border-y border-slate-200/70 py-2.5">
+                        <p className={`text-[13px] ${failed > 0 ? 'text-rose-600' : 'text-slate-600'}`}>
+                            {failed > 0
+                                ? `${failed} of ${total} not delivered`
+                                : sending > 0
+                                  ? `Sending… ${sent} of ${total} delivered`
+                                  : total === 1
+                                    ? 'Pass delivered'
+                                    : `All ${total} passes delivered`}
+                        </p>
+                        {failed > 0 && membership.is_admin ? (
+                            <button
+                                type="button"
+                                onClick={handleRetryFailed}
+                                disabled={isRetrying}
+                                className="inline-flex min-h-[36px] items-center gap-1.5 text-[13px] font-medium text-[#1a5dbf] disabled:opacity-50"
+                            >
+                                {isRetrying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                Retry
+                            </button>
+                        ) : failed === 0 && sending === 0 ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
+                        ) : null}
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                            className="h-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
+                )}
 
-                {/* Delivery Stats Bar */}
-                <div className="grid grid-cols-4 gap-2">
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 text-center shadow-xs">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase">Total</div>
-                        <div className="text-base font-extrabold text-slate-900">{totalRecipients}</div>
+                {/* People */}
+                <section className="mt-6">
+                    <div className="mb-2 flex items-baseline justify-between px-0.5">
+                        <h2 className="text-[13px] font-medium text-slate-500">People</h2>
+                        <span className="text-[12px] text-slate-400">{total}</span>
                     </div>
-                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-center">
-                        <div className="text-[10px] font-bold text-emerald-600 uppercase">Sent</div>
-                        <div className="text-base font-extrabold text-emerald-700">{sentCount}</div>
-                    </div>
-                    <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-center">
-                        <div className="text-[10px] font-bold text-amber-600 uppercase">Queued</div>
-                        <div className="text-base font-extrabold text-amber-700">{queuedCount}</div>
-                    </div>
-                    <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-center">
-                        <div className="text-[10px] font-bold text-rose-600 uppercase">Failed</div>
-                        <div className="text-base font-extrabold text-rose-700">{failedCount}</div>
-                    </div>
-                </div>
 
-                {/* Retry action if failures exist */}
-                {failedCount > 0 && membership.is_admin && (
-                    <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 p-4">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-rose-800">
-                            <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
-                            <span>{failedCount} passes encountered email delivery failures.</span>
+                    {total > 1 && (
+                        <div className="relative mb-2.5">
+                            <Search
+                                className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                                strokeWidth={2.25}
+                            />
+                            <input
+                                type="search"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Search people…"
+                                className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            />
                         </div>
+                    )}
+
+                    {total === 0 ? (
+                        <p className="py-6 text-center text-[13px] text-slate-500">No one is in this group.</p>
+                    ) : filtered.length === 0 ? (
+                        <p className="py-6 text-center text-[13px] text-slate-500">No one matches “{query.trim()}”.</p>
+                    ) : (
+                        <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
+                            {filtered.map((r) => (
+                                <li key={r.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelected(r)}
+                                        className="flex w-full min-h-[60px] items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50"
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-[14px] text-[#071f4b]">{r.email}</p>
+                                            <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-slate-500">
+                                                {r.code && (
+                                                    <span className="font-mono tracking-wide text-slate-600">{r.code}</span>
+                                                )}
+                                                {r.code && <span className="text-slate-300">·</span>}
+                                                <RecipientStatus recipient={r} />
+                                            </p>
+                                        </div>
+                                        <MoreHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+
+                {/* Renewals */}
+                {bulkInvite.renewals.length > 0 && (
+                    <section className="mt-6">
+                        <h2 className="mb-2 px-0.5 text-[13px] font-medium text-slate-500">Renewals</h2>
+                        <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
+                            {bulkInvite.renewals.map((renewal) => (
+                                <li key={renewal.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                                    <div className="min-w-0">
+                                        <p className="text-[14px] text-[#071f4b]">{renewal.period_label}</p>
+                                        <p className="mt-0.5 text-[12px] text-slate-500">
+                                            Processed {renewal.processed_label}
+                                        </p>
+                                    </div>
+                                    <span className="shrink-0 text-[12px] text-slate-500">
+                                        {renewal.status === 'completed'
+                                            ? `${renewal.recipients_renewed} renewed`
+                                            : renewal.status.charAt(0).toUpperCase() + renewal.status.slice(1)}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
+
+                {/* Group actions: quiet, at the end, where they can't be hit by accident */}
+                {canManage && (
+                    <div className="mt-8 flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
                         <button
                             type="button"
-                            onClick={handleRetryFailed}
-                            disabled={isRetrying}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50"
+                            onClick={() => setConfirming('renew')}
+                            className="min-h-[48px] px-4 text-left text-[14px] text-[#1a5dbf] active:bg-slate-50"
                         >
-                            {isRetrying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                            <span>Retry Failed</span>
+                            Renew now
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setConfirming('cancel')}
+                            className="min-h-[48px] px-4 text-left text-[14px] text-rose-600 active:bg-slate-50"
+                        >
+                            Cancel group
                         </button>
                     </div>
                 )}
+            </div>
 
-                {/* Recipients List */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-xs">
-                    <div className="border-b border-slate-100 bg-slate-50/75 px-4 py-3 text-xs font-bold tracking-wider text-slate-600 uppercase">
-                        Recipients & Pass Codes ({recipients.length})
-                    </div>
-                    <div className="divide-y divide-slate-100">
-                        {recipients.map((r) => (
-                            <div key={r.id} className="flex items-center justify-between gap-3 p-3.5">
-                                <div className="min-w-0 flex-1">
-                                    <div className="truncate text-xs font-bold text-slate-900">{r.email}</div>
-                                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
-                                        {r.last_access_code && (
-                                            <span className="font-mono font-semibold tracking-wider text-indigo-600">
-                                                Code: {r.last_access_code.code}
-                                            </span>
-                                        )}
-                                        {r.last_delivered_at && (
-                                            <span>· Delivered {new Date(r.last_delivered_at).toLocaleDateString()}</span>
-                                        )}
-                                    </div>
-                                    {r.delivery_error && (
-                                        <div className="mt-1 text-[11px] text-rose-600 truncate" title={r.delivery_error}>
-                                            Error: {r.delivery_error}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex shrink-0 items-center gap-2">
-                                    {r.delivery_status === 'sent' && (
-                                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                            <CheckCircle2 className="h-3 w-3" /> Sent
-                                        </span>
-                                    )}
-                                    {r.delivery_status === 'queued' && (
-                                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                                            <Clock className="h-3 w-3" /> Queued
-                                        </span>
-                                    )}
-                                    {r.delivery_status === 'pending' && (
-                                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                            Pending
-                                        </span>
-                                    )}
-                                    {r.delivery_status === 'failed' && (
-                                        <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700">
-                                            <AlertCircle className="h-3 w-3" /> Failed
-                                        </span>
-                                    )}
-
-                                    {r.last_access_code && (
-                                        <button
-                                            type="button"
-                                            onClick={() => copyPassUrl(r.last_access_code!.pass_uuid, r.id)}
-                                            className="rounded-lg border border-slate-200 p-1.5 text-slate-400 hover:border-slate-300 hover:text-slate-700"
-                                            title="Copy public pass link"
-                                        >
-                                            {copiedCodeId === r.id ? (
-                                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                            ) : (
-                                                <Copy className="h-4 w-4" />
-                                            )}
-                                        </button>
-                                    )}
-                                </div>
+            {/* Person actions */}
+            <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email}>
+                {selected && (
+                    <div className="flex flex-col gap-4 pb-2">
+                        <div className="flex items-baseline justify-between">
+                            <div>
+                                <p className="text-[11px] text-slate-500">Pass code</p>
+                                <p className="mt-0.5 font-mono text-[20px] tracking-[0.12em] text-[#071f4b]">
+                                    {selected.code ?? '—'}
+                                </p>
                             </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Renewal History Section */}
-                {bulkInvite.renewals && bulkInvite.renewals.length > 0 && (
-                    <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-xs">
-                        <div className="border-b border-slate-100 bg-slate-50/75 px-4 py-3 text-xs font-bold tracking-wider text-slate-600 uppercase">
-                            Renewal Cycles ({bulkInvite.renewals.length})
+                            <p className="text-[12px] text-slate-500">
+                                <RecipientStatus recipient={selected} />
+                            </p>
                         </div>
-                        <div className="divide-y divide-slate-100">
-                            {bulkInvite.renewals.map((renewal) => (
-                                <div key={renewal.id} className="flex items-center justify-between p-3.5 text-xs">
-                                    <div>
-                                        <div className="font-semibold text-slate-800">
-                                            {renewal.valid_from} to {renewal.valid_until}
-                                        </div>
-                                        <div className="mt-0.5 text-[11px] text-slate-400">
-                                            Processed on {new Date(renewal.created_at).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 font-bold text-indigo-700 border border-indigo-200 text-[10px]">
-                                            {renewal.recipients_renewed} renewed
-                                        </span>
-                                        <span className="capitalize text-[11px] text-slate-500 font-medium">
-                                            {renewal.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                        {selected.delivery_error && (
+                            <p className="text-[12px] text-rose-600">{selected.delivery_error}</p>
+                        )}
+
+                        <div className="flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70">
+                            {selected.pass_uuid && (
+                                <button
+                                    type="button"
+                                    onClick={() => copyPassLink(selected)}
+                                    className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50"
+                                >
+                                    {copied ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <Copy className="h-4 w-4 text-slate-500" />
+                                    )}
+                                    {copied ? 'Link copied' : 'Copy pass link'}
+                                </button>
+                            )}
+                            {canManage && selected.can_resend && (
+                                <button
+                                    type="button"
+                                    onClick={() => resendPass(selected)}
+                                    disabled={isResending}
+                                    className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50 disabled:opacity-60"
+                                >
+                                    {isResending ? (
+                                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                                    ) : (
+                                        <Send className="h-4 w-4 text-slate-500" />
+                                    )}
+                                    {isResending ? 'Resending…' : 'Resend pass'}
+                                </button>
+                            )}
+                            {canManage && (
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirming('remove')}
+                                    className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-rose-600 active:bg-slate-50"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Remove from group
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
-            </div>
+            </MobileSheet>
+
+            {activeConfirm && (
+                <ConfirmationSheet
+                    isOpen
+                    onClose={() => !processing && setConfirming(null)}
+                    onConfirm={runConfirmed}
+                    title={activeConfirm.title}
+                    message={activeConfirm.message}
+                    confirmLabel={activeConfirm.confirmLabel}
+                    type={activeConfirm.type}
+                    isLoading={processing}
+                />
+            )}
         </OrganizationLayout>
     );
+}
+
+function RecipientStatus({ recipient }: { recipient: Recipient }) {
+    switch (recipient.delivery_status) {
+        case 'failed':
+            return <span className="text-rose-600">Not delivered</span>;
+        case 'sent':
+            return <span>{recipient.delivered_label ? `Delivered ${recipient.delivered_label}` : 'Delivered'}</span>;
+        default:
+            return <span>Sending…</span>;
+    }
 }
