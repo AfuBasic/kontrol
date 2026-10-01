@@ -104,7 +104,7 @@ const buildOperationalDetail = (org: Organization): string => {
     }
 
     let line = `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
-    if (org.quick_entry_enabled) line += ' · Quick Entry';
+    if (org.quick_entry_enabled) line += ' · Walk-in admission';
     return line;
 };
 
@@ -115,8 +115,6 @@ const TYPE_CONFIG = {
         color: 'text-amber-600 bg-amber-50 border-amber-200/60',
         badgeColor: 'text-amber-700 bg-amber-50',
         description: 'Drop-off, parents, teachers & student traffic.',
-        defaultAccess: 'Managed organization access. Eligible parents and staff are logged or admitted through Quick Entry.',
-        defaultHours: { open: '07:30', close: '16:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
     church: {
@@ -125,8 +123,6 @@ const TYPE_CONFIG = {
         color: 'text-purple-600 bg-purple-50 border-purple-200/60',
         badgeColor: 'text-purple-700 bg-purple-50',
         description: 'Worship services, choir practice & community gatherings.',
-        defaultAccess: 'Managed organization access during service days and fellowship hours.',
-        defaultHours: { open: '08:00', close: '20:00', days: ['wednesday', 'friday', 'sunday'] },
         isUnrestricted: false,
     },
     hospital: {
@@ -135,8 +131,6 @@ const TYPE_CONFIG = {
         color: 'text-rose-600 bg-rose-50 border-rose-200/60',
         badgeColor: 'text-rose-700 bg-rose-50',
         description: '24/7 patient care, emergencies & clinic visitors.',
-        defaultAccess: 'Unrestricted destination. Visitors cannot be turned away solely due to missing credentials.',
-        defaultHours: null,
         isUnrestricted: true,
     },
     business: {
@@ -145,8 +139,6 @@ const TYPE_CONFIG = {
         color: 'text-blue-600 bg-blue-50 border-blue-200/60',
         badgeColor: 'text-blue-700 bg-blue-50',
         description: 'Commercial operations, clients, employees & deliveries.',
-        defaultAccess: 'Standard commercial schedule with operational gate logging.',
-        defaultHours: { open: '08:00', close: '18:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
     facility: {
@@ -155,8 +147,6 @@ const TYPE_CONFIG = {
         color: 'text-emerald-600 bg-emerald-50 border-emerald-200/60',
         badgeColor: 'text-emerald-700 bg-emerald-50',
         description: 'Clubhouse, sports courts, pools & shared community spaces.',
-        defaultAccess: 'Estate-operated facility accessible to verified residents and authorized guests.',
-        defaultHours: { open: '07:00', close: '21:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] },
         isUnrestricted: false,
     },
     other: {
@@ -165,8 +155,6 @@ const TYPE_CONFIG = {
         color: 'text-slate-600 bg-slate-50 border-slate-200/60',
         badgeColor: 'text-slate-700 bg-slate-100',
         description: 'Other non-residential operational destinations inside the estate.',
-        defaultAccess: 'Operational gate logging according to estate standards.',
-        defaultHours: { open: '08:00', close: '18:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
 } as const;
@@ -851,9 +839,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                         <div className="flex items-center justify-between gap-4 py-1">
                                             <div className="flex-1 pr-2">
-                                                <span className="block text-xs font-medium text-slate-900">Quick Entry</span>
+                                                <span className="block text-xs font-medium text-slate-900">Walk-in admission</span>
                                                 <span className="block text-xs leading-relaxed text-slate-500">
-                                                    Allow guards to admit visitors with quick physical tags without a resident code
+                                                    Let guards admit visitors without a pass: they photograph the ID and issue an entry tag
                                                 </span>
                                             </div>
                                             <button
@@ -959,8 +947,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Quick Entry</span>
-                                        <p className="text-slate-700">{form.data.quick_entry_enabled ? 'Enabled for gate tags' : 'Disabled'}</p>
+                                        <span className="mb-0.5 block font-medium text-slate-400">Walk-in admission</span>
+                                        <p className="text-slate-700">{form.data.quick_entry_enabled ? 'Guards can admit walk-ins' : 'Off'}</p>
                                     </div>
                                 </div>
                             </div>
