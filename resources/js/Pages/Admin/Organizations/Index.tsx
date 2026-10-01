@@ -834,8 +834,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             {form.data.type !== 'hospital' && form.data.access_policy === 'public_window' && (
                                 <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-600">
                                     <span className="mb-0.5 block font-semibold text-slate-900">Walk-in hours</span>
-                                    The organization's admin sets and updates its walk-in hours from their Profile. Until they do, walk-ins are
-                                    turned away.
+                                    The organization's admin sets its walk-in hours, and can change this policy, from their Profile. Until hours are
+                                    set, walk-ins are turned away.
                                 </div>
                             )}
 
