@@ -109,7 +109,6 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     // 6. Profile & Settings (Team & Preferences)
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::patch('/confirmation-policy', [SettingsController::class, 'updateConfirmationPolicy'])->name('confirmation-policy.update');
         Route::post('/staff', [SettingsController::class, 'inviteStaff'])->name('staff.invite');
         Route::delete('/staff/{targetMembership}', [SettingsController::class, 'removeStaff'])->name('staff.remove');
     });
