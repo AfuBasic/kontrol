@@ -8,6 +8,7 @@ use App\Models\EstateSettings;
 use App\Models\OrganizationPublicWindow;
 use App\Models\User;
 use App\Models\VisitorProfile;
+use App\Models\Zone;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -143,6 +144,30 @@ it('recognises a returning visitor from the same ID photo', function () {
     $send()->assertOk()->assertJsonPath('is_returning_visitor', true);
 
     expect(VisitorProfile::count())->toBe(1);
+});
+
+it('admits walk-ins and recognises returning visitors for a zone-assigned guard', function () {
+    $zone = Zone::create(['estate_id' => $this->estate->id, 'name' => 'North Gate Zone']);
+    $zoneAssignment = AdministrativeAssignment::create([
+        'user_id' => $this->guard->id,
+        'estate_id' => $this->estate->id,
+        'zone_id' => $zone->id,
+        'role_id' => $this->guard->roles->first()->id,
+        'scope_type' => 'zone',
+        'is_primary' => false,
+        'is_active' => true,
+    ]);
+    $contents = ($this->idPhotoBytes)();
+
+    $send = fn () => $this->actingAs($this->guard)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->post(route('security.quick-entry.store'), [
+            'organization_id' => $this->hospital->id,
+            'id_photo' => UploadedFile::fake()->createWithContent('id.jpg', $contents),
+        ], ['Accept' => 'application/json']);
+
+    $send()->assertOk()->assertJsonPath('is_returning_visitor', false);
+    $send()->assertOk()->assertJsonPath('is_returning_visitor', true);
 });
 
 it('keeps a tag issued by the gate device', function () {
