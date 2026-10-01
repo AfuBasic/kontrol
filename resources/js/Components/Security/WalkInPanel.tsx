@@ -13,6 +13,8 @@ interface Props {
     requireVehicleInformation?: boolean;
     /** Estate enforces checkout: the entry tag is also the exit tag. */
     checkoutEnabled?: boolean;
+    /** Estate has walk-in entry switched on. When off, the panel only checks people out. */
+    admissionOpen?: boolean;
 }
 
 interface InsideVisitor {
@@ -31,8 +33,7 @@ type ExitState =
     | { kind: 'done'; visitor: InsideVisitor; at: string }
     | { kind: 'error'; message: string };
 
-const timeLabel = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null;
+const timeLabel = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null);
 
 const durationLabel = (iso: string | null) => {
     if (!iso) return null;
@@ -43,8 +44,14 @@ const durationLabel = (iso: string | null) => {
     return m ? `${h}h ${m}m` : `${h}h`;
 };
 
-export default function WalkInPanel({ destinations, isOnline, requireVehicleInformation = false, checkoutEnabled = false }: Props) {
-    const [admitting, setAdmitting] = useState(!checkoutEnabled);
+export default function WalkInPanel({
+    destinations,
+    isOnline,
+    requireVehicleInformation = false,
+    checkoutEnabled = false,
+    admissionOpen = true,
+}: Props) {
+    const [admitting, setAdmitting] = useState(admissionOpen && !checkoutEnabled);
     const [digits, setDigits] = useState<string[]>(Array(TAG_LENGTH).fill(''));
     const [exit, setExit] = useState<ExitState>({ kind: 'idle' });
     const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
@@ -122,14 +129,14 @@ export default function WalkInPanel({ destinations, isOnline, requireVehicleInfo
         }
     };
 
-    if (admitting) {
+    if (admitting && admissionOpen) {
         return (
             <div className="flex w-full flex-col">
                 {checkoutEnabled && (
                     <button
                         type="button"
                         onClick={() => setAdmitting(false)}
-                        className="-ml-1.5 mb-3 inline-flex min-h-[40px] items-center gap-0.5 self-start pr-3 text-sm font-semibold text-indigo-700 dark:text-indigo-300"
+                        className="mb-3 -ml-1.5 inline-flex min-h-[40px] items-center gap-0.5 self-start pr-3 text-sm font-semibold text-indigo-700 dark:text-indigo-300"
                     >
                         <ChevronLeft className="h-5 w-5" />
                         Check-out
@@ -189,7 +196,12 @@ export default function WalkInPanel({ destinations, isOnline, requireVehicleInfo
                             <WifiOff className="h-3.5 w-3.5" /> Check-out needs a connection. Admitting still works offline.
                         </motion.p>
                     ) : exit.kind === 'looking' ? (
-                        <motion.p key="looking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2 text-sm text-slate-500">
+                        <motion.p
+                            key="looking"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-center justify-center gap-2 text-sm text-slate-500"
+                        >
                             <Loader2 className="h-4 w-4 animate-spin" /> Looking up tag…
                         </motion.p>
                     ) : exit.kind === 'found' || exit.kind === 'checking_out' ? (
@@ -256,7 +268,11 @@ export default function WalkInPanel({ destinations, isOnline, requireVehicleInfo
                                     </p>
                                 </div>
                             </div>
-                            <button type="button" onClick={resetExit} className="min-h-[40px] shrink-0 rounded-xl px-3 text-sm font-bold text-emerald-800">
+                            <button
+                                type="button"
+                                onClick={resetExit}
+                                className="min-h-[40px] shrink-0 rounded-xl px-3 text-sm font-bold text-emerald-800"
+                            >
                                 Next
                             </button>
                         </motion.div>
@@ -274,30 +290,43 @@ export default function WalkInPanel({ destinations, isOnline, requireVehicleInfo
                             </button>
                         </motion.div>
                     ) : (
-                        <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs font-semibold text-slate-400">
+                        <motion.p
+                            key="hint"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center text-xs font-semibold text-slate-400"
+                        >
                             Looks up automatically on the 4th character
                         </motion.p>
                     )}
                 </AnimatePresence>
             </div>
 
-            {/* Divider */}
-            <div className="my-7 flex w-full items-center gap-3 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
-                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                or
-                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-            </div>
+            {admissionOpen ? (
+                <>
+                    {/* Divider */}
+                    <div className="my-7 flex w-full items-center gap-3 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                        or
+                        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    </div>
 
-            {/* Admit */}
-            <button
-                type="button"
-                onClick={() => setAdmitting(true)}
-                className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 py-4.5 text-base font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
-            >
-                <Plus className="h-5 w-5" strokeWidth={2.75} />
-                Admit a walk-in
-            </button>
-            <p className="mt-2 text-center text-[11px] font-semibold text-slate-400">Choose where they are going and photograph their ID</p>
+                    {/* Admit */}
+                    <button
+                        type="button"
+                        onClick={() => setAdmitting(true)}
+                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 py-4.5 text-base font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
+                    >
+                        <Plus className="h-5 w-5" strokeWidth={2.75} />
+                        Admit a walk-in
+                    </button>
+                    <p className="mt-2 text-center text-[11px] font-semibold text-slate-400">Choose where they are going and photograph their ID</p>
+                </>
+            ) : (
+                <p className="mt-8 text-center text-xs font-semibold text-slate-400">
+                    Walk-in entry is switched off for this estate. Tags already issued can still check out.
+                </p>
+            )}
         </div>
     );
 }
