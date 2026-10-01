@@ -10,6 +10,7 @@ interface Log {
     tag: string | null;
     visitor_name: string;
     admission_basis: string;
+    entry_type: 'access_code' | 'walk_in';
     vehicle_plate_number: string | null;
     entry_point: string | null;
     verified_at: string | null;
@@ -41,16 +42,27 @@ interface Props {
         search?: string;
         date?: string;
         status?: string;
+        entry_type?: string;
     };
 }
 
 export default function ArrivalHistory({ organization, logs, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
-    const [dateFilter, setDateFilter] = useState(filters.date ?? 'today');
+    const [entryType, setEntryType] = useState(filters.entry_type ?? 'all');
+
+    const query = (next: { search?: string; entryType?: string }) => ({
+        search: (next.search ?? search) || undefined,
+        entry_type: (next.entryType ?? entryType) === 'all' ? undefined : (next.entryType ?? entryType),
+    });
+
+    const applyEntryType = (id: string) => {
+        setEntryType(id);
+        router.get('/org/on-site/history', query({ entryType: id }), { preserveState: true, preserveScroll: true });
+    };
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/on-site/history', { search }, { preserveState: true, preserveScroll: true });
+        router.get('/org/on-site/history', query({}), { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
@@ -122,18 +134,12 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
 
                     <FilterChips
                         variant="status"
-                        value={dateFilter}
-                        onChange={(id) => {
-                            if (id === 'more') {
-                                // Normally opens filter sheet
-                            } else {
-                                setDateFilter(id);
-                            }
-                        }}
+                        value={entryType}
+                        onChange={(id) => applyEntryType(id)}
                         options={[
-                            { id: 'today', label: 'Today' },
-                            { id: 'week', label: 'This week' },
-                            { id: 'more', label: 'More' },
+                            { id: 'all', label: 'All' },
+                            { id: 'access_code', label: 'Access code' },
+                            { id: 'walk_in', label: 'Walk-in' },
                         ]}
                     />
 
@@ -166,7 +172,14 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                                                         <div className="min-w-0 flex-1 py-0.5">
                                                             <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{log.visitor_name}</div>
                                                             <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
-                                                                <span className="capitalize">{log.admission_basis}</span>
+                                                                {log.entry_type === 'walk_in' ? (
+                                                                    <>
+                                                                        <span className="font-semibold text-amber-700">Walk-in</span>
+                                                                        {log.tag ? ` · Tag ${log.tag}` : ''}
+                                                                    </>
+                                                                ) : (
+                                                                    <span>Access code</span>
+                                                                )}
                                                             </p>
                                                             <p className="mt-0.5 truncate text-[12px] text-slate-400">
                                                                 Entered {formatTime(log.verified_at)} {log.checked_out_at_human ? `· Left ${log.checked_out_at_human}` : ''}
