@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import VisitEventIcon from './VisitEventIcon';
+import EntryTypeBadge from './EntryTypeBadge';
 import { ACTIVITY_KINDS, resolveActivityKind } from './activityKinds';
 import { buildActivityEvents, groupEventsByDay, hasActiveVisitorFilters, type ActivityEvent, type VisitorFilters, type VisitorRecord } from './types';
 
@@ -147,7 +148,10 @@ function TimelineEvent({
                     <div className="min-w-0 flex-1">
                         {/* Activity type first - scannable before the name */}
                         <p className={`text-[10px] font-bold tracking-wider uppercase ${config.textClass}`}>{config.label}</p>
-                        <p className="mt-0.5 truncate text-sm leading-snug font-semibold text-gray-900">{record.visitor.name}</p>
+                        <div className="mt-0.5 flex min-w-0 items-center gap-2">
+                            <p className="truncate text-sm leading-snug font-semibold text-gray-900">{record.visitor.name}</p>
+                            <EntryTypeBadge record={record} />
+                        </div>
 
                         {/* Supporting details - muted metadata layer */}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[11px] font-medium text-gray-500">
@@ -157,7 +161,11 @@ function TimelineEvent({
                                     {record.host.unit ? <span className="text-gray-400"> · {record.host.unit}</span> : null}
                                 </span>
                             ) : null}
-                            {type === 'check_out' && showHost ? <span className="truncate text-gray-400">Host: {record.host.name}</span> : null}
+                            {type === 'check_out' && showHost ? (
+                                <span className="truncate text-gray-400">
+                                    {record.entry_type === 'walk_in' ? 'Destination' : 'Host'}: {record.host.name}
+                                </span>
+                            ) : null}
                             {showGate ? (
                                 <>
                                     {(showHost || type === 'check_out') && (
