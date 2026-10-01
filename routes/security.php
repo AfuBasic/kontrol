@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Security\CheckpointController;
-use App\Http\Controllers\Security\ConfirmController;
 use App\Http\Controllers\Security\EstateBoardCommentController;
 use App\Http\Controllers\Security\EstateBoardController;
 use App\Http\Controllers\Security\HistoryController;
@@ -12,7 +11,6 @@ use App\Http\Controllers\Security\IncidentController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
 use App\Http\Controllers\Security\QuickEntryController;
-use App\Http\Controllers\Security\ReserveController;
 use App\Http\Controllers\Security\VerifyController;
 use App\Http\Middleware\EnsureCheckpointSelected;
 use Illuminate\Support\Facades\Route;
@@ -49,8 +47,6 @@ Route::middleware('role:security')->group(function (): void {
 
         // Quick Entry (Gate Tool)
         Route::prefix('quick-entry')->name('security.quick-entry.')->group(function (): void {
-            Route::post('/reservations', ReserveController::class)->name('reservations.store');
-            Route::post('/{tag}/confirm', ConfirmController::class)->name('reservations.confirm');
             Route::post('/log', [QuickEntryController::class, 'store'])->name('store');
             Route::post('/sync', [QuickEntryController::class, 'sync'])->name('sync');
             Route::get('/lookup', [QuickEntryController::class, 'lookup'])->name('lookup');
