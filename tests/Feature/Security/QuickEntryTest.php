@@ -364,3 +364,11 @@ it('requires a plate for a reported vehicle when the estate requires vehicle inf
     ($this->admit)($this->hospital)->assertOk();
     ($this->admit)($this->hospital, ['vehicle_make' => 'Toyota', 'vehicle_plate_number' => 'ABC-123-XY'])->assertOk();
 });
+
+it('tells the gate how many walk-ins are still inside so tag check-out survives a switch-off', function () {
+    ($this->admit)($this->hospital)->assertOk();
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->asGuard)()->get(route('security.verify'))
+        ->assertInertia(fn ($page) => $page->where('quickEntryEnabled', false)->where('walkInsInside', 1));
+});
