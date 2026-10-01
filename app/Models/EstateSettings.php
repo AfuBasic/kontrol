@@ -100,7 +100,6 @@ class EstateSettings extends Model
             'access_code_require_confirmation' => 'boolean',
             'visitor_checkout_enabled' => 'boolean',
             'quick_entry_enabled' => 'boolean',
-            'quick_entry_hours_enforcement' => 'string',
             'entry_point_checkout_enforced' => 'boolean',
             'entry_points' => 'array',
             'require_vehicle_information' => 'boolean',
