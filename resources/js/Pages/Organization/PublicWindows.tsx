@@ -21,7 +21,7 @@ interface Props {
         id: number;
         name: string;
         access_policy: string;
-        policy_lock: 'hospital' | 'estate' | null;
+        policy_lock: 'hospital' | null;
         walk_in: { open: boolean; label: string };
     };
     membership: { role: string; is_admin: boolean };
@@ -46,10 +46,7 @@ const POLICY_OPTIONS = [
 ] as const;
 
 // "Any time" is granted by the estate admin only, so it is never offered as a choice here.
-const LOCKED_COPY = {
-    hospital: 'Hospitals and clinics always admit walk-ins. This cannot be changed.',
-    estate: 'The estate admin allows walk-ins at any hour for this organization. Ask them if you need to change it.',
-} as const;
+const HOSPITAL_LOCK_COPY = 'Hospitals and clinics always admit walk-ins. This cannot be changed.';
 
 export default function PublicWindows({ organization, membership, windows }: Props) {
     const [sheet, setSheet] = useState<'add' | 'edit' | null>(null);
@@ -187,10 +184,17 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                         Who can walk in
                     </h2>
 
+                    {canEditPolicy && organization.access_policy === 'unrestricted' && !policyChanged && (
+                        <p className="mb-3 rounded-xl bg-slate-50 px-3.5 py-2.5 text-[12.5px] text-slate-600 ring-1 ring-slate-200/70">
+                            The estate admin currently allows walk-ins at any hour. Choose one of these to change it. Only the estate admin can set it
+                            back to any time.
+                        </p>
+                    )}
+
                     {organization.policy_lock ? (
                         <p className="rounded-2xl border border-slate-200/60 bg-white px-4 py-3.5 text-[14px] text-[#071f4b]">
                             Any time
-                            <span className="mt-0.5 block text-[12px] text-slate-500">{LOCKED_COPY[organization.policy_lock]}</span>
+                            <span className="mt-0.5 block text-[12px] text-slate-500">{HOSPITAL_LOCK_COPY}</span>
                         </p>
                     ) : (
                         <div
