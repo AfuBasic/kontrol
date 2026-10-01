@@ -71,13 +71,25 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
                 'delivery_error' => null,
             ]);
 
+            $pdfContents = null;
+
             try {
                 $pdfPath = $pdfService->generatePassPdf($recipient, $accessCode);
+                $pdfContents = File::get($pdfPath);
             } catch (Throwable $e) {
-                Log::warning("DeliverBulkVisitorPassJob: Failed to generate PDF for {$recipient->email}: {$e->getMessage()}");
+                // The PDF is the pass people bring to the gate, so retry rather than silently
+                // sending without it. Only the final attempt falls back to the link-only email.
+                if ($this->attempts() < $this->tries) {
+                    Log::warning("DeliverBulkVisitorPassJob: PDF generation failed for {$recipient->email}, retrying: {$e->getMessage()}");
+                    $this->release($this->backoff[$this->attempts() - 1] ?? 60);
+
+                    return;
+                }
+
+                Log::error("DeliverBulkVisitorPassJob: PDF generation failed for {$recipient->email} on final attempt, sending without attachment: {$e->getMessage()}");
             }
 
-            Mail::to($recipient->email)->send(new BulkVisitorPassMail($accessCode, $pdfPath));
+            Mail::to($recipient->email)->send(new BulkVisitorPassMail($accessCode, $pdfContents));
 
             $recipient->update([
                 'delivery_status' => 'sent',
