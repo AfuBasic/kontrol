@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $verified_by
  * @property CarbonImmutable|null $verified_at
  * @property CarbonImmutable|null $checked_out_at
- * @property string|null $exit_point
  * @property string|null $vehicle_plate_number
  * @property string|null $vehicle_make
  * @property string|null $vehicle_model
@@ -46,7 +45,6 @@ class AccessLog extends Model
         'confirmed_by',
         'checked_out_at',
         'checked_out_by',
-        'exit_point',
         'vehicle_plate_number',
         'vehicle_make',
         'vehicle_model',
