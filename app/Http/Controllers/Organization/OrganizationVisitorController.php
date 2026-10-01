@@ -6,7 +6,9 @@ use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\EstateOrganization;
+use App\Models\EstateSettings;
 use App\Services\OrganizationContextService;
+use App\Services\Resident\AccessCodeService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +21,7 @@ class OrganizationVisitorController extends Controller
 {
     public function __construct(
         private OrganizationContextService $contextService,
+        private AccessCodeService $accessCodeService,
     ) {}
 
     public function index(Request $request): Response
@@ -60,6 +63,9 @@ class OrganizationVisitorController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+            // Same estate-configured choices residents get when creating a pass.
+            'durationOptions' => $this->accessCodeService->getDurationOptions($organization->estate),
+            'durationConstraints' => $this->durationConstraints($organization),
         ]);
     }
 
@@ -73,13 +79,19 @@ class OrganizationVisitorController extends Controller
             abort(403, 'Only organization administrators can invite visitors.');
         }
 
+        ['min' => $minMinutes, 'max' => $maxMinutes] = $this->durationConstraints($organization);
+
         $validated = $request->validate([
             'visitor_name' => 'required|string|max:255',
             'visitor_phone' => 'nullable|string|max:50',
             'purpose' => 'nullable|string|max:255',
-            'date' => 'required|date|after_or_equal:today',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
+            // Omitted means "starts now", like the resident pass flow.
+            'starts_at' => 'nullable|date|after_or_equal:'.now()->subMinutes(5)->toDateTimeString(),
+            'duration_minutes' => "required|integer|min:{$minMinutes}|max:{$maxMinutes}",
+        ], [
+            'starts_at.after_or_equal' => 'Start time cannot be in the past.',
+            'duration_minutes.min' => 'Passes must last at least :min minutes.',
+            'duration_minutes.max' => 'Passes can last at most :max minutes.',
         ]);
 
         $code = strtoupper(Str::random(6));
@@ -88,25 +100,11 @@ class OrganizationVisitorController extends Controller
             $code = strtoupper(Str::random(6));
         }
 
-        $visitDate = Carbon::parse($validated['date']);
-
-        if (! empty($validated['start_time'])) {
-            $startTimeParts = explode(':', $validated['start_time']);
-            $startsAt = $visitDate->copy()->setTime((int) $startTimeParts[0], (int) $startTimeParts[1], 0);
-        } else {
-            $startsAt = $visitDate->copy()->startOfDay();
-        }
-
-        if (! empty($validated['end_time'])) {
-            $endTimeParts = explode(':', $validated['end_time']);
-            $expiresAt = $visitDate->copy()->setTime((int) $endTimeParts[0], (int) $endTimeParts[1], 59);
-            // If end_time is earlier than start_time, assume it extends to the next day
-            if ($expiresAt->lessThanOrEqualTo($startsAt)) {
-                $expiresAt = $expiresAt->addDay();
-            }
-        } else {
-            $expiresAt = $visitDate->copy()->endOfDay();
-        }
+        // The browser sends UTC; convert to the app timezone before saving, as the resident flow does.
+        $startsAt = ! empty($validated['starts_at'])
+            ? Carbon::parse($validated['starts_at'])->setTimezone(config('app.timezone'))
+            : now();
+        $expiresAt = $startsAt->copy()->addMinutes((int) $validated['duration_minutes']);
 
         $pass = AccessCode::create([
             'estate_id' => $organization->estate_id,
@@ -234,5 +232,20 @@ class OrganizationVisitorController extends Controller
         $pass->update(['status' => 'revoked']);
 
         return back()->with('success', 'Visitor pass revoked.');
+    }
+
+    /**
+     * Pass lifespan bounds from estate settings, with the same defaults residents get.
+     *
+     * @return array{min: int, max: int}
+     */
+    private function durationConstraints(EstateOrganization $organization): array
+    {
+        $settings = EstateSettings::forEstate($organization->estate_id);
+
+        return [
+            'min' => (int) ($settings->access_code_min_lifespan_minutes ?? 30),
+            'max' => (int) ($settings->access_code_max_lifespan_minutes ?? 1440),
+        ];
     }
 }
