@@ -100,7 +100,6 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
             'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
-            'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_phone' => ['nullable', 'string', 'max:50'],
@@ -118,7 +117,6 @@ class OrganizationController extends Controller
                 'name' => $validated['name'],
                 'type' => $validated['type'],
                 'access_policy' => $policy,
-                'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
                 'is_active' => $validated['is_active'] ?? true,
             ]);
 
@@ -182,7 +180,6 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
             'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
-            'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_phone' => ['nullable', 'string', 'max:50'],
