@@ -45,10 +45,22 @@ class SettingsController extends Controller
                 'name' => $organization->name,
                 'type' => $organization->type,
                 'access_policy' => $organization->access_policy,
-                'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
-                'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
-                'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
                 'is_unrestricted' => $organization->isUnrestricted(),
+                'estate_name' => $organization->estate?->name,
+                'walk_in' => $organization->walkInStatus(),
+                'walk_in_windows' => $organization->publicWindows()
+                    ->where('is_active', true)
+                    ->orderBy('day_of_week')
+                    ->orderBy('start_time')
+                    ->get()
+                    ->map(fn ($window) => [
+                        'id' => $window->id,
+                        'name' => $window->name,
+                        'day_of_week' => (int) $window->day_of_week,
+                        'start_time' => substr($window->start_time, 0, 5),
+                        'end_time' => substr($window->end_time, 0, 5),
+                    ])
+                    ->values(),
             ],
             'membership' => [
                 'role' => $membership->role,
@@ -56,32 +68,6 @@ class SettingsController extends Controller
             ],
             'staff' => $staffMembers,
         ]);
-    }
-
-    public function updateConfirmationPolicy(Request $request): RedirectResponse
-    {
-        /** @var EstateOrganization $organization */
-        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
-        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
-
-        if (! $membership->isAdmin()) {
-            abort(403, 'Unauthorized.');
-        }
-
-        // If organization is unrestricted (hospital), confirmation cannot be enabled
-        if ($organization->isUnrestricted()) {
-            abort(422, 'Unrestricted organizations cannot require arrival confirmation.');
-        }
-
-        $validated = $request->validate([
-            'arrival_confirmation_required' => 'required|boolean',
-            'confirmation_window_minutes' => 'required|integer|between:5,120',
-            'confirmation_escalation' => 'required|string|in:alert_only,flag_security',
-        ]);
-
-        $organization->update($validated);
-
-        return back()->with('success', 'Arrival confirmation policy updated.');
     }
 
     public function inviteStaff(Request $request): RedirectResponse
