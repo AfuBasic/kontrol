@@ -25,7 +25,9 @@ use App\Services\OrganizationContextService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -219,6 +221,9 @@ test('organization isWithinPublicWindow evaluates all active windows', function 
 });
 
 test('record quick entry records organization_id and admission_basis', function () {
+    Storage::fake('local');
+    $this->org->update(['access_policy' => 'unrestricted']); // closed destinations take no walk-ins
+
     $guard = User::factory()->create();
     $action = app(RecordQuickEntryAction::class);
 
@@ -229,13 +234,14 @@ test('record quick entry records organization_id and admission_basis', function 
             'tag' => 'TAG1',
             'organization_id' => $this->org->id,
             'visitor_name' => 'Delivery Driver',
+            'id_photo' => UploadedFile::fake()->image('id.jpg'),
         ]
     );
 
     expect($log->organization_id)->toBe($this->org->id)
-        ->and($log->meta['admission_basis'])->toBe('quick_entry')
-        ->and($log->confirmed_at)->toBeNull()
-        ->and($log->confirmationState(15))->toBe('PENDING');
+        ->and($log->meta['tag'])->toBe('TAG1')
+        ->and($log->meta['admission_basis'])->toBe('unrestricted')
+        ->and($log->visitor_profile_id)->not->toBeNull();
 });
 
 test('confirm arrival action marks log as confirmed and is idempotent', function () {
