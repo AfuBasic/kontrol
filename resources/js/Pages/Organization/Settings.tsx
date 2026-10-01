@@ -26,6 +26,7 @@ interface Props {
         is_unrestricted: boolean;
         estate_name?: string;
         walk_in: { open: boolean; label: string };
+        needs_walk_in_hours?: boolean;
         walk_in_windows: { id: number; name: string; day_of_week: number; start_time: string; end_time: string }[];
     };
     membership: {
@@ -215,10 +216,24 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <div className="min-w-0">
                                 <span className="block text-sm font-bold text-slate-900">Walk-in hours</span>
                                 <span
-                                    className={`mt-0.5 flex items-center gap-1.5 text-xs ${organization.walk_in.open ? 'text-emerald-700' : 'text-slate-500'}`}
+                                    className={`mt-0.5 flex items-center gap-1.5 text-xs ${
+                                        organization.needs_walk_in_hours
+                                            ? 'font-semibold text-amber-700'
+                                            : organization.walk_in.open
+                                              ? 'text-emerald-700'
+                                              : 'text-slate-500'
+                                    }`}
                                 >
-                                    <span className={`h-1.5 w-1.5 rounded-full ${organization.walk_in.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                    {organization.walk_in.label}
+                                    <span
+                                        className={`h-1.5 w-1.5 rounded-full ${
+                                            organization.needs_walk_in_hours
+                                                ? 'bg-amber-500'
+                                                : organization.walk_in.open
+                                                  ? 'bg-emerald-500'
+                                                  : 'bg-slate-400'
+                                        }`}
+                                    />
+                                    {organization.needs_walk_in_hours ? 'Not set · walk-ins are turned away' : organization.walk_in.label}
                                 </span>
                             </div>
                             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
