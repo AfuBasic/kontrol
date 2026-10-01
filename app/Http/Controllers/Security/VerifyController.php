@@ -8,6 +8,7 @@ use App\Actions\Security\RecordCheckOutAction;
 use App\Actions\Security\ValidateAccessCodeAction;
 use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Security\ValidateAccessCodeRequest;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\Estate;
@@ -18,6 +19,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -60,15 +62,10 @@ class VerifyController extends Controller
         ]);
     }
 
-    public function validate(Request $request): RedirectResponse|JsonResponse
+    public function validate(ValidateAccessCodeRequest $request): RedirectResponse|JsonResponse
     {
         $user = $request->user();
         $estate = Estate::findOrFail($request->attributes->get('estate_id'));
-
-        $request->validate([
-            'code' => ['required', 'string'],
-            'source' => ['required', 'in:manual,quick_entry,access_code'],
-        ]);
 
         $result = app(ValidateAccessCodeAction::class)->execute(
             code: $request->input('code'),
@@ -77,17 +74,36 @@ class VerifyController extends Controller
 
         if ($result['valid']) {
             if (isset($result['action']) && $result['action'] === 'checkout') {
-                $log = app(RecordCheckOutAction::class)->execute(
-                    code: $request->input('code'),
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
+                try {
+                    $log = app(RecordCheckOutAction::class)->execute(
+                        code: $request->input('code'),
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
+                } catch (ValidationException $e) {
+                    // e.g. checking out at a different gate than the one claimed for check-in.
+                    $result['valid'] = false;
+                    $result['status'] = 'checkout_mismatch';
+                    $result['message'] = $e->getMessage();
+
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'validation_result' => $result,
+                        ], 422);
+                    }
+
+                    return back()->with('validation_result', $result)->withErrors($e->errors());
+                }
 
                 $result['access_log_id'] = $log->id;
                 $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
                 $result['duration_minutes'] = $log->checked_out_at && $log->verified_at
                     ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
                     : 0;
+            } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
+                // The visitor is already inside: the guard confirms checkout via decision(),
+                // so this scan must not record a second check-in.
             } else {
                 $log = app(RecordCheckInAction::class)->execute(
                     code: $request->input('code'),
@@ -142,6 +158,16 @@ class VerifyController extends Controller
         $user = $request->user();
         $estate = Estate::findOrFail($request->attributes->get('estate_id'));
 
+        activity()
+            ->causedBy($user)
+            ->withProperties([
+                'estate_id' => $estate->id,
+                'code' => $request->input('code'),
+                'decision' => $request->input('decision'),
+                'reason' => $request->input('reason'),
+            ])
+            ->log('Security guard recorded entry decision');
+
         if ($request->input('decision') === 'admit') {
             if ($request->filled('access_log_id')) {
                 AccessLog::where('id', $request->input('access_log_id'))->update([
@@ -175,19 +201,43 @@ class VerifyController extends Controller
                 || ($targetLog && empty($targetLog->access_code_id))
                 || (! AccessCode::query()->forEstate($estate->id)->where('code', $code)->exists() && ! str_starts_with($code, 'kontrol://pass/'));
 
-            if ($isQuickEntry) {
-                $tag = $targetLog->meta['tag'] ?? $code;
-                app(CheckoutQuickEntryAction::class)->execute(
-                    tag: $tag,
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
-            } else {
-                app(RecordCheckOutAction::class)->execute(
-                    code: $code,
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
+            try {
+                $log = $isQuickEntry
+                    ? app(CheckoutQuickEntryAction::class)->execute(
+                        tag: $targetLog->meta['tag'] ?? $code,
+                        estateId: $estate->id,
+                        checkoutBy: $user
+                    )
+                    : app(RecordCheckOutAction::class)->execute(
+                        code: $code,
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
+            } catch (ValidationException $e) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                        'errors' => $e->errors(),
+                    ], 422);
+                }
+
+                return back()->withErrors($e->errors())->with('error', $e->getMessage());
+            }
+
+            // The gate shows a check-out summary built from these fields.
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'decision' => 'checkout',
+                    'checked_in_at' => $log->verified_at?->toIso8601String(),
+                    'checked_out_at' => $log->checked_out_at?->toIso8601String(),
+                    'entry_point' => $log->entry_point ?? 'Main Gate',
+                    'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
+                    'duration_minutes' => $log->checked_out_at && $log->verified_at
+                        ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                        : 0,
+                ]);
             }
         }
 
