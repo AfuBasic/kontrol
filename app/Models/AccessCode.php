@@ -139,6 +139,17 @@ class AccessCode extends Model
         });
     }
 
+    /**
+     * The value encoded in a pass QR so the security scanner can verify it.
+     *
+     * Validate/check-in/check-out actions resolve "kontrol://pass/{uuid}?token={qr_token}";
+     * a web URL to the public pass page is not accepted at the gate.
+     */
+    public function gateQrPayload(): string
+    {
+        return "kontrol://pass/{$this->pass_uuid}?token={$this->qr_token}";
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
