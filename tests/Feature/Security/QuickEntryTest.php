@@ -170,6 +170,39 @@ it('admits walk-ins and recognises returning visitors for a zone-assigned guard'
     $send()->assertOk()->assertJsonPath('is_returning_visitor', true);
 });
 
+it('records the name typed for this visit, and falls back to the name saved for the ID', function () {
+    $contents = ($this->idPhotoBytes)();
+    $admitWith = fn (array $extra = []) => ($this->asGuard)()->post(route('security.quick-entry.store'), [
+        'organization_id' => $this->hospital->id,
+        'id_photo' => UploadedFile::fake()->createWithContent('id.jpg', $contents),
+        ...$extra,
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    $admitWith(['visitor_name' => 'Idris']);
+
+    // Nothing typed this time: the name saved for this ID is used.
+    expect($admitWith()->json('visitor_name'))->toBe('Idris');
+
+    // A different name typed this time is what this visit records, and the saved name is not overwritten.
+    expect($admitWith(['visitor_name' => 'Ade'])->json('visitor_name'))->toBe('Ade')
+        ->and(VisitorProfile::first()->name)->toBe('Idris');
+});
+
+it('gives an unnamed ID the first name a guard later types', function () {
+    $contents = ($this->idPhotoBytes)();
+    $admitWith = fn (array $extra = []) => ($this->asGuard)()->post(route('security.quick-entry.store'), [
+        'organization_id' => $this->hospital->id,
+        'id_photo' => UploadedFile::fake()->createWithContent('id.jpg', $contents),
+        ...$extra,
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    expect($admitWith()->json('visitor_name'))->toBe('Unknown Visitor');
+
+    $admitWith(['visitor_name' => 'Ngozi']);
+
+    expect(VisitorProfile::first()->name)->toBe('Ngozi');
+});
+
 it('keeps a tag issued by the gate device', function () {
     ($this->admit)($this->hospital, ['tag' => 'k7pq'])->assertOk()->assertJsonPath('tag', 'K7PQ');
 });
