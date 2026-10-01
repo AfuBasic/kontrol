@@ -172,7 +172,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
         setIsPolling(false);
     };
 
-    if (!isOpen) return null;
+
 
     return (
         <ResponsiveSheet isOpen={isOpen} onClose={handleCloseAll} title="Bulk Visitor Invite">
