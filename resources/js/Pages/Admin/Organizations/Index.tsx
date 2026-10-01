@@ -58,7 +58,6 @@ export interface Organization {
     name: string;
     type: 'school' | 'church' | 'hospital' | 'business' | 'facility' | 'other';
     access_policy?: 'unrestricted' | 'public_window' | 'managed';
-    quick_entry_enabled: boolean;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -103,9 +102,7 @@ const buildOperationalDetail = (org: Organization): string => {
         return `Walk-ins during their hours · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
     }
 
-    let line = `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
-    if (org.quick_entry_enabled) line += ' · Walk-in admission';
-    return line;
+    return `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
 };
 
 const TYPE_CONFIG = {
@@ -221,7 +218,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 name: org.name,
                 type: org.type,
                 access_policy: org.access_policy ?? 'managed',
-                quick_entry_enabled: org.quick_entry_enabled ?? true,
                 is_active: !org.is_active,
             },
             { preserveScroll: true },
@@ -235,7 +231,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         admin_email: '',
         admin_phone: '',
         access_policy: 'managed' as 'unrestricted' | 'public_window' | 'managed',
-        quick_entry_enabled: true,
         is_active: true,
     });
 
@@ -296,7 +291,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: '',
             admin_phone: '',
             access_policy: 'managed',
-            quick_entry_enabled: true,
             is_active: true,
         });
         setEditingOrg(null);
@@ -315,7 +309,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_phone: primaryAdmin?.profile?.phone || '',
             access_policy: (org.access_policy ||
                 (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
-            quick_entry_enabled: org.quick_entry_enabled,
             is_active: org.is_active,
         });
         setIsCreateModalOpen(true);
@@ -333,7 +326,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                       ? 'public_window'
                       : 'managed'
                   : form.data.access_policy,
-            quick_entry_enabled: config.isUnrestricted ? true : form.data.quick_entry_enabled,
         });
     };
 
@@ -349,7 +341,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: form.data.admin_email,
             admin_phone: form.data.admin_phone,
             access_policy: effectivePolicy,
-            quick_entry_enabled: form.data.quick_entry_enabled,
             is_active: form.data.is_active,
         };
 
@@ -836,31 +827,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 size="sm"
                                             />
                                         </div>
-
-                                        <div className="flex items-center justify-between gap-4 py-1">
-                                            <div className="flex-1 pr-2">
-                                                <span className="block text-xs font-medium text-slate-900">Walk-in admission</span>
-                                                <span className="block text-xs leading-relaxed text-slate-500">
-                                                    Let guards admit visitors without a pass: they photograph the ID and issue an entry tag
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                role="switch"
-                                                aria-checked={form.data.quick_entry_enabled}
-                                                onClick={() => form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)}
-                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                    form.data.quick_entry_enabled ? 'bg-slate-900' : 'bg-slate-200'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                        form.data.quick_entry_enabled ? 'translate-x-4' : 'translate-x-0'
-                                                    }`}
-                                                />
-                                            </button>
-                                        </div>
-
                                     </div>
                                 )}
                             </div>
@@ -944,11 +910,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         ) : (
                                             <p className="text-slate-500">Not assigned (can be added later)</p>
                                         )}
-                                    </div>
-
-                                    <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Walk-in admission</span>
-                                        <p className="text-slate-700">{form.data.quick_entry_enabled ? 'Guards can admit walk-ins' : 'Off'}</p>
                                     </div>
                                 </div>
                             </div>
