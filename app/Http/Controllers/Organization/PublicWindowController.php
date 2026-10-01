@@ -45,8 +45,8 @@ class PublicWindowController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
-                // A hospital is never blocked, so its policy cannot be changed from here.
-                'policy_locked' => $organization->type === 'hospital',
+                // Why the organization cannot change its own policy, if it cannot.
+                'policy_lock' => $this->policyLock($organization),
                 'walk_in' => $organization->walkInStatus(),
             ],
             'membership' => [
@@ -67,15 +67,20 @@ class PublicWindowController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        $validated = $request->validate([
-            'access_policy' => ['required', 'string', 'in:managed,public_window,unrestricted'],
-        ]);
-
-        if ($organization->type === 'hospital' && $validated['access_policy'] !== 'unrestricted') {
+        if ($this->policyLock($organization) !== null) {
             throw ValidationException::withMessages([
-                'access_policy' => ['Hospitals and clinics always admit walk-ins; this cannot be changed.'],
+                'access_policy' => [$organization->type === 'hospital'
+                    ? 'Hospitals and clinics always admit walk-ins; this cannot be changed.'
+                    : 'Walk-ins any time was set by the estate admin. Ask them to change it.'],
             ]);
         }
+
+        // "Any time" is the estate's decision: an organization may only choose between the two below.
+        $validated = $request->validate([
+            'access_policy' => ['required', 'string', 'in:managed,public_window'],
+        ], [
+            'access_policy.in' => 'Only the estate admin can allow walk-ins at any time.',
+        ]);
 
         $previous = $organization->access_policy;
 
@@ -90,6 +95,20 @@ class PublicWindowController extends Controller
         }
 
         return back()->with('success', 'Walk-in policy updated.');
+    }
+
+    /**
+     * Why this organization cannot change its own walk-in policy, or null when it can.
+     *
+     * Hospitals are never blocked, and "any time" is only ever granted by the estate admin.
+     */
+    private function policyLock(EstateOrganization $organization): ?string
+    {
+        if ($organization->type === 'hospital') {
+            return 'hospital';
+        }
+
+        return $organization->access_policy === 'unrestricted' ? 'estate' : null;
     }
 
     public function store(Request $request): RedirectResponse
