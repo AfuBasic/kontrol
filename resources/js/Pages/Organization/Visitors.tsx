@@ -4,7 +4,6 @@ import type { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import PassTimingPicker, { defaultPassTiming, passStart, type PassTiming } from '@/Components/Organization/PassTimingPicker';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
@@ -72,7 +71,6 @@ interface Props {
 export default function Visitors({ organization, membership, visitors, filters, durationOptions, durationConstraints }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
-    const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
     const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
@@ -122,7 +120,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/visitors', { search, status: status === 'all' ? undefined : status }, { preserveState: true, preserveScroll: true });
+        router.get('/org/visitors', { search: search || undefined }, { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
@@ -130,7 +128,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
             handleSearch();
         }, 300);
         return () => clearTimeout(debounce);
-    }, [search, status]);
+    }, [search]);
 
     const copyCodeOnly = async (pass: VisitorPass) => {
         if (copying) return;
@@ -318,23 +316,6 @@ export default function Visitors({ organization, membership, visitors, filters, 
                         />
                     </div>
 
-                    {/* Status Filters */}
-                    <FilterChips
-                        variant="status"
-                        value={status}
-                        onChange={(id) => {
-                            if (id === 'more') {
-                                // Normally opens a filter sheet, doing nothing for now to keep UI clean
-                            } else {
-                                setStatus(id);
-                            }
-                        }}
-                        options={[
-                            { id: 'all', label: 'All', count: status === 'all' ? visitors.total : undefined },
-                            { id: 'active', label: 'Active', count: undefined, color: 'mint' },
-                            { id: 'more', label: 'More' },
-                        ]}
-                    />
 
                     {/* Recent Visitors Header */}
                     <div className="flex items-center justify-between px-1 pt-2">
