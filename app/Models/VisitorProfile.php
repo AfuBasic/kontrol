@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\ZoneScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,12 +26,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  *
+ * Not zone-scoped: a visitor's identity belongs to the estate, the table has no zone_id,
+ * and lookups always filter by estate_id explicitly.
+ *
  * @mixin \Eloquent
  */
 class VisitorProfile extends Model
 {
     use HasFactory;
-    use ZoneScoped;
 
     protected $fillable = [
         'estate_id',
