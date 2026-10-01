@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
 import { Car, LogOut, Tag, Users, X, AlertCircle, Building2, User, ChevronRight } from 'lucide-react';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 
 export type SecurityActiveVisit = {
@@ -56,6 +57,8 @@ type Props = {
 
 export default function SecurityActiveQueue({ activeVisits }: Props) {
     const [selectedVisit, setSelectedVisit] = useState<SecurityActiveVisit | null>(null);
+    // The visit the guard has tapped Check Out on, awaiting a second confirming tap.
+    const [confirmVisit, setConfirmVisit] = useState<SecurityActiveVisit | null>(null);
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
@@ -89,6 +92,13 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
         } finally {
             setProcessingId(null);
         }
+    };
+
+    const confirmCheckout = async () => {
+        if (!confirmVisit) return;
+        await handleCheckout(confirmVisit);
+        // Success or failure, return to the list: the result banner is shown there.
+        setConfirmVisit(null);
     };
 
     if (activeVisits.length === 0) {
@@ -262,7 +272,7 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
                                     <button
                                         type="button"
                                         disabled={isBusy}
-                                        onClick={() => handleCheckout(visit)}
+                                        onClick={() => setConfirmVisit(visit)}
                                         className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                                     >
                                         <LogOut className="h-3.5 w-3.5" />
@@ -352,7 +362,7 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
                             <button
                                 type="button"
                                 disabled={processingId === selectedVisit.id}
-                                onClick={() => handleCheckout(selectedVisit)}
+                                onClick={() => setConfirmVisit(selectedVisit)}
                                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-bold text-white transition hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                             >
                                 <LogOut className="h-4 w-4" />
@@ -366,6 +376,41 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
                     </div>
                 )}
             </MobileSheet>
+
+            {/* Second tap: guards check people out from a busy list, so a stray touch must not write the exit */}
+            <ConfirmationSheet
+                isOpen={confirmVisit !== null}
+                onClose={() => processingId === null && setConfirmVisit(null)}
+                onConfirm={confirmCheckout}
+                title={confirmVisit ? `Check out ${confirmVisit.visitor.name}?` : 'Check out?'}
+                message="This records their exit now and cannot be undone."
+                confirmLabel="Check out"
+                type="info"
+                isLoading={processingId !== null}
+            >
+                {confirmVisit && (
+                    <dl className="space-y-2 rounded-2xl bg-slate-50 p-4 text-sm dark:bg-slate-800/50">
+                        <div className="flex items-center justify-between gap-3">
+                            <dt className="text-slate-500">{confirmVisit.tag ? 'Tag' : 'Pass'}</dt>
+                            <dd className="font-mono font-black tracking-wider text-slate-900 dark:text-white">
+                                {confirmVisit.tag || confirmVisit.code || '-'}
+                            </dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                            <dt className="text-slate-500">{confirmVisit.is_quick_entry ? 'Went to' : 'Visiting'}</dt>
+                            <dd className="truncate font-semibold text-slate-900 dark:text-white">
+                                {confirmVisit.destination_name || confirmVisit.host.name}
+                            </dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                            <dt className="text-slate-500">Inside since</dt>
+                            <dd className="font-semibold text-slate-900 dark:text-white">
+                                {confirmVisit.verified_at_time || confirmVisit.verified_at || '-'}
+                            </dd>
+                        </div>
+                    </dl>
+                )}
+            </ConfirmationSheet>
         </div>
     );
 }
