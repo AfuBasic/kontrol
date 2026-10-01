@@ -23,8 +23,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property bool $is_active
  * @property bool $quick_entry_enabled
- * @property string|null $confirmation_policy
- * @property int|null $arrival_confirmation_minutes
  * @property string $access_policy
  * @property string|null $notes
  * @property CarbonImmutable $created_at
@@ -48,8 +46,6 @@ class EstateOrganization extends Model
         'type',
         'is_active',
         'quick_entry_enabled',
-        'confirmation_policy',
-        'arrival_confirmation_minutes',
         'access_policy',
         'notes',
     ];
@@ -59,7 +55,6 @@ class EstateOrganization extends Model
         return [
             'is_active' => 'boolean',
             'quick_entry_enabled' => 'boolean',
-            'arrival_confirmation_minutes' => 'integer',
         ];
     }
 
@@ -208,33 +203,6 @@ class EstateOrganization extends Model
     public function isOutsideOperatingHours(): bool
     {
         return $this->hasPublicWindows() && ! $this->isWithinPublicWindow();
-    }
-
-    public function confirmationState(): ?string
-    {
-        if ($this->confirmation_policy === 'none' || $this->arrival_confirmation_minutes === null) {
-            return null;
-        }
-
-        $since = CarbonImmutable::now()->subMinutes($this->arrival_confirmation_minutes);
-
-        $pendingCount = $this->accessLogs()
-            ->whereNull('checked_out_at')
-            ->where('verified_at', '<=', $since)
-            ->whereNull('arrival_confirmed_at')
-            ->count();
-
-        if ($pendingCount > 0) {
-            return 'overdue';
-        }
-
-        return 'confirmed';
-    }
-
-    public function requiresArrivalConfirmation(): bool
-    {
-        return $this->confirmation_policy === 'required'
-            && $this->arrival_confirmation_minutes !== null;
     }
 
     /**
