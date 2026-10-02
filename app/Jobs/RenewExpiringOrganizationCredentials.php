@@ -14,6 +14,12 @@ class RenewExpiringOrganizationCredentials implements ShouldQueue
 {
     use Queueable;
 
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 1;
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 600;
+
     /**
      * Execute the job.
      */
@@ -66,5 +72,13 @@ class RenewExpiringOrganizationCredentials implements ShouldQueue
         }
 
         Log::info("Automated organization credential renewal completed. {$renewedCount} credentials renewed.");
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }
