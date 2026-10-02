@@ -50,7 +50,6 @@ beforeEach(function () {
         'name' => $name,
         'type' => 'other',
         'is_active' => true,
-        'quick_entry_enabled' => true,
         'access_policy' => $policy,
     ]);
 
@@ -219,7 +218,6 @@ it('rejects a destination from another estate', function () {
     $otherOrg = EstateOrganization::factory()->create([
         'estate_id' => Estate::factory()->create()->id,
         'is_active' => true,
-        'quick_entry_enabled' => true,
         'access_policy' => 'unrestricted',
     ]);
 
