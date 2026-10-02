@@ -39,6 +39,25 @@ class TransactionController extends Controller
         private CollectionService $collectionService,
     ) {}
 
+    /**
+     * The next page of the activity feed, for infinite scroll.
+     */
+    public function timeline(Request $request): JsonResponse
+    {
+        $this->authorize('transactions.view');
+
+        $estate = $this->estateContext->getEstate();
+        app(ContextManager::class)->setSystemContext($estate->id);
+
+        $filters = $request->only([
+            'search', 'resident_id', 'collection_id', 'type', 'status',
+            'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
+            'amount_min', 'amount_max', 'date_from', 'date_to',
+        ]);
+
+        return response()->json($this->overviewService->timelinePage($estate, $filters, $request->string('cursor')->toString() ?: null));
+    }
+
     public function index(Request $request): Response
     {
         $this->authorize('transactions.view');
@@ -123,7 +142,7 @@ class TransactionController extends Controller
         return Inertia::render('Admin/Transactions/Index', [
             'maxAmountLimit' => $maxAmountNaira,
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
-            'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate, $filters)),
+            'activity' => Inertia::defer(fn () => $this->overviewService->timelinePage($estate, $filters)),
             'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
                 ? $this->overviewService->charts($estate)
                 : null),
