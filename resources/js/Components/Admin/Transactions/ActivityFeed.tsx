@@ -1,8 +1,10 @@
-import { motion } from 'framer-motion';
-import { AlertCircle, ArrowUpRight, PenLine, RefreshCcw, CornerDownRight, FileText, Gift, CheckCircle2, XCircle, Tag, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import axios from 'axios';
+import { AlertCircle, ArrowUpRight, CornerDownRight, FileText, Gift, Loader2, PenLine, RefreshCcw } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-interface ActivityEntry {
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+
+export interface ActivityEntry {
     id: string;
     headline: string;
     type: string;
@@ -21,8 +23,14 @@ interface ActivityEntry {
     time_ago: string | null;
 }
 
+export interface ActivityPage {
+    entries: ActivityEntry[];
+    next_cursor: string | null;
+}
+
 interface Props {
-    entries?: ActivityEntry[];
+    initial?: ActivityPage;
+    filters?: Record<string, string>;
     loading?: boolean;
     onSelect?: (id: string) => void;
 }
@@ -30,14 +38,114 @@ interface Props {
 const formatCurrency = (amountKobo: number) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(amountKobo / 100);
 
-export default function ActivityFeed({ entries, loading, onSelect }: Props) {
-    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+const dayKey = (iso: string | null) => (iso ? new Date(iso).toDateString() : 'unknown');
 
-    if (loading || !entries) {
+const dayLabel = (key: string) => {
+    if (key === 'unknown') return 'Undated';
+    const date = new Date(key);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+    return date.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric',
+    });
+};
+
+const clockTime = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() : '';
+
+type Kind = 'failed' | 'refund' | 'coupon' | 'adjust' | 'payment';
+
+const kindOf = (entry: ActivityEntry): Kind => {
+    if (entry.status === 'failed') return 'failed';
+    if (entry.type.includes('refund') || entry.type.includes('reverse')) return 'refund';
+    if (entry.type.includes('coupon') || entry.type.includes('discount')) return 'coupon';
+    if (entry.type.includes('adjustment')) return 'adjust';
+    return 'payment';
+};
+
+const KIND: Record<Kind, { label: string; tile: string; text: string; Icon: typeof ArrowUpRight }> = {
+    payment: { label: 'Payment', tile: 'border-emerald-100 bg-emerald-50 text-emerald-600', text: 'text-emerald-700', Icon: ArrowUpRight },
+    refund: { label: 'Refund', tile: 'border-violet-100 bg-violet-50 text-violet-600', text: 'text-violet-700', Icon: RefreshCcw },
+    failed: { label: 'Failed', tile: 'border-rose-100 bg-rose-50 text-rose-600', text: 'text-rose-600', Icon: AlertCircle },
+    coupon: { label: 'Coupon', tile: 'border-amber-100 bg-amber-50 text-amber-600', text: 'text-amber-700', Icon: Gift },
+    adjust: { label: 'Adjustment', tile: 'border-blue-100 bg-blue-50 text-blue-600', text: 'text-blue-700', Icon: PenLine },
+};
+
+/** Net money for the day: successful credits minus successful debits. Failed attempts move no money. */
+const netFor = (entries: ActivityEntry[]) =>
+    entries.reduce((sum, e) => (e.status !== 'success' ? sum : sum + (e.direction === 'debit' ? -e.amount : e.amount)), 0);
+
+export default function ActivityFeed({ initial, filters = {}, loading, onSelect }: Props) {
+    const [entries, setEntries] = useState<ActivityEntry[]>(initial?.entries ?? []);
+    const [cursor, setCursor] = useState<string | null>(initial?.next_cursor ?? null);
+    const [fetching, setFetching] = useState(false);
+    const [failed, setFailed] = useState(false);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const fetchingRef = useRef(false);
+
+    // A new first page (filters changed, or a refresh) replaces whatever was scrolled in.
+    useEffect(() => {
+        setEntries(initial?.entries ?? []);
+        setCursor(initial?.next_cursor ?? null);
+        setFailed(false);
+    }, [initial]);
+
+    const loadMore = useCallback(async () => {
+        if (!cursor || fetchingRef.current) return;
+
+        fetchingRef.current = true;
+        setFetching(true);
+        setFailed(false);
+
+        try {
+            const { data } = await axios.get<ActivityPage>(TransactionController.timeline.url({ query: { ...filters, cursor } }));
+            setEntries((prev) => {
+                const seen = new Set(prev.map((e) => e.id));
+                return [...prev, ...data.entries.filter((e) => !seen.has(e.id))];
+            });
+            setCursor(data.next_cursor);
+        } catch {
+            setFailed(true);
+        } finally {
+            fetchingRef.current = false;
+            setFetching(false);
+        }
+    }, [cursor, filters]);
+
+    useEffect(() => {
+        const node = sentinelRef.current;
+        if (!node || !cursor || failed) return;
+
+        const observer = new IntersectionObserver((hits) => hits[0]?.isIntersecting && loadMore(), { rootMargin: '400px 0px' });
+        observer.observe(node);
+
+        return () => observer.disconnect();
+    }, [cursor, failed, loadMore, entries.length]);
+
+    const days = useMemo(() => {
+        const groups: Array<{ key: string; items: ActivityEntry[] }> = [];
+        for (const entry of entries) {
+            const key = dayKey(entry.occurred_at);
+            const last = groups[groups.length - 1];
+            if (last && last.key === key) last.items.push(entry);
+            else groups.push({ key, items: [entry] });
+        }
+        return groups;
+    }, [entries]);
+
+    if (loading || !initial) {
         return (
-            <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-24 animate-pulse rounded-3xl border border-slate-100 bg-slate-50" />
+            <div className="space-y-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-16 animate-pulse rounded-2xl border border-slate-100 bg-slate-50" />
                 ))}
             </div>
         );
@@ -46,7 +154,7 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
     if (entries.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-slate-450 mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 text-slate-400">
                     <FileText className="h-5 w-5" />
                 </div>
                 <p className="text-sm font-bold text-slate-800">No events found</p>
@@ -55,205 +163,115 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
         );
     }
 
-    // Group entries dynamically
-    const grouped = entries.reduce(
-        (groups, entry) => {
-            const date = entry.occurred_at ? new Date(entry.occurred_at) : new Date();
-            const today = new Date();
-            const yesterday = new Date();
-            yesterday.setDate(today.getDate() - 1);
-
-            let groupKey = 'Earlier';
-            if (date.toDateString() === today.toDateString()) {
-                groupKey = 'Today';
-            } else if (date.toDateString() === yesterday.toDateString()) {
-                groupKey = 'Yesterday';
-            } else {
-                const diffTime = Math.abs(today.getTime() - date.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays <= 7) {
-                    groupKey = 'This Week';
-                } else if (diffDays <= 14) {
-                    groupKey = 'Last Week';
-                } else {
-                    groupKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                }
-            }
-
-            if (!groups[groupKey]) {
-                groups[groupKey] = [];
-            }
-            groups[groupKey].push(entry);
-            return groups;
-        },
-        {} as Record<string, ActivityEntry[]>,
-    );
-
-    const toggleGroup = (key: string) => {
-        setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
-    };
-
     return (
-        <div className="space-y-8">
-            {Object.entries(grouped).map(([groupTitle, items]) => {
-                // Collapsed by default after one week (if not explicitly toggled)
-                const isOlderThanWeek = groupTitle !== 'Today' && groupTitle !== 'Yesterday' && groupTitle !== 'This Week';
-                const isExpanded = expandedGroups[groupTitle] ?? true;
+        <div className="space-y-7">
+            {days.map((day, index) => {
+                // The newest day on screen is only complete once an older day (or the end of the list) follows it.
+                const isComplete = index < days.length - 1 || cursor === null;
+                const net = netFor(day.items);
 
                 return (
-                    <div key={groupTitle} className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-1 pb-1">
-                            <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{groupTitle}</h3>
-                            {isOlderThanWeek && (
-                                <button
-                                    onClick={() => toggleGroup(groupTitle)}
-                                    className="text-[9px] font-black tracking-widest text-[#1F6FDB] uppercase transition hover:text-blue-700"
-                                >
-                                    {isExpanded ? 'Collapse' : `Expand (${items.length})`}
-                                </button>
+                    <section key={day.key}>
+                        <div className="flex items-baseline justify-between border-b border-slate-100 px-1 py-2">
+                            <h3 className="text-[11px] font-black tracking-widest text-slate-500 uppercase">{dayLabel(day.key)}</h3>
+                            {isComplete && (
+                                <p className="text-[11px] font-semibold text-slate-400">
+                                    {day.items.length} {day.items.length === 1 ? 'event' : 'events'}
+                                    <span className={`ml-2 font-black ${net < 0 ? 'text-violet-600' : 'text-slate-700'}`}>
+                                        {net < 0 ? '-' : '+'}
+                                        {formatCurrency(Math.abs(net))} net
+                                    </span>
+                                </p>
                             )}
                         </div>
 
-                        {isExpanded && (
-                            <div className="relative space-y-4 pl-4 before:absolute before:top-2 before:bottom-2 before:left-0 before:w-[1px] before:bg-slate-200">
-                                {items.map((entry) => {
-                                    const isRefund = entry.type.includes('refund') || entry.type.includes('reverse');
-                                    const isFailed = entry.status === 'failed';
-                                    const isCoupon = entry.type.includes('coupon') || entry.type.includes('discount');
-                                    const isAdjust = entry.type.includes('adjustment');
+                        <ul className="divide-y divide-slate-100">
+                            {day.items.map((entry) => {
+                                const kind = kindOf(entry);
+                                const { Icon, tile, text, label } = KIND[kind];
+                                const subline = [entry.collection_name || entry.description, entry.payment_method_label].filter(Boolean).join(' · ');
 
-                                    // Event-specific styled cards
-                                    return (
-                                        <motion.div
-                                            key={entry.id}
-                                            initial={{ opacity: 0, y: 6 }}
-                                            animate={{ opacity: 1, y: 0 }}
+                                return (
+                                    <li key={entry.id}>
+                                        <button
+                                            type="button"
                                             onClick={() => onSelect?.(entry.id)}
-                                            className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-xs active:scale-[0.99]"
+                                            className="flex w-full items-start gap-3 rounded-xl px-1 py-3 text-left transition hover:bg-slate-50 active:bg-slate-100"
                                         >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex items-start gap-3">
-                                                    {/* Custom Event Badge */}
-                                                    {isFailed && (
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600">
-                                                            <AlertCircle className="h-4.5 w-4.5" />
-                                                        </div>
-                                                    )}
-                                                    {isRefund && (
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-violet-100 bg-violet-50 text-violet-600">
-                                                            <RefreshCcw className="h-4.5 w-4.5" />
-                                                        </div>
-                                                    )}
-                                                    {isCoupon && (
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
-                                                            <Gift className="h-4.5 w-4.5" />
-                                                        </div>
-                                                    )}
-                                                    {isAdjust && (
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-                                                            <PenLine className="h-4.5 w-4.5" />
-                                                        </div>
-                                                    )}
-                                                    {!isFailed && !isRefund && !isCoupon && !isAdjust && (
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600">
-                                                            <ArrowUpRight className="h-4.5 w-4.5" />
-                                                        </div>
-                                                    )}
+                                            <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${tile}`}>
+                                                <Icon className="h-4 w-4" />
+                                            </span>
 
-                                                    {/* Headline & Details */}
-                                                    <div>
-                                                        <span
-                                                            className={`inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase ${
-                                                                isFailed
-                                                                    ? 'text-rose-500'
-                                                                    : isRefund
-                                                                      ? 'text-violet-600'
-                                                                      : isCoupon
-                                                                        ? 'text-amber-600'
-                                                                        : isAdjust
-                                                                          ? 'text-blue-600'
-                                                                          : 'text-emerald-600'
-                                                            }`}
-                                                        >
-                                                            {isFailed ? (
-                                                                <>
-                                                                    <XCircle className="h-3 w-3 shrink-0 text-rose-500" />
-                                                                    <span>Payment Failed</span>
-                                                                </>
-                                                            ) : isRefund ? (
-                                                                <>
-                                                                    <RotateCcw className="h-3 w-3 shrink-0 text-violet-600" />
-                                                                    <span>Refund Issued</span>
-                                                                </>
-                                                            ) : isCoupon ? (
-                                                                <>
-                                                                    <Tag className="h-3 w-3 shrink-0 text-amber-600" />
-                                                                    <span>Coupon Applied</span>
-                                                                </>
-                                                            ) : isAdjust ? (
-                                                                <>
-                                                                    <PenLine className="h-3 w-3 shrink-0 text-blue-600" />
-                                                                    <span>Manual Adjustment</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
-                                                                    <span>Payment Received</span>
-                                                                </>
-                                                            )}
-                                                        </span>
-                                                        <h4 className="mt-0.5 text-sm leading-tight font-extrabold text-slate-800">
-                                                            {entry.resident_name || 'System Action'}
-                                                        </h4>
-                                                        <p className="mt-0.5 text-xs font-semibold text-slate-400">
-                                                            {entry.collection_name || entry.description || 'System accounting ledger action'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Directional Amount */}
-                                                <div className="text-right">
-                                                    <p className="text-sm font-black text-slate-900">
-                                                        {entry.direction === 'debit' ? '-' : ''}
-                                                        {formatCurrency(entry.amount)}
-                                                    </p>
-                                                    <span className="text-slate-350 mt-0.5 block text-[10px] font-bold">{entry.time_ago}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Contextual Extra Blocks */}
-                                            {isFailed && entry.failure_reason && (
-                                                <div className="rounded-xl border border-rose-100/50 bg-rose-50/50 p-2.5 text-xs leading-relaxed font-semibold text-rose-700">
-                                                    Reason: {entry.failure_reason}
-                                                </div>
-                                            )}
-
-                                            {isCoupon && entry.coupon_code && (
-                                                <div className="flex items-center gap-2 rounded-xl border border-amber-100/50 bg-amber-50/50 p-2.5 text-xs font-bold text-amber-800">
-                                                    <span>
-                                                        Code:{' '}
-                                                        <span className="rounded border border-amber-100 bg-white px-1 py-0.5 font-mono text-[11px]">
-                                                            {entry.coupon_code}
-                                                        </span>
+                                            <span className="min-w-0 flex-1">
+                                                <span className="flex items-baseline gap-2">
+                                                    <span className="truncate text-sm font-bold text-slate-900">
+                                                        {entry.resident_name || 'System action'}
                                                     </span>
-                                                    {entry.reason && <span className="font-normal text-slate-400">({entry.reason})</span>}
-                                                </div>
-                                            )}
+                                                    {kind !== 'payment' && (
+                                                        <span className={`shrink-0 text-[10px] font-black tracking-wider uppercase ${text}`}>
+                                                            {label}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                {subline && (
+                                                    <span className="mt-0.5 block truncate text-xs font-medium text-slate-400">{subline}</span>
+                                                )}
 
-                                            {entry.reason && !isCoupon && (
-                                                <div className="flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-xs font-medium text-slate-500">
-                                                    <CornerDownRight className="h-3.5 w-3.5 text-slate-400" />
-                                                    <span>"{entry.reason}"</span>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
+                                                {kind === 'failed' && entry.failure_reason && (
+                                                    <span className="mt-1 block text-xs font-semibold text-rose-600">{entry.failure_reason}</span>
+                                                )}
+                                                {kind === 'coupon' && entry.coupon_code && (
+                                                    <span className="mt-1 block font-mono text-[11px] font-bold text-amber-700">
+                                                        {entry.coupon_code}
+                                                    </span>
+                                                )}
+                                                {entry.reason && kind !== 'coupon' && (
+                                                    <span className="mt-1 flex items-center gap-1 text-xs font-medium text-slate-500">
+                                                        <CornerDownRight className="h-3 w-3 shrink-0 text-slate-300" />
+                                                        <span className="truncate">{entry.reason}</span>
+                                                    </span>
+                                                )}
+                                            </span>
+
+                                            <span className="shrink-0 text-right">
+                                                <span
+                                                    className={`block text-sm font-black tabular-nums ${
+                                                        kind === 'failed'
+                                                            ? 'text-slate-400 line-through'
+                                                            : entry.direction === 'debit'
+                                                              ? 'text-violet-700'
+                                                              : 'text-slate-900'
+                                                    }`}
+                                                >
+                                                    {entry.direction === 'debit' ? '-' : ''}
+                                                    {formatCurrency(entry.amount)}
+                                                </span>
+                                                <span className="mt-0.5 block text-[11px] font-semibold text-slate-400">
+                                                    {clockTime(entry.occurred_at)}
+                                                </span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </section>
                 );
             })}
+
+            {/* Infinite scroll: the next page loads as this nears the viewport. */}
+            {cursor && (
+                <div ref={sentinelRef} className="flex min-h-12 items-center justify-center py-2">
+                    {failed ? (
+                        <button type="button" onClick={loadMore} className="text-xs font-bold text-[#1F6FDB] hover:text-blue-700">
+                            Couldn't load more. Tap to retry
+                        </button>
+                    ) : (
+                        fetching && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                    )}
+                </div>
+            )}
+            {!cursor && entries.length > 25 && <p className="py-2 text-center text-[11px] font-semibold text-slate-400">That's everything.</p>}
         </div>
     );
 }
