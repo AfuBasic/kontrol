@@ -5,6 +5,7 @@ namespace App\Actions\Security;
 use App\Actions\Visitor\ResolveVisitorIdentityAction;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use App\Services\Visitor\TagGeneratorService;
@@ -59,6 +60,23 @@ class RecordQuickEntryAction
             $tag = $this->tagGenerator->generateUnique($estateId);
         }
 
+        $settings = EstateSettings::where('estate_id', $estateId)->first();
+
+        // The estate's switch is the rule; the gate screen merely reflects it.
+        if ($settings && ! $settings->quick_entry_enabled) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['Walk-in entry is switched off for this estate.'],
+            ]);
+        }
+
+        // A vehicle that was reported must be identifiable when the estate requires vehicle details.
+        $reportsVehicle = ! empty($data['vehicle_make']) || ! empty($data['vehicle_model']) || ! empty($data['vehicle_plate_number']);
+        if ($settings?->require_vehicle_information && $reportsVehicle && empty($data['vehicle_plate_number'])) {
+            throw ValidationException::withMessages([
+                'vehicle_plate_number' => ['Enter the vehicle plate number.'],
+            ]);
+        }
+
         $idPhotoFile = $data['id_photo'] ?? null;
         $visitorName = ! empty($data['visitor_name']) ? trim($data['visitor_name']) : null;
 
@@ -67,9 +85,9 @@ class RecordQuickEntryAction
                 ->where('id', $data['organization_id'])
                 ->firstOrFail();
 
-            if (! $organization->is_active || ! $organization->quick_entry_enabled) {
+            if (! $organization->is_active) {
                 throw ValidationException::withMessages([
-                    'organization_id' => ['Quick entry is currently disabled for this organization.'],
+                    'organization_id' => ['This organization is not active.'],
                 ]);
             }
 
@@ -83,7 +101,8 @@ class RecordQuickEntryAction
 
             // The guard photographs the visitor's ID for every walk-in.
             $visitorProfile = $this->resolveVisitorIdentity->execute($visitorName, $idPhotoFile, $estateId);
-            $displayName = $visitorProfile->name;
+            // The name typed for this visit wins; otherwise fall back to the name saved for this ID.
+            $displayName = $visitorName ?? $visitorProfile->name;
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,

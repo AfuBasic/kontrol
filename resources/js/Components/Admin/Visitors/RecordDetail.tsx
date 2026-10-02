@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Car, X } from 'lucide-react';
 import RecordDetailChain from './RecordDetailChain';
+import EntryTypeBadge from './EntryTypeBadge';
 import { formatStayDuration, type VisitorRecord } from './types';
 
 type Props = {
@@ -44,9 +45,11 @@ export default function RecordDetail({ record, checkoutEnabled, onClose }: Props
                                     {record.visitor.name}
                                 </h3>
                                 <p className="mt-0.5 text-xs font-medium text-gray-500">
-                                    Visiting {record.host.name}
-                                    {record.code ? <span className="font-mono text-gray-400"> · #{record.code}</span> : null}
+                                    {record.entry_type === 'walk_in' ? 'Going to' : 'Visiting'} {record.host.name}
                                 </p>
+                                <div className="mt-2">
+                                    <EntryTypeBadge record={record} />
+                                </div>
                             </div>
                             <button
                                 type="button"

@@ -207,9 +207,17 @@ export default function VerificationResultCard({ result, onAdmit, onCheckout, on
                 {decision.actionType === 'scan_next' && !result.has_vehicle && (
                     <div>
                         {isAutoReturnActive ? (
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-slate-50 px-3.5 py-2 dark:border-slate-800 dark:bg-slate-800/40">
-                                    <div className="relative flex h-5 w-5 items-center justify-center">
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    type="button"
+                                    onClick={onReset}
+                                    className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-black whitespace-nowrap text-white shadow-md transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-950"
+                                >
+                                    Scan Next Pass
+                                </button>
+
+                                <div className="flex items-center justify-center gap-2.5 whitespace-nowrap">
+                                    <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
                                         <svg className="-rotate-90" width="20" height="20">
                                             <circle strokeWidth="2" stroke="#e2e8f0" fill="transparent" r="8" cx="10" cy="10" />
                                             {!isPaused && (
@@ -229,25 +237,18 @@ export default function VerificationResultCard({ result, onAdmit, onCheckout, on
                                         </svg>
                                         <span className="absolute text-[8px] font-black text-slate-800 dark:text-white">{countdown}</span>
                                     </div>
-                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                                         {isPaused ? 'Paused' : `Next scan in ${countdown}s`}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => setIsPaused(!isPaused)}
                                         aria-label={isPaused ? 'Resume countdown' : 'Pause countdown'}
-                                        className="cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
+                                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
                                     >
-                                        {isPaused ? <Play className="h-3 w-3 fill-slate-500" /> : <Pause className="h-3 w-3" />}
+                                        {isPaused ? <Play className="h-3.5 w-3.5 fill-slate-500" /> : <Pause className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={onReset}
-                                    className="cursor-pointer rounded-2xl bg-slate-950 px-5 py-3 text-xs font-black text-white shadow-md transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-950"
-                                >
-                                    Scan Next Pass
-                                </button>
                             </div>
                         ) : (
                             <button

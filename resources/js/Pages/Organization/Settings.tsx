@@ -214,7 +214,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                             className="group flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <div className="min-w-0">
-                                <span className="block text-sm font-bold text-slate-900">Walk-in hours</span>
+                                <span className="block text-sm font-bold text-slate-900">Walk-ins</span>
                                 <span
                                     className={`mt-0.5 flex items-center gap-1.5 text-xs ${
                                         organization.needs_walk_in_hours

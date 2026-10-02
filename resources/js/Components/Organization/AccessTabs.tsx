@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Clock, History, User, Users, UsersRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React from 'react';
@@ -20,7 +20,9 @@ interface AccessTab {
     badgeVariant?: 'warning' | 'neutral';
 }
 
-export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 0, showOnSiteTab = false, onTabChange }: Props) {
+export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 0, showOnSiteTab, onTabChange }: Props) {
+    const shared = usePage().props as { org_on_site_enabled?: boolean };
+    const onSiteEnabled = showOnSiteTab ?? !!shared.org_on_site_enabled;
     const baseTabs: AccessTab[] = [
         { id: 'people', label: 'People', href: '/org/access-list', icon: Users },
         { id: 'visitors', label: 'Visitors', href: '/org/visitors', icon: User },
@@ -38,15 +40,10 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
     };
 
     // Insert On-site tab before History only when checkout tracking is enabled
-    const tabs = showOnSiteTab
-        ? [...baseTabs.slice(0, 3), onSiteTab, ...baseTabs.slice(3)]
-        : baseTabs;
+    const tabs = onSiteEnabled ? [...baseTabs.slice(0, 3), onSiteTab, ...baseTabs.slice(3)] : baseTabs;
 
     return (
-        <nav
-            aria-label="Access workspace tabs"
-            className="flex items-center w-full"
-        >
+        <nav aria-label="Access workspace tabs" className="flex w-full items-center">
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 const Icon = tab.icon;
@@ -95,14 +92,7 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
                 }
 
                 return (
-                    <Link
-                        key={tab.id}
-                        href={tab.href}
-                        prefetch
-                        preserveScroll
-                        aria-current={isActive ? 'page' : undefined}
-                        className={tabClassName}
-                    >
+                    <Link key={tab.id} href={tab.href} prefetch preserveScroll aria-current={isActive ? 'page' : undefined} className={tabClassName}>
                         {content}
                     </Link>
                 );
@@ -110,4 +100,3 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
         </nav>
     );
 }
-

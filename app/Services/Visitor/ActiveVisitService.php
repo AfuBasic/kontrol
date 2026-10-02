@@ -215,7 +215,7 @@ class ActiveVisitService
         $verifiedAt = $log->verified_at;
         $now = Carbon::now();
 
-        $durationMinutes = $verifiedAt ? (int) $now->diffInMinutes($verifiedAt) : 0;
+        $durationMinutes = $verifiedAt ? (int) $verifiedAt->diffInMinutes($now) : 0;
         $isOverstayed = false;
 
         if ($code && $code->expires_at && $now->isAfter($code->expires_at)) {

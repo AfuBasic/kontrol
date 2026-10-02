@@ -80,6 +80,8 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     });
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)
+    Route::patch('/walk-in-policy', [PublicWindowController::class, 'updatePolicy'])->name('walk-in-policy.update');
+
     Route::prefix('public-windows')->name('public-windows.')->group(function () {
         Route::get('/', [PublicWindowController::class, 'index'])->name('index');
         Route::post('/', [PublicWindowController::class, 'store'])->name('store');

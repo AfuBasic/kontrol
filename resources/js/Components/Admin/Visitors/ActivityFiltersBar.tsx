@@ -12,6 +12,12 @@ type Props = {
     onClearFilters: () => void;
 };
 
+const ENTRY_TYPE_OPTIONS = [
+    { value: '', label: 'All' },
+    { value: 'access_code', label: 'Access code' },
+    { value: 'walk_in', label: 'Walk-in' },
+] as const;
+
 /**
  * Timeline tools - search + filters sit in the journal chrome, not as floating widgets.
  */
@@ -29,9 +35,28 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
                         type="search"
                         value={filters.search || ''}
                         onChange={(e) => onFilterChange({ search: e.target.value || undefined })}
-                        placeholder="Search visitor, host, code…"
+                        placeholder="Search visitor, host, code, tag…"
                         className="w-full rounded-lg border border-gray-200 bg-gray-50/80 py-1.5 pr-2.5 pl-8 text-xs font-medium text-gray-800 transition-[border-color,box-shadow,background-color] duration-150 ease-out placeholder:text-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-slate-900/15 focus:outline-hidden"
                     />
+                </div>
+
+                <div role="group" aria-label="Entry type" className="inline-flex shrink-0 rounded-lg border border-gray-200 bg-gray-50/80 p-0.5">
+                    {ENTRY_TYPE_OPTIONS.map((option) => {
+                        const selected = (filters.entry_type || '') === option.value;
+                        return (
+                            <button
+                                key={option.value || 'all'}
+                                type="button"
+                                aria-pressed={selected}
+                                onClick={() => onFilterChange({ entry_type: option.value || undefined })}
+                                className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors duration-150 ease-out ${
+                                    selected ? 'bg-white text-gray-900 shadow-xs ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'
+                                }`}
+                            >
+                                {option.label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {checkoutEnabled && (
@@ -111,14 +136,17 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
                             />
                         </FilterField>
 
-                        <FilterField label="Host">
-                            <CustomSelect
-                                size="sm"
-                                value={filters.host_id || ''}
-                                onChange={(val) => onFilterChange({ host_id: val || undefined })}
-                                options={[{ value: '', label: 'All hosts' }, ...hosts.map((host) => ({ value: host.id, label: host.name }))]}
-                            />
-                        </FilterField>
+                        {/* Walk-ins have a destination, not a resident host, so this filter would only return nothing. */}
+                        {filters.entry_type !== 'walk_in' && (
+                            <FilterField label="Host">
+                                <CustomSelect
+                                    size="sm"
+                                    value={filters.host_id || ''}
+                                    onChange={(val) => onFilterChange({ host_id: val || undefined })}
+                                    options={[{ value: '', label: 'All hosts' }, ...hosts.map((host) => ({ value: host.id, label: host.name }))]}
+                                />
+                            </FilterField>
+                        )}
 
                         {checkoutEnabled && (
                             <FilterField label="Stay status">

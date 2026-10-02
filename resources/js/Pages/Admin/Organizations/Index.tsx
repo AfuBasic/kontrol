@@ -58,7 +58,6 @@ export interface Organization {
     name: string;
     type: 'school' | 'church' | 'hospital' | 'business' | 'facility' | 'other';
     access_policy?: 'unrestricted' | 'public_window' | 'managed';
-    quick_entry_enabled: boolean;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -103,9 +102,7 @@ const buildOperationalDetail = (org: Organization): string => {
         return `Walk-ins during their hours · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
     }
 
-    let line = `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
-    if (org.quick_entry_enabled) line += ' · Quick Entry';
-    return line;
+    return `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
 };
 
 const TYPE_CONFIG = {
@@ -115,8 +112,6 @@ const TYPE_CONFIG = {
         color: 'text-amber-600 bg-amber-50 border-amber-200/60',
         badgeColor: 'text-amber-700 bg-amber-50',
         description: 'Drop-off, parents, teachers & student traffic.',
-        defaultAccess: 'Managed organization access. Eligible parents and staff are logged or admitted through Quick Entry.',
-        defaultHours: { open: '07:30', close: '16:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
     church: {
@@ -125,8 +120,6 @@ const TYPE_CONFIG = {
         color: 'text-purple-600 bg-purple-50 border-purple-200/60',
         badgeColor: 'text-purple-700 bg-purple-50',
         description: 'Worship services, choir practice & community gatherings.',
-        defaultAccess: 'Managed organization access during service days and fellowship hours.',
-        defaultHours: { open: '08:00', close: '20:00', days: ['wednesday', 'friday', 'sunday'] },
         isUnrestricted: false,
     },
     hospital: {
@@ -135,8 +128,6 @@ const TYPE_CONFIG = {
         color: 'text-rose-600 bg-rose-50 border-rose-200/60',
         badgeColor: 'text-rose-700 bg-rose-50',
         description: '24/7 patient care, emergencies & clinic visitors.',
-        defaultAccess: 'Unrestricted destination. Visitors cannot be turned away solely due to missing credentials.',
-        defaultHours: null,
         isUnrestricted: true,
     },
     business: {
@@ -145,8 +136,6 @@ const TYPE_CONFIG = {
         color: 'text-blue-600 bg-blue-50 border-blue-200/60',
         badgeColor: 'text-blue-700 bg-blue-50',
         description: 'Commercial operations, clients, employees & deliveries.',
-        defaultAccess: 'Standard commercial schedule with operational gate logging.',
-        defaultHours: { open: '08:00', close: '18:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
     facility: {
@@ -155,8 +144,6 @@ const TYPE_CONFIG = {
         color: 'text-emerald-600 bg-emerald-50 border-emerald-200/60',
         badgeColor: 'text-emerald-700 bg-emerald-50',
         description: 'Clubhouse, sports courts, pools & shared community spaces.',
-        defaultAccess: 'Estate-operated facility accessible to verified residents and authorized guests.',
-        defaultHours: { open: '07:00', close: '21:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] },
         isUnrestricted: false,
     },
     other: {
@@ -165,12 +152,9 @@ const TYPE_CONFIG = {
         color: 'text-slate-600 bg-slate-50 border-slate-200/60',
         badgeColor: 'text-slate-700 bg-slate-100',
         description: 'Other non-residential operational destinations inside the estate.',
-        defaultAccess: 'Operational gate logging according to estate standards.',
-        defaultHours: { open: '08:00', close: '18:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
         isUnrestricted: false,
     },
 } as const;
-
 
 /** Format 24h time 'HH:mm' to 'h:mm A' */
 function formatTime(timeStr?: string | null): string {
@@ -233,7 +217,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 name: org.name,
                 type: org.type,
                 access_policy: org.access_policy ?? 'managed',
-                quick_entry_enabled: org.quick_entry_enabled ?? true,
                 is_active: !org.is_active,
             },
             { preserveScroll: true },
@@ -247,7 +230,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         admin_email: '',
         admin_phone: '',
         access_policy: 'managed' as 'unrestricted' | 'public_window' | 'managed',
-        quick_entry_enabled: true,
         is_active: true,
     });
 
@@ -308,7 +290,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: '',
             admin_phone: '',
             access_policy: 'managed',
-            quick_entry_enabled: true,
             is_active: true,
         });
         setEditingOrg(null);
@@ -327,7 +308,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_phone: primaryAdmin?.profile?.phone || '',
             access_policy: (org.access_policy ||
                 (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
-            quick_entry_enabled: org.quick_entry_enabled,
             is_active: org.is_active,
         });
         setIsCreateModalOpen(true);
@@ -345,7 +325,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                       ? 'public_window'
                       : 'managed'
                   : form.data.access_policy,
-            quick_entry_enabled: config.isUnrestricted ? true : form.data.quick_entry_enabled,
         });
     };
 
@@ -361,7 +340,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             admin_email: form.data.admin_email,
             admin_phone: form.data.admin_phone,
             access_policy: effectivePolicy,
-            quick_entry_enabled: form.data.quick_entry_enabled,
             is_active: form.data.is_active,
         };
 
@@ -848,31 +826,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 size="sm"
                                             />
                                         </div>
-
-                                        <div className="flex items-center justify-between gap-4 py-1">
-                                            <div className="flex-1 pr-2">
-                                                <span className="block text-xs font-medium text-slate-900">Quick Entry</span>
-                                                <span className="block text-xs leading-relaxed text-slate-500">
-                                                    Allow guards to admit visitors with quick physical tags without a resident code
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                role="switch"
-                                                aria-checked={form.data.quick_entry_enabled}
-                                                onClick={() => form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)}
-                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                    form.data.quick_entry_enabled ? 'bg-slate-900' : 'bg-slate-200'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                        form.data.quick_entry_enabled ? 'translate-x-4' : 'translate-x-0'
-                                                    }`}
-                                                />
-                                            </button>
-                                        </div>
-
                                     </div>
                                 )}
                             </div>
@@ -880,8 +833,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             {form.data.type !== 'hospital' && form.data.access_policy === 'public_window' && (
                                 <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-600">
                                     <span className="mb-0.5 block font-semibold text-slate-900">Walk-in hours</span>
-                                    The organization's admin sets and updates its walk-in hours from their Profile. Until they do, walk-ins are
-                                    turned away.
+                                    The organization's admin sets its walk-in hours from their Profile, and can switch between no walk-ins and
+                                    walk-ins during their hours. Only you can allow walk-ins at any time. Until hours are set, walk-ins are turned
+                                    away.
                                 </div>
                             )}
 
@@ -956,11 +910,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         ) : (
                                             <p className="text-slate-500">Not assigned (can be added later)</p>
                                         )}
-                                    </div>
-
-                                    <div>
-                                        <span className="mb-0.5 block font-medium text-slate-400">Quick Entry</span>
-                                        <p className="text-slate-700">{form.data.quick_entry_enabled ? 'Enabled for gate tags' : 'Disabled'}</p>
                                     </div>
                                 </div>
                             </div>

@@ -10,6 +10,7 @@ interface Log {
     tag: string | null;
     visitor_name: string;
     admission_basis: string;
+    entry_type: 'access_code' | 'walk_in';
     vehicle_plate_number: string | null;
     entry_point: string | null;
     verified_at: string | null;
@@ -41,16 +42,27 @@ interface Props {
         search?: string;
         date?: string;
         status?: string;
+        entry_type?: string;
     };
 }
 
 export default function ArrivalHistory({ organization, logs, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
-    const [dateFilter, setDateFilter] = useState(filters.date ?? 'today');
+    const [entryType, setEntryType] = useState(filters.entry_type ?? 'all');
+
+    const query = (next: { search?: string; entryType?: string }) => ({
+        search: (next.search ?? search) || undefined,
+        entry_type: (next.entryType ?? entryType) === 'all' ? undefined : (next.entryType ?? entryType),
+    });
+
+    const applyEntryType = (id: string) => {
+        setEntryType(id);
+        router.get('/org/on-site/history', query({ entryType: id }), { preserveState: true, preserveScroll: true });
+    };
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/on-site/history', { search }, { preserveState: true, preserveScroll: true });
+        router.get('/org/on-site/history', query({}), { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
@@ -104,7 +116,7 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
         <OrganizationLayout title="Access - History" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - History`} />
 
-            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
+            <div className="mx-auto flex max-w-[480px] flex-col gap-3.5 px-4 pt-1 pb-24">
                 <AccessHeader activeTab="history" />
 
                 <div className="flex flex-col gap-3">
@@ -116,24 +128,18 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search history..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
                     <FilterChips
                         variant="status"
-                        value={dateFilter}
-                        onChange={(id) => {
-                            if (id === 'more') {
-                                // Normally opens filter sheet
-                            } else {
-                                setDateFilter(id);
-                            }
-                        }}
+                        value={entryType}
+                        onChange={(id) => applyEntryType(id)}
                         options={[
-                            { id: 'today', label: 'Today' },
-                            { id: 'week', label: 'This week' },
-                            { id: 'more', label: 'More' },
+                            { id: 'all', label: 'All' },
+                            { id: 'access_code', label: 'Access code' },
+                            { id: 'walk_in', label: 'Walk-in' },
                         ]}
                     />
 
@@ -145,11 +151,11 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-6 pb-6 px-1">
+                        <div className="space-y-6 px-1 pb-6">
                             {Object.entries(groupedLogs).map(([date, dayLogs]) => (
                                 <div key={date} className="space-y-2">
-                                    <h3 className="text-[12px] font-bold tracking-wider text-slate-500 uppercase px-1">{date}</h3>
-                                    <div className="overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                                    <h3 className="px-1 text-[12px] font-bold tracking-wider text-slate-500 uppercase">{date}</h3>
+                                    <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
                                         {dayLogs.map((log, index) => {
                                             return (
                                                 <div
@@ -164,18 +170,28 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                                                         </div>
 
                                                         <div className="min-w-0 flex-1 py-0.5">
-                                                            <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{log.visitor_name}</div>
+                                                            <div className="truncate text-[15px] leading-tight font-bold text-slate-900">
+                                                                {log.visitor_name}
+                                                            </div>
                                                             <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
-                                                                <span className="capitalize">{log.admission_basis}</span>
+                                                                {log.entry_type === 'walk_in' ? (
+                                                                    <>
+                                                                        <span className="font-semibold text-amber-700">Walk-in</span>
+                                                                        {log.tag ? ` · Tag ${log.tag}` : ''}
+                                                                    </>
+                                                                ) : (
+                                                                    <span>Access code</span>
+                                                                )}
                                                             </p>
                                                             <p className="mt-0.5 truncate text-[12px] text-slate-400">
-                                                                Entered {formatTime(log.verified_at)} {log.checked_out_at_human ? `· Left ${log.checked_out_at_human}` : ''}
+                                                                Entered {formatTime(log.verified_at)}{' '}
+                                                                {log.checked_out_at_human ? `· Left ${log.checked_out_at_human}` : ''}
                                                             </p>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex shrink-0 items-center justify-end">
-                                                        <ChevronRight className="h-4 w-4 text-slate-300 ml-2" strokeWidth={2.5} />
+                                                        <ChevronRight className="ml-2 h-4 w-4 text-slate-300" strokeWidth={2.5} />
                                                     </div>
                                                 </div>
                                             );

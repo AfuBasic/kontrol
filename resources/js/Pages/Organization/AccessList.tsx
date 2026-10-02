@@ -126,15 +126,7 @@ const getAvatarColor = (name: string) => {
     return colors[Math.abs(hash) % colors.length];
 };
 
-export default function AccessList({
-    organization,
-    membership,
-    members,
-    filters,
-    total_access_members = 0,
-    metrics,
-    recent_activity = [],
-}: Props) {
+export default function AccessList({ organization, membership, members, filters, total_access_members = 0, metrics, recent_activity = [] }: Props) {
     const page = usePage();
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
@@ -300,17 +292,14 @@ export default function AccessList({
             {/* ATMOSPHERIC BACKGROUND */}
             <div className="app-atmosphere" />
 
-            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
-
+            <div className="mx-auto flex max-w-[480px] flex-col gap-3.5 px-4 pt-1 pb-24">
                 {/* ORGANIZATION IDENTITY */}
                 <header className="flex flex-col pt-1">
                     <p className="text-[12px] font-medium text-slate-500">
                         {getGreeting()}, {userFirstName}
                     </p>
-                    <div className="flex items-center justify-between mt-0.5">
-                        <h1 className="text-[26px] font-extrabold tracking-tight text-[#071f4b] leading-tight">
-                            {organization.name}
-                        </h1>
+                    <div className="mt-0.5 flex items-center justify-between">
+                        <h1 className="text-[26px] leading-tight font-extrabold tracking-tight text-[#071f4b]">{organization.name}</h1>
                         {membership.is_admin && (
                             <button
                                 type="button"
@@ -326,20 +315,15 @@ export default function AccessList({
                         <p className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-slate-500">
                             <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
                             {organization.estate_name}
-                            <ChevronRight className="h-3 w-3 ml-0.5 text-slate-400" />
+                            <ChevronRight className="ml-0.5 h-3 w-3 text-slate-400" />
                         </p>
                     )}
                 </header>
 
-                {organization.needs_walk_in_hours && (
-                    <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />
-                )}
+                {organization.needs_walk_in_hours && <WalkInHoursSetupCard organizationName={organization.name} isAdmin={membership.is_admin} />}
 
                 {/* ACCESS OVERVIEW CARD */}
-                <Link
-                    href="/org/access-list"
-                    className="brand-card flex items-center justify-between p-4 active:scale-[0.98] transition-transform"
-                >
+                <Link href="/org/access-list" className="brand-card flex items-center justify-between p-4 transition-transform active:scale-[0.98]">
                     <div className="relative z-10 flex items-center gap-3.5">
                         <div className="brand-card-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]">
                             <ShieldCheck className="h-5 w-5 text-white" strokeWidth={2.1} />
@@ -347,9 +331,7 @@ export default function AccessList({
                         <div className="flex flex-col gap-0.5">
                             <h2 className="text-[13px] font-semibold text-white/90">Access Overview</h2>
                             <p className="text-[11px] text-blue-200/70">Total people with access</p>
-                            <span className="text-[32px] font-extrabold text-white leading-none tracking-tight mt-0.5">
-                                {total_access_members}
-                            </span>
+                            <span className="mt-0.5 text-[32px] leading-none font-extrabold tracking-tight text-white">{total_access_members}</span>
                         </div>
                     </div>
                     <ChevronRight className="relative z-10 h-5 w-5 text-white/50" strokeWidth={2.5} />
@@ -357,81 +339,80 @@ export default function AccessList({
 
                 {/* PRIMARY ACCESS TABS */}
                 <div className="soft-card overflow-hidden p-0">
-                    <AccessTabs
-                        activeTab="people"
-                        activeCount={currentlyHere}
-                        showOnSiteTab={organization.visitor_checkout_enabled}
-                    />
+                    <AccessTabs activeTab="people" activeCount={currentlyHere} showOnSiteTab={organization.visitor_checkout_enabled} />
                 </div>
 
                 {/* QUICK ACTIONS */}
                 <div className="flex flex-col">
-                    <h2 className="text-[14px] font-bold text-[#071f4b] mb-2.5 px-1 tracking-tight">Quick actions</h2>
+                    <h2 className="mb-2.5 px-1 text-[14px] font-bold tracking-tight text-[#071f4b]">Quick actions</h2>
                     <div className="grid grid-cols-2 gap-3.5">
                         <button
                             type="button"
                             onClick={gated(() => setAddPersonModalOpen(true))}
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group text-left"
+                            className="soft-card group flex flex-col p-4 text-left transition-all active:scale-[0.98]"
                         >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
+                            <div className="icon-tile-blue mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
                                 <UserPlus className="h-5 w-5" strokeWidth={2.2} />
                             </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
+                            <div className="mt-auto flex w-full items-end justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Add person</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Recurring access</span>
+                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">Add person</span>
+                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Recurring access</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                <ChevronRight
+                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
+                                    strokeWidth={2.5}
+                                />
                             </div>
                         </button>
 
-                        <Link
-                            href="/org/visitors"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                        >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-mint mb-3">
+                        <Link href="/org/visitors" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
+                            <div className="icon-tile-mint mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
                                 <UserCircle className="h-5 w-5" strokeWidth={2.2} />
                             </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
+                            <div className="mt-auto flex w-full items-end justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Invite visitor</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Create a pass</span>
+                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">Invite visitor</span>
+                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Create a pass</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                <ChevronRight
+                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
+                                    strokeWidth={2.5}
+                                />
                             </div>
                         </Link>
 
                         {organization.visitor_checkout_enabled && (
-                            <Link
-                                href="/org/on-site"
-                                className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                            >
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                            <Link href="/org/on-site" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
+                                <div className="icon-tile-lavender mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
                                     <Clock className="h-5 w-5" strokeWidth={2.2} />
                                 </div>
-                                <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="mt-auto flex w-full items-end justify-between">
                                     <div className="flex flex-col">
-                                        <span className="text-[14px] font-bold text-[#071f4b] leading-tight">On-site</span>
-                                        <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's present</span>
+                                        <span className="text-[14px] leading-tight font-bold text-[#071f4b]">On-site</span>
+                                        <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">See who's present</span>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                    <ChevronRight
+                                        className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
+                                        strokeWidth={2.5}
+                                    />
                                 </div>
                             </Link>
                         )}
 
-                        <Link
-                            href="/org/on-site/history"
-                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
-                        >
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
+                        <Link href="/org/on-site/history" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
+                            <div className="icon-tile-amber mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
                                 <History className="h-5 w-5" strokeWidth={2.2} />
                             </div>
-                            <div className="flex items-end justify-between w-full mt-auto">
+                            <div className="mt-auto flex w-full items-end justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">History</span>
-                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Past activity</span>
+                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">History</span>
+                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Past activity</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                                <ChevronRight
+                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
+                                    strokeWidth={2.5}
+                                />
                             </div>
                         </Link>
                     </div>
@@ -440,7 +421,7 @@ export default function AccessList({
                 {/* TODAY MODULE */}
                 {metrics && (
                     <div className="soft-card flex flex-col p-3.5">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="mb-3 flex items-center justify-between">
                             <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
                             {organization.walk_in && (
                                 <Link
@@ -456,25 +437,31 @@ export default function AccessList({
                         </div>
 
                         <div className="flex items-stretch justify-between">
-                            <Link href="/org/on-site" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-mint mb-1.5">
+                            <Link
+                                href="/org/on-site"
+                                className="group flex flex-1 flex-col items-start rounded-xl px-1.5 py-1 transition hover:bg-slate-50/80"
+                            >
+                                <div className="icon-tile-mint mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg">
                                     <Users className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{currentlyHere}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
-                                    Inside <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                                <span className="mb-0.5 text-[20px] leading-none font-extrabold text-[#071f4b]">{currentlyHere}</span>
+                                <span className="flex items-center gap-0.5 text-[10px] font-medium text-slate-500">
+                                    Inside <ChevronRight className="h-2.5 w-2.5 text-slate-300 transition group-hover:text-slate-400" />
                                 </span>
                             </Link>
 
-                            <div className="w-px bg-slate-100 self-stretch mx-0.5" />
+                            <div className="mx-0.5 w-px self-stretch bg-slate-100" />
 
-                            <Link href="/org/on-site/history" className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-sky mb-1.5">
+                            <Link
+                                href="/org/on-site/history"
+                                className="group flex flex-1 flex-col items-start rounded-xl px-1.5 py-1 transition hover:bg-slate-50/80"
+                            >
+                                <div className="icon-tile-sky mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg">
                                     <Calendar className="h-3.5 w-3.5" strokeWidth={2.2} />
                                 </div>
-                                <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">{metrics.today_entries}</span>
-                                <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
-                                    Arrivals today <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                                <span className="mb-0.5 text-[20px] leading-none font-extrabold text-[#071f4b]">{metrics.today_entries}</span>
+                                <span className="flex items-center gap-0.5 text-[10px] font-medium whitespace-nowrap text-slate-500">
+                                    Arrivals today <ChevronRight className="h-2.5 w-2.5 text-slate-300 transition group-hover:text-slate-400" />
                                 </span>
                             </Link>
                         </div>
@@ -483,17 +470,20 @@ export default function AccessList({
 
                 {/* RECENT ACTIVITY */}
                 <div className="flex flex-col">
-                    <div className="flex items-center justify-between mb-2.5 px-0.5">
+                    <div className="mb-2.5 flex items-center justify-between px-0.5">
                         <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
-                        <Link href="/org/on-site/history" className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition">
-                            View all <ChevronRight className="h-3 w-3 ml-0.5" />
+                        <Link
+                            href="/org/on-site/history"
+                            className="flex items-center text-[11px] font-semibold text-slate-500 transition hover:text-[#1a5dbf]"
+                        >
+                            View all <ChevronRight className="ml-0.5 h-3 w-3" />
                         </Link>
                     </div>
 
                     {recent_activity.length === 0 ? (
-                        <p className="text-[12px] font-medium text-slate-400 py-3 px-1">No movement yet today</p>
+                        <p className="px-1 py-3 text-[12px] font-medium text-slate-400">No movement yet today</p>
                     ) : (
-                        <div className="overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_8px_28px_rgba(28,65,115,0.07)]">
+                        <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_28px_rgba(28,65,115,0.07)]">
                             {recent_activity.slice(0, 5).map((item, index) => {
                                 const actStatus = getActivityStatus(item);
                                 return (
@@ -501,18 +491,22 @@ export default function AccessList({
                                         key={item.id}
                                         className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
                                     >
-                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}>
+                                        <div
+                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}
+                                        >
                                             {initialsFor(item.name)}
                                         </div>
                                         <div className="flex min-w-0 flex-1 flex-col">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="truncate text-[13px] font-bold text-[#071f4b]">{item.name}</span>
-                                                <div className={`flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide ${actStatus.badge}`}>
+                                                <div
+                                                    className={`flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-px text-[8.5px] font-bold tracking-wide uppercase ${actStatus.badge}`}
+                                                >
                                                     <span className={`h-1 w-1 rounded-full ${actStatus.dot}`} />
                                                     {actStatus.label}
                                                 </div>
                                             </div>
-                                            <span className="text-[11px] font-medium text-slate-400 mt-0.5 capitalize">
+                                            <span className="mt-0.5 text-[11px] font-medium text-slate-400 capitalize">
                                                 {item.category} · {item.gate}
                                             </span>
                                         </div>
@@ -542,7 +536,7 @@ export default function AccessList({
                             onChange={(event) => setSearch(event.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                             placeholder="Search people..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
@@ -551,16 +545,13 @@ export default function AccessList({
                         variant="category"
                         value={category}
                         onChange={(id) => {
-                            if (id !== 'more') {
-                                setCategory(id);
-                                applyFilters({ category: id });
-                            }
+                            setCategory(id);
+                            applyFilters({ category: id });
                         }}
                         options={[
                             { id: 'all', label: 'All', count: category === 'all' ? members.total : undefined },
                             { id: 'staff', label: 'Staff' },
                             { id: 'parent', label: 'Parents' },
-                            { id: 'more', label: 'More' },
                         ]}
                     />
 
@@ -589,7 +580,7 @@ export default function AccessList({
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                        <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
                             {members.data.map((member, index) => {
                                 const memberStatus = getMemberStatus(member);
                                 const dateLabel = member.valid_until ? `Until ${member.valid_until}` : 'No end date';
@@ -600,15 +591,19 @@ export default function AccessList({
                                         className={`flex min-h-[64px] cursor-pointer items-center justify-between gap-3 p-3.5 transition hover:bg-slate-50 active:bg-slate-100 ${index !== members.data.length - 1 ? 'border-b border-slate-100' : ''}`}
                                     >
                                         <div className="flex min-w-0 items-start gap-3.5">
-                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold tracking-tight ${getAvatarColor(member.name)}`}>
+                                            <div
+                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold tracking-tight ${getAvatarColor(member.name)}`}
+                                            >
                                                 {initialsFor(member.name)}
                                             </div>
                                             <div className="min-w-0 flex-1 py-0.5">
-                                                <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{member.name}</div>
+                                                <div className="truncate text-[15px] leading-tight font-bold text-slate-900">{member.name}</div>
                                                 <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
                                                     <span className="capitalize">{member.category}</span>
                                                     {' · '}
-                                                    <span className={memberStatus.label === 'Active' ? 'text-emerald-600 font-semibold' : ''}>{memberStatus.label}</span>
+                                                    <span className={memberStatus.label === 'Active' ? 'font-semibold text-emerald-600' : ''}>
+                                                        {memberStatus.label}
+                                                    </span>
                                                 </p>
                                                 <p className="mt-0.5 truncate text-[12px] text-slate-400">{dateLabel}</p>
                                             </div>
@@ -735,7 +730,9 @@ export default function AccessList({
                         <>
                             <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold tracking-tight ${getAvatarColor(selectedMember.name)}`}>
+                                    <div
+                                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold tracking-tight ${getAvatarColor(selectedMember.name)}`}
+                                    >
                                         {initialsFor(selectedMember.name)}
                                     </div>
                                     <div>
@@ -752,7 +749,11 @@ export default function AccessList({
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">Status</dt>
                                             <dd className="text-sm font-semibold text-slate-900">
-                                                {selectedMember.status === 'suspended' ? 'Suspended' : selectedMember.is_valid_now ? 'Active' : 'Pending/Expired'}
+                                                {selectedMember.status === 'suspended'
+                                                    ? 'Suspended'
+                                                    : selectedMember.is_valid_now
+                                                      ? 'Active'
+                                                      : 'Pending/Expired'}
                                             </dd>
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
@@ -774,29 +775,42 @@ export default function AccessList({
                                         <>
                                             <div ref={cardRef} className="mx-auto w-full max-w-sm">
                                                 <PassCard
-                                                    pass={{
-                                                        id: selectedMember.active_credential.id,
-                                                        code: selectedMember.active_credential.code,
-                                                        visitor_name: selectedMember.name,
-                                                        visitor_phone: null,
-                                                        purpose: selectedMember.category,
-                                                        status: selectedMember.status === 'suspended' ? 'revoked' : selectedMember.is_valid_now ? 'expected' : 'expired',
-                                                        type: 'long_lived',
-                                                        expires_at: selectedMember.active_credential.expires_at,
-                                                        starts_at: selectedMember.valid_from,
-                                                        estate_name: organization.name,
-                                                        host_name: 'Admin',
-                                                    } as any}
+                                                    pass={
+                                                        {
+                                                            id: selectedMember.active_credential.id,
+                                                            code: selectedMember.active_credential.code,
+                                                            visitor_name: selectedMember.name,
+                                                            visitor_phone: null,
+                                                            purpose: selectedMember.category,
+                                                            status:
+                                                                selectedMember.status === 'suspended'
+                                                                    ? 'revoked'
+                                                                    : selectedMember.is_valid_now
+                                                                      ? 'expected'
+                                                                      : 'expired',
+                                                            type: 'long_lived',
+                                                            expires_at: selectedMember.active_credential.expires_at,
+                                                            starts_at: selectedMember.valid_from,
+                                                            estate_name: organization.name,
+                                                            host_name: 'Admin',
+                                                        } as any
+                                                    }
                                                     qrUrl={selectedMember.active_credential.code}
                                                 />
                                             </div>
                                             <div className="mt-4 flex w-full gap-3">
                                                 <button
                                                     type="button"
-                                                    onClick={() => copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)}
+                                                    onClick={() =>
+                                                        copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)
+                                                    }
                                                     className={`flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 ${copiedCodeId === selectedMember.active_credential.id ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`}
                                                 >
-                                                    {copiedCodeId === selectedMember.active_credential.id ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-slate-500" />}
+                                                    {copiedCodeId === selectedMember.active_credential.id ? (
+                                                        <Check className="h-4 w-4 text-emerald-600" />
+                                                    ) : (
+                                                        <Copy className="h-4 w-4 text-slate-500" />
+                                                    )}
                                                     <span>{copiedCodeId === selectedMember.active_credential.id ? 'Copied Code!' : 'Copy Code'}</span>
                                                 </button>
                                                 <button
@@ -805,7 +819,13 @@ export default function AccessList({
                                                     disabled={sharing}
                                                     className={`flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-75 ${shareCopied ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'}`}
                                                 >
-                                                    {sharing ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" /> : shareCopied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4 text-slate-500" />}
+                                                    {sharing ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                                                    ) : shareCopied ? (
+                                                        <Check className="h-4 w-4 text-emerald-600" />
+                                                    ) : (
+                                                        <Share2 className="h-4 w-4 text-slate-500" />
+                                                    )}
                                                     <span>{shareCopied ? 'Shared / Copied!' : sharing ? 'Preparing...' : 'Share Pass'}</span>
                                                 </button>
                                             </div>
@@ -834,13 +854,23 @@ export default function AccessList({
                                                 className={`flex w-full items-center justify-between rounded-xl border p-4 transition-colors ${selectedMember.status === 'suspended' ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-200' : 'border-orange-100 bg-orange-50 hover:border-orange-200'}`}
                                             >
                                                 <div className="flex items-center gap-3 text-left">
-                                                    {selectedMember.status === 'suspended' ? <BadgeCheck className="h-5 w-5 text-emerald-600" /> : <Ban className="h-5 w-5 text-orange-600" />}
+                                                    {selectedMember.status === 'suspended' ? (
+                                                        <BadgeCheck className="h-5 w-5 text-emerald-600" />
+                                                    ) : (
+                                                        <Ban className="h-5 w-5 text-orange-600" />
+                                                    )}
                                                     <div>
-                                                        <p className={`text-sm font-semibold ${selectedMember.status === 'suspended' ? 'text-emerald-900' : 'text-orange-900'}`}>
+                                                        <p
+                                                            className={`text-sm font-semibold ${selectedMember.status === 'suspended' ? 'text-emerald-900' : 'text-orange-900'}`}
+                                                        >
                                                             {selectedMember.status === 'suspended' ? 'Reactivate access' : 'Suspend access'}
                                                         </p>
-                                                        <p className={`text-xs ${selectedMember.status === 'suspended' ? 'text-emerald-700' : 'text-orange-700'}`}>
-                                                            {selectedMember.status === 'suspended' ? 'Restore access immediately' : 'Temporarily disable all access'}
+                                                        <p
+                                                            className={`text-xs ${selectedMember.status === 'suspended' ? 'text-emerald-700' : 'text-orange-700'}`}
+                                                        >
+                                                            {selectedMember.status === 'suspended'
+                                                                ? 'Restore access immediately'
+                                                                : 'Temporarily disable all access'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -859,7 +889,7 @@ export default function AccessList({
                                                         </div>
                                                     </div>
                                                 </button>
-                                             )}
+                                            )}
 
                                             <button
                                                 onClick={() => setConfirmAction('delete')}
@@ -886,8 +916,16 @@ export default function AccessList({
                     {confirmAction && selectedMember && (
                         <div className="flex flex-col gap-5 pt-2 pb-4">
                             <div className="flex items-start gap-4">
-                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${confirmAction === 'activate' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : confirmAction === 'delete' ? <Trash2 className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+                                <div
+                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${confirmAction === 'activate' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                                >
+                                    {confirmAction === 'activate' ? (
+                                        <BadgeCheck className="h-6 w-6" />
+                                    ) : confirmAction === 'delete' ? (
+                                        <Trash2 className="h-6 w-6" />
+                                    ) : (
+                                        <AlertTriangle className="h-6 w-6" />
+                                    )}
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-900">
@@ -897,10 +935,14 @@ export default function AccessList({
                                         {confirmAction === 'delete' && 'Delete Person & Access?'}
                                     </h3>
                                     <p className="mt-1.5 text-[15px] leading-snug text-slate-500">
-                                        {confirmAction === 'suspend' && `Are you sure you want to suspend access for ${selectedMember.name}? Their code will be temporarily disabled.`}
-                                        {confirmAction === 'activate' && `Are you sure you want to reactivate access for ${selectedMember.name}? Their previous code will be valid again.`}
-                                        {confirmAction === 'revoke' && 'Are you sure you want to permanently revoke this code? You will need to issue a new code if they need access again.'}
-                                        {confirmAction === 'delete' && `Are you sure you want to permanently delete ${selectedMember.name}? This will remove their record and delete all associated access codes and passes permanently.`}
+                                        {confirmAction === 'suspend' &&
+                                            `Are you sure you want to suspend access for ${selectedMember.name}? Their code will be temporarily disabled.`}
+                                        {confirmAction === 'activate' &&
+                                            `Are you sure you want to reactivate access for ${selectedMember.name}? Their previous code will be valid again.`}
+                                        {confirmAction === 'revoke' &&
+                                            'Are you sure you want to permanently revoke this code? You will need to issue a new code if they need access again.'}
+                                        {confirmAction === 'delete' &&
+                                            `Are you sure you want to permanently delete ${selectedMember.name}? This will remove their record and delete all associated access codes and passes permanently.`}
                                     </p>
                                 </div>
                             </div>

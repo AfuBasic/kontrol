@@ -50,7 +50,6 @@ beforeEach(function () {
         'name' => $name,
         'type' => 'other',
         'is_active' => true,
-        'quick_entry_enabled' => true,
         'access_policy' => $policy,
     ]);
 
@@ -170,6 +169,39 @@ it('admits walk-ins and recognises returning visitors for a zone-assigned guard'
     $send()->assertOk()->assertJsonPath('is_returning_visitor', true);
 });
 
+it('records the name typed for this visit, and falls back to the name saved for the ID', function () {
+    $contents = ($this->idPhotoBytes)();
+    $admitWith = fn (array $extra = []) => ($this->asGuard)()->post(route('security.quick-entry.store'), [
+        'organization_id' => $this->hospital->id,
+        'id_photo' => UploadedFile::fake()->createWithContent('id.jpg', $contents),
+        ...$extra,
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    $admitWith(['visitor_name' => 'Idris']);
+
+    // Nothing typed this time: the name saved for this ID is used.
+    expect($admitWith()->json('visitor_name'))->toBe('Idris');
+
+    // A different name typed this time is what this visit records, and the saved name is not overwritten.
+    expect($admitWith(['visitor_name' => 'Ade'])->json('visitor_name'))->toBe('Ade')
+        ->and(VisitorProfile::first()->name)->toBe('Idris');
+});
+
+it('gives an unnamed ID the first name a guard later types', function () {
+    $contents = ($this->idPhotoBytes)();
+    $admitWith = fn (array $extra = []) => ($this->asGuard)()->post(route('security.quick-entry.store'), [
+        'organization_id' => $this->hospital->id,
+        'id_photo' => UploadedFile::fake()->createWithContent('id.jpg', $contents),
+        ...$extra,
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    expect($admitWith()->json('visitor_name'))->toBe('Unknown Visitor');
+
+    $admitWith(['visitor_name' => 'Ngozi']);
+
+    expect(VisitorProfile::first()->name)->toBe('Ngozi');
+});
+
 it('keeps a tag issued by the gate device', function () {
     ($this->admit)($this->hospital, ['tag' => 'k7pq'])->assertOk()->assertJsonPath('tag', 'K7PQ');
 });
@@ -186,7 +218,6 @@ it('rejects a destination from another estate', function () {
     $otherOrg = EstateOrganization::factory()->create([
         'estate_id' => Estate::factory()->create()->id,
         'is_active' => true,
-        'quick_entry_enabled' => true,
         'access_policy' => 'unrestricted',
     ]);
 
@@ -263,4 +294,79 @@ it('explains when no visitor inside holds the tag', function () {
         ->postJson(route('security.quick-entry.checkout'), ['tag' => $tag])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['tag']);
+});
+
+it('lists only organizations that take walk-ins on the gate, with their status', function () {
+    EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Dormant Org',
+        'is_active' => false,
+        'access_policy' => 'unrestricted',
+    ]);
+    // Takes walk-ins during its hours but has none set yet: still listed, as closed.
+    ($this->makeOrg)('public_window', 'New Church');
+
+    $props = ($this->asGuard)()->get(route('security.verify'))->assertOk()->inertiaPage()['props'];
+    $byName = collect($props['organizations'])->keyBy('name');
+
+    expect($byName->keys()->sort()->values()->all())->toBe(['City Hospital', 'Grace Chapel', 'New Church'])
+        ->and($byName)->not->toHaveKey('Lounge Bar')
+        ->and($byName)->not->toHaveKey('Dormant Org')
+        ->and($byName['City Hospital']['is_open'])->toBeTrue()
+        ->and($byName['Grace Chapel']['is_open'])->toBeTrue()
+        ->and($byName['New Church']['is_open'])->toBeFalse()
+        ->and($byName['New Church']['status_label'])->toBe('No walk-in hours set');
+});
+
+it('leaves an organization off the gate list once it stops taking walk-ins', function () {
+    $names = fn () => collect(($this->asGuard)()->get(route('security.verify'))->inertiaPage()['props']['organizations'])->pluck('name');
+
+    expect($names())->toContain('City Hospital');
+
+    $this->hospital->update(['access_policy' => 'managed']);
+
+    expect($names())->not->toContain('City Hospital');
+});
+
+it('refuses walk-ins to an inactive organization', function () {
+    $this->hospital->update(['is_active' => false]);
+
+    ($this->admit)($this->hospital)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['organization_id']);
+});
+
+it('refuses walk-in admission when the estate has switched quick entry off', function () {
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->admit)($this->hospital)->assertStatus(422)->assertJsonValidationErrors('organization_id');
+
+    expect(AccessLog::withoutGlobalScopes()->where('meta->entry_type', 'quick_entry')->count())->toBe(0);
+});
+
+it('still lets a guard check out a tag after quick entry is switched off', function () {
+    $tag = ($this->admit)($this->hospital)->assertOk()->json('tag');
+
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->asGuard)()->postJson(route('security.quick-entry.checkout'), ['tag' => $tag])->assertOk();
+});
+
+it('requires a plate for a reported vehicle when the estate requires vehicle information', function () {
+    EstateSettings::forEstate($this->estate->id)->update(['require_vehicle_information' => true]);
+
+    ($this->admit)($this->hospital, ['vehicle_make' => 'Toyota'])
+        ->assertStatus(422)->assertJsonValidationErrors('vehicle_plate_number');
+
+    // On foot, nothing is required.
+    ($this->admit)($this->hospital)->assertOk();
+    ($this->admit)($this->hospital, ['vehicle_make' => 'Toyota', 'vehicle_plate_number' => 'ABC-123-XY'])->assertOk();
+});
+
+it('tells the gate how many walk-ins are still inside so tag check-out survives a switch-off', function () {
+    ($this->admit)($this->hospital)->assertOk();
+    EstateSettings::forEstate($this->estate->id)->update(['quick_entry_enabled' => false]);
+
+    ($this->asGuard)()->get(route('security.verify'))
+        ->assertInertia(fn ($page) => $page->where('quickEntryEnabled', false)->where('walkInsInside', 1));
 });

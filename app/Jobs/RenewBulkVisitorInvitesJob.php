@@ -7,6 +7,7 @@ use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRenewal;
+use App\Notifications\BulkInviteRenewalBlockedNotification;
 use App\Notifications\BulkInviteRenewedNotification;
 use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use Carbon\CarbonImmutable;
@@ -44,7 +45,13 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
         $bulkInvites = $query->get();
 
         foreach ($bulkInvites as $bulkInvite) {
-            $this->renewSingleInvite($bulkInvite);
+            // One broken group must not stop the rest from renewing tonight.
+            try {
+                $this->renewSingleInvite($bulkInvite);
+            } catch (\Throwable $e) {
+                report($e);
+                Log::error("RenewBulkVisitorInvitesJob: Bulk invite {$bulkInvite->id} failed to renew: {$e->getMessage()}");
+            }
         }
     }
 
@@ -61,18 +68,27 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
 
         // Subscription check
         if (! $organization->hasActiveSubscription()) {
+            $firstBlock = $bulkInvite->renewal_blocked_reason !== 'subscription_required';
+
             $bulkInvite->update([
                 'renewal_blocked_reason' => 'subscription_required',
             ]);
 
-            OrganizationBulkInviteRenewal::create([
-                'bulk_invite_id' => $bulkInvite->id,
-                'cycle_key' => "{$bulkInvite->id}:blocked:".now()->toDateString(),
-                'valid_from' => now()->toDateString(),
-                'valid_until' => now()->toDateString(),
-                'status' => 'blocked',
-                'blocked_reason' => 'subscription_required',
-            ]);
+            // A retry or manual run on the same day must not hit the unique cycle key.
+            OrganizationBulkInviteRenewal::firstOrCreate(
+                ['bulk_invite_id' => $bulkInvite->id, 'cycle_key' => "{$bulkInvite->id}:blocked:".now()->toDateString()],
+                [
+                    'valid_from' => now()->toDateString(),
+                    'valid_until' => now()->toDateString(),
+                    'status' => 'blocked',
+                    'blocked_reason' => 'subscription_required',
+                ],
+            );
+
+            // Tell the creator once per blockage, not every night.
+            if ($firstBlock) {
+                $bulkInvite->createdBy?->notify(new BulkInviteRenewalBlockedNotification($bulkInvite));
+            }
 
             Log::info("RenewBulkVisitorInvitesJob: Organization {$organization->id} has no active subscription. Blocked renewal for bulk invite {$bulkInvite->id}.");
 
@@ -86,9 +102,13 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
             return;
         }
 
-        // Determine cycle date window (starts day after current valid_until)
+        // The next cycle starts the day after the current one ends, but never in the past
+        // (a group that sat blocked would otherwise receive passes whose window already elapsed).
         $currentValidUntil = CarbonImmutable::instance($bulkInvite->valid_until);
         $nextValidFrom = $currentValidUntil->addDay()->startOfDay();
+        if ($nextValidFrom->isBefore(now()->startOfDay())) {
+            $nextValidFrom = CarbonImmutable::now()->startOfDay();
+        }
         $nextValidUntil = OrganizationBulkInviteValidityPolicy::defaultValidUntil($nextValidFrom);
         $cycleKey = "{$bulkInvite->id}:{$nextValidFrom->toDateString()}";
 

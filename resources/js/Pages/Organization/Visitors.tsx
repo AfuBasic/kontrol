@@ -1,10 +1,8 @@
-
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Search, Copy, Share2, Check, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone, ChevronRight, Plus } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import FilterChips from '@/Components/Organization/FilterChips';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import PassTimingPicker, { defaultPassTiming, passStart, type PassTiming } from '@/Components/Organization/PassTimingPicker';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
@@ -72,7 +70,6 @@ interface Props {
 export default function Visitors({ organization, membership, visitors, filters, durationOptions, durationConstraints }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
-    const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
     const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
@@ -122,7 +119,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/visitors', { search, status: status === 'all' ? undefined : status }, { preserveState: true, preserveScroll: true });
+        router.get('/org/visitors', { search: search || undefined }, { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
@@ -130,7 +127,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
             handleSearch();
         }, 300);
         return () => clearTimeout(debounce);
-    }, [search, status]);
+    }, [search]);
 
     const copyCodeOnly = async (pass: VisitorPass) => {
         if (copying) return;
@@ -287,7 +284,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
         <OrganizationLayout title="Access - Visitors" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - Visitors`} />
 
-            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
+            <div className="mx-auto flex max-w-[480px] flex-col gap-3.5 px-4 pt-1 pb-24">
                 <AccessHeader
                     activeTab="visitors"
                     primaryAction={
@@ -314,27 +311,9 @@ export default function Visitors({ organization, membership, visitors, filters, 
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Search visitors..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
-
-                    {/* Status Filters */}
-                    <FilterChips
-                        variant="status"
-                        value={status}
-                        onChange={(id) => {
-                            if (id === 'more') {
-                                // Normally opens a filter sheet, doing nothing for now to keep UI clean
-                            } else {
-                                setStatus(id);
-                            }
-                        }}
-                        options={[
-                            { id: 'all', label: 'All', count: status === 'all' ? visitors.total : undefined },
-                            { id: 'active', label: 'Active', count: undefined, color: 'mint' },
-                            { id: 'more', label: 'More' },
-                        ]}
-                    />
 
                     {/* Recent Visitors Header */}
                     <div className="flex items-center justify-between px-1 pt-2">
@@ -353,7 +332,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
                             </p>
                         </div>
                     ) : (
-                        <div className="mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                        <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
                             {visitors.data.map((pass, index) => {
                                 // Status styling mappings
                                 const statusMap = {
@@ -380,7 +359,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
 
                                             {/* Identity & Metadata */}
                                             <div className="min-w-0 flex-1 py-0.5">
-                                                <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{pass.visitor_name}</div>
+                                                <div className="truncate text-[15px] leading-tight font-bold text-slate-900">{pass.visitor_name}</div>
                                                 <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
                                                     <span className="capitalize">{pass.purpose}</span>
                                                     {' · '}

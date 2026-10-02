@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { Search, ChevronRight } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import AccessHeader from '@/Components/Organization/AccessHeader';
+import FilterChips from '@/Components/Organization/FilterChips';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
 interface Arrival {
@@ -9,6 +10,7 @@ interface Arrival {
     tag: string | null;
     visitor_name: string;
     admission_basis: string;
+    entry_type: 'access_code' | 'walk_in';
     vehicle_plate_number: string | null;
     vehicle_make: string | null;
     vehicle_model: string | null;
@@ -43,14 +45,24 @@ interface Props {
     filters: {
         search?: string;
         admission_basis?: string;
+        entry_type?: string;
     };
 }
 
 export default function OnSite({ organization, onSiteVisitors, metrics, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [entryType, setEntryType] = useState(filters.entry_type ?? 'all');
+
+    const visit = (nextType: string) =>
+        router.get(
+            '/org/on-site',
+            { search: search || undefined, entry_type: nextType === 'all' ? undefined : nextType },
+            { preserveState: true, preserveScroll: true },
+        );
+
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/on-site', { search: search || undefined }, { preserveState: true, preserveScroll: true });
+        visit(entryType);
     };
 
     useEffect(() => {
@@ -76,11 +88,8 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
         <OrganizationLayout title="Access - On-site" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - On-site Visitors`} />
 
-            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
-                <AccessHeader
-                    activeTab="on_site"
-                    activeCount={metrics.currently_inside ?? onSiteVisitors.length}
-                />
+            <div className="mx-auto flex max-w-[480px] flex-col gap-3.5 px-4 pt-1 pb-24">
+                <AccessHeader activeTab="on_site" activeCount={metrics.currently_inside ?? onSiteVisitors.length} />
 
                 {/* Directory with search, filters, and list */}
                 <div className="flex flex-col gap-3">
@@ -92,9 +101,23 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search on-site visitors..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
+
+                    <FilterChips
+                        variant="status"
+                        value={entryType}
+                        onChange={(id) => {
+                            setEntryType(id);
+                            visit(id);
+                        }}
+                        options={[
+                            { id: 'all', label: 'All' },
+                            { id: 'access_code', label: 'Access code' },
+                            { id: 'walk_in', label: 'Walk-in' },
+                        ]}
+                    />
 
                     {/* Section Header */}
                     <div className="flex items-center justify-between px-1 pt-2 pb-2">
@@ -107,10 +130,12 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
                     {displayVisitors.length === 0 ? (
                         <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
                             <p className="text-sm font-bold text-slate-900">No visitors currently on-site</p>
-                            <p className="mt-1 text-sm text-slate-500">{search ? `No active visitors matched "${search}".` : 'There are no active visitors on-site right now.'}</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {search ? `No active visitors matched "${search}".` : 'There are no active visitors on-site right now.'}
+                            </p>
                         </div>
                     ) : (
-                        <div className="mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                        <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
                             {displayVisitors.map((arrival, index) => {
                                 return (
                                     <div
@@ -127,10 +152,19 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
 
                                             {/* Identity */}
                                             <div className="min-w-0 flex-1 py-0.5">
-                                                <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{arrival.visitor_name}</div>
+                                                <div className="truncate text-[15px] leading-tight font-bold text-slate-900">
+                                                    {arrival.visitor_name}
+                                                </div>
                                                 <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
-                                                    <span className="text-emerald-600 font-semibold">On-site</span>
+                                                    <span className="font-semibold text-emerald-600">On-site</span>
                                                     {' · '}
+                                                    {arrival.entry_type === 'walk_in' ? (
+                                                        <>
+                                                            <span className="font-semibold text-amber-700">Walk-in</span>
+                                                            {arrival.tag ? ` ${arrival.tag}` : ''}
+                                                            {' · '}
+                                                        </>
+                                                    ) : null}
                                                     <span>{arrival.entry_point || 'Gate'}</span>
                                                     {arrival.vehicle_plate_number ? ` · ${arrival.vehicle_plate_number.toUpperCase()}` : ''}
                                                 </p>
@@ -142,7 +176,7 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
 
                                         {/* Right Column */}
                                         <div className="flex shrink-0 items-center justify-end">
-                                            <ChevronRight className="h-4 w-4 text-slate-300 ml-2" strokeWidth={2.5} />
+                                            <ChevronRight className="ml-2 h-4 w-4 text-slate-300" strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 );

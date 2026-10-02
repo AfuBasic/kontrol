@@ -34,6 +34,7 @@ interface PageProps {
     accessCodesEnabled?: boolean;
     visitorCheckoutEnabled?: boolean;
     quickEntryEnabled?: boolean;
+    walkInsInside?: number;
     requireVehicleInformation?: boolean;
     organizations?: Organization[];
     flash?: {
@@ -68,6 +69,7 @@ export default function SecurityVerify() {
         accessCodesEnabled = true,
         visitorCheckoutEnabled = true,
         quickEntryEnabled = true,
+        walkInsInside = 0,
         requireVehicleInformation = false,
         organizations = [],
     } = usePage<PageProps>().props;
@@ -627,7 +629,7 @@ export default function SecurityVerify() {
                 </AnimatePresence>
 
                 {/* Two gate modes: visitors with a pass, and walk-ins (tag in, same tag out) */}
-                {quickEntryEnabled && !result && !isScanning && !submitting && (
+                {(quickEntryEnabled || walkInsInside > 0) && !result && !isScanning && !submitting && (
                     <div className="mb-6 flex items-center justify-center">
                         <div className="grid w-full max-w-sm grid-cols-2 rounded-2xl bg-slate-100/90 p-1 dark:bg-slate-800/90" role="tablist">
                             {(
@@ -730,6 +732,7 @@ export default function SecurityVerify() {
                                 isOnline={isOnline}
                                 requireVehicleInformation={requireVehicleInformation}
                                 checkoutEnabled={visitorCheckoutEnabled}
+                                admissionOpen={quickEntryEnabled}
                             />
                         </motion.div>
                     ) : (

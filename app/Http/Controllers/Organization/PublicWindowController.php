@@ -9,6 +9,7 @@ use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,8 @@ class PublicWindowController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
+                // Why the organization cannot change its own policy, if it cannot.
+                'policy_lock' => $this->policyLock($organization),
                 'walk_in' => $organization->walkInStatus(),
             ],
             'membership' => [
@@ -52,6 +55,55 @@ class PublicWindowController extends Controller
             ],
             'windows' => $windows,
         ]);
+    }
+
+    public function updatePolicy(Request $request): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if ($this->policyLock($organization) !== null) {
+            throw ValidationException::withMessages([
+                'access_policy' => ['Hospitals and clinics always admit walk-ins; this cannot be changed.'],
+            ]);
+        }
+
+        // "Any time" is the estate's decision: an organization may only choose between the two below,
+        // including one that the estate has set to "any time" (it can step down, never back up).
+        $validated = $request->validate([
+            'access_policy' => ['required', 'string', 'in:managed,public_window'],
+        ], [
+            'access_policy.in' => 'Only the estate admin can allow walk-ins at any time.',
+        ]);
+
+        $previous = $organization->access_policy;
+
+        if ($previous !== $validated['access_policy']) {
+            $organization->update(['access_policy' => $validated['access_policy']]);
+
+            activity('access')
+                ->causedBy($request->user())
+                ->performedOn($organization)
+                ->withProperties(['from' => $previous, 'to' => $validated['access_policy']])
+                ->log("Walk-in policy for {$organization->name} changed from {$previous} to {$validated['access_policy']}");
+        }
+
+        return back()->with('success', 'Walk-in policy updated.');
+    }
+
+    /**
+     * Why this organization cannot change its own walk-in policy, or null when it can.
+     *
+     * Hospitals are never blocked, so theirs is fixed at "any time".
+     */
+    private function policyLock(EstateOrganization $organization): ?string
+    {
+        return $organization->type === 'hospital' ? 'hospital' : null;
     }
 
     public function store(Request $request): RedirectResponse

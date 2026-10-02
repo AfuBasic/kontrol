@@ -66,7 +66,6 @@ it('allows estate admin to create a new organization with a walk-in policy', fun
             'name' => 'St. Mary High School',
             'type' => 'school',
             'access_policy' => 'public_window',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
 
@@ -78,7 +77,6 @@ it('allows estate admin to create a new organization with a walk-in policy', fun
         'name' => 'St. Mary High School',
         'type' => 'school',
         'access_policy' => 'public_window',
-        'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
 });
@@ -88,7 +86,6 @@ it('allows estate admin to update an existing organization', function () {
         'estate_id' => $this->estate->id,
         'name' => 'Old Name',
         'type' => 'business',
-        'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
 
@@ -97,7 +94,6 @@ it('allows estate admin to update an existing organization', function () {
         ->put(route('admin.organizations.update', $org->id), [
             'name' => 'Updated Community Hospital',
             'type' => 'hospital',
-            'quick_entry_enabled' => false,
             'is_active' => false,
         ]);
 
@@ -107,7 +103,6 @@ it('allows estate admin to update an existing organization', function () {
     $org->refresh();
     expect($org->name)->toBe('Updated Community Hospital')
         ->and($org->type)->toBe('hospital')
-        ->and($org->quick_entry_enabled)->toBeFalse()
         ->and($org->is_active)->toBeFalse();
 });
 
@@ -154,7 +149,6 @@ it('allows estate admin to create an organization with an initial administrator'
             'type' => 'school',
             'admin_email' => 'sarah.johnson@greenwood.edu',
             'admin_phone' => '+2348012345678',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
 
@@ -236,7 +230,6 @@ it('allows an already existing resident user to be assigned as organization admi
             'type' => 'facility',
             'admin_email' => 'resident.john@example.com',
             'admin_phone' => '+2348000000001',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
 
@@ -272,7 +265,6 @@ it('sends OrganizationInvitationMail when creating an organization with an admin
             'name' => 'Apex Healthcare',
             'type' => 'hospital',
             'admin_email' => 'dr.smith@apex.com',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
 
@@ -300,7 +292,6 @@ it('sends OrganizationInvitationMail with role added info when admin is an exist
             'name' => 'Apex Clinic',
             'type' => 'hospital',
             'admin_email' => 'existing.doctor@apex.com',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ]);
 

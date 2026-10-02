@@ -35,9 +35,10 @@ class VerifyController extends Controller
         $gateName = $this->checkpointClaim->getCurrentCheckpoint($estate->id, $user);
         $settings = EstateSettings::forEstate($estate->id);
 
+        // Only organizations that take walk-ins at all: a "no walk-ins" destination can never be chosen.
         $organizations = $estate->organizations()
             ->where('is_active', true)
-            ->where('quick_entry_enabled', true)
+            ->where('access_policy', '!=', 'managed')
             ->select(['id', 'name', 'type', 'access_policy'])
             ->orderBy('name')
             ->get()
@@ -62,6 +63,13 @@ class VerifyController extends Controller
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
             'quickEntryEnabled' => (bool) $settings->quick_entry_enabled,
+            // Tags already issued must stay checkable-out even after the estate switches walk-ins off.
+            'walkInsInside' => AccessLog::withoutGlobalScopes()
+                ->where('estate_id', $estate->id)
+                ->whereNull('access_code_id')
+                ->where('meta->entry_type', 'quick_entry')
+                ->whereNull('checked_out_at')
+                ->count(),
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
             'organizations' => $organizations,
         ]);
@@ -104,7 +112,7 @@ class VerifyController extends Controller
                 $result['access_log_id'] = $log->id;
                 $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
                 $result['duration_minutes'] = $log->checked_out_at && $log->verified_at
-                    ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                    ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
                     : 0;
             } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
                 // The visitor is already inside: the guard confirms checkout via decision(),
@@ -240,7 +248,7 @@ class VerifyController extends Controller
                     'entry_point' => $log->entry_point ?? 'Main Gate',
                     'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
                     'duration_minutes' => $log->checked_out_at && $log->verified_at
-                        ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                        ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
                         : 0,
                 ]);
             }
@@ -290,7 +298,8 @@ class VerifyController extends Controller
             });
 
             $organizations = $estate->organizations()
-                ->quickEntryEnabled()
+                ->where('is_active', true)
+                ->where('access_policy', '!=', 'managed')
                 ->select(['id', 'name', 'type', 'access_policy'])
                 ->orderBy('name')
                 ->get();

@@ -129,8 +129,24 @@ export default function VisitorIndex({
     };
 
     const handleExportCSV = () => {
-        const headers = ['Visitor', 'Phone', 'Host', 'Purpose', 'Issued', 'Verified', 'Verifier', 'Checked Out', 'Duration (min)', 'Gate', 'Vehicle'];
+        const headers = [
+            'Entry type',
+            'Tag / Code',
+            'Visitor',
+            'Phone',
+            'Host / Destination',
+            'Purpose',
+            'Issued',
+            'Verified',
+            'Verifier',
+            'Checked Out',
+            'Duration (min)',
+            'Gate',
+            'Vehicle',
+        ];
         const rows = logs.data.map((log) => [
+            log.entry_type === 'walk_in' ? 'Walk-in' : 'Access code',
+            (log.entry_type === 'walk_in' ? log.tag : log.code) ?? '',
             log.visitor.name,
             log.visitor.phone ?? '',
             log.host.name,

@@ -1,5 +1,11 @@
+export type EntryType = 'access_code' | 'walk_in';
+
 export type VisitorRecord = {
     id: number;
+    /** How the visitor got in: with an access code, or as a walk-in admitted with a tag. */
+    entry_type: EntryType;
+    /** The walk-in's entry/exit tag (null for access-code entries). */
+    tag: string | null;
     code: string | null;
     visitor: {
         name: string;
@@ -15,7 +21,7 @@ export type VisitorRecord = {
     purpose: string | null;
     issued_at: string | null;
     issued_at_iso: string | null;
-    issued_by: string;
+    issued_by: string | null;
     verified_at: string;
     verified_at_iso: string;
     verified_at_human: string;
@@ -61,6 +67,7 @@ export type VisitorFilters = {
     vehicle_plate?: string;
     host_id?: string | number;
     status?: string;
+    entry_type?: EntryType | string;
     gate?: string;
     verifier_id?: string | number;
     sort?: SortField | string;
@@ -69,7 +76,9 @@ export type VisitorFilters = {
 };
 
 export function hasActiveVisitorFilters(filters: VisitorFilters): boolean {
-    return Boolean(filters.search || filters.date || filters.vehicle_plate || filters.host_id || filters.status || filters.verifier_id);
+    return Boolean(
+        filters.search || filters.date || filters.vehicle_plate || filters.host_id || filters.status || filters.entry_type || filters.verifier_id,
+    );
 }
 
 /**

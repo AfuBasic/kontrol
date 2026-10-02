@@ -23,7 +23,6 @@ class EstateOrganizationFactory extends Factory
             'name' => fake()->company(),
             'type' => fake()->randomElement(['school', 'church', 'hospital', 'business', 'other']),
             'access_policy' => 'managed',
-            'quick_entry_enabled' => true,
             'is_active' => true,
         ];
     }

@@ -15,14 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @extends Model<EstateOrganization>
  *
  * @method static \Illuminate\Database\Eloquent\Builder|EstateOrganization active()
- * @method static \Illuminate\Database\Eloquent\Builder|EstateOrganization quickEntryEnabled()
  *
  * @property int $id
  * @property int $estate_id
  * @property string $name
  * @property string $type
  * @property bool $is_active
- * @property bool $quick_entry_enabled
  * @property string $access_policy
  * @property string|null $notes
  * @property CarbonImmutable $created_at
@@ -45,7 +43,6 @@ class EstateOrganization extends Model
         'name',
         'type',
         'is_active',
-        'quick_entry_enabled',
         'access_policy',
         'notes',
     ];
@@ -54,7 +51,6 @@ class EstateOrganization extends Model
     {
         return [
             'is_active' => 'boolean',
-            'quick_entry_enabled' => 'boolean',
         ];
     }
 
@@ -106,11 +102,6 @@ class EstateOrganization extends Model
     public function scopeActive($query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    public function scopeQuickEntryEnabled($query): Builder
-    {
-        return $query->where('quick_entry_enabled', true);
     }
 
     /**

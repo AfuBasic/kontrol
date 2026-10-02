@@ -294,3 +294,128 @@ it('returns an empty currently inside list when checkout is disabled', function 
             ->has('currentlyInsideList')
         );
 });
+
+describe('walk-ins and access codes in the visitor log', function () {
+    beforeEach(function () {
+        $this->resident = User::factory()->create(['name' => 'Host Resident']);
+        $this->resident->assignRole('resident');
+        $this->estate->users()->attach($this->resident->id, ['status' => 'accepted']);
+
+        $this->security = User::factory()->create(['name' => 'Gate Officer']);
+        $this->security->assignRole('security');
+        $this->estate->users()->attach($this->security->id, ['status' => 'accepted']);
+
+        $code = AccessCode::create([
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'code' => 'CODE0001',
+            'type' => 'single_use',
+            'visitor_name' => 'Pass Holder',
+            'status' => AccessCodeStatus::Active,
+            'expires_at' => now()->addHours(2),
+        ]);
+
+        $this->codeLog = AccessLog::create([
+            'estate_id' => $this->estate->id,
+            'access_code_id' => $code->id,
+            'verified_by' => $this->security->id,
+            'verified_at' => now()->subHours(2),
+        ]);
+
+        $this->walkInLog = AccessLog::create([
+            'estate_id' => $this->estate->id,
+            'access_code_id' => null,
+            'verified_by' => $this->security->id,
+            'verified_at' => now()->subHour(),
+            'meta' => [
+                'entry_type' => 'quick_entry',
+                'tag' => 'K7PQ',
+                'visitor_name' => 'Dele Okafor',
+                'organization_name' => 'OSBA',
+            ],
+        ]);
+    });
+
+    it('labels each entry as a walk-in or an access code and shows the walk-in as its own record', function () {
+        $logs = collect($this->actingAs($this->admin)->get(route('admin.visitors.index'))->inertiaPage()['props']['logs']['data'])->keyBy('id');
+
+        expect($logs[$this->walkInLog->id])->toMatchArray([
+            'entry_type' => 'walk_in',
+            'tag' => 'K7PQ',
+            'code' => null,
+            'issued_by' => null,
+            'visitor' => ['name' => 'Dele Okafor', 'phone' => null, 'type' => 'walk_in'],
+        ])->and($logs[$this->walkInLog->id]['host']['name'])->toBe('OSBA')
+            ->and($logs[$this->codeLog->id])->toMatchArray(['entry_type' => 'access_code', 'tag' => null, 'code' => 'CODE0001'])
+            ->and($logs[$this->codeLog->id]['host']['name'])->toBe('Host Resident');
+    });
+
+    it('filters by entry type', function () {
+        $ids = fn (?string $type) => collect(
+            $this->actingAs($this->admin)->get(route('admin.visitors.index', array_filter(['entry_type' => $type])))->inertiaPage()['props']['logs']['data']
+        )->pluck('id')->all();
+
+        expect($ids('walk_in'))->toBe([$this->walkInLog->id])
+            ->and($ids('access_code'))->toBe([$this->codeLog->id])
+            ->and($ids(null))->toEqualCanonicalizing([$this->walkInLog->id, $this->codeLog->id])
+            ->and($ids('anything_else'))->toEqualCanonicalizing([$this->walkInLog->id, $this->codeLog->id]);
+    });
+
+    it('finds walk-ins by tag, name, or destination', function () {
+        $found = fn (string $search) => collect(
+            $this->actingAs($this->admin)->get(route('admin.visitors.index', ['search' => $search]))->inertiaPage()['props']['logs']['data']
+        )->pluck('id')->all();
+
+        expect($found('k7pq'))->toBe([$this->walkInLog->id])
+            ->and($found('Dele'))->toBe([$this->walkInLog->id])
+            ->and($found('OSBA'))->toBe([$this->walkInLog->id])
+            ->and($found('CODE0001'))->toBe([$this->codeLog->id]);
+    });
+
+    it('keeps walk-in and access-code filters combinable with stay status', function () {
+        EstateSettings::forEstate($this->estate->id)->update(['visitor_checkout_enabled' => true]);
+        $this->walkInLog->update(['checked_out_at' => now()->subMinutes(5), 'checked_out_by' => $this->security->id]);
+
+        $ids = fn (array $query) => collect(
+            $this->actingAs($this->admin)->get(route('admin.visitors.index', $query))->inertiaPage()['props']['logs']['data']
+        )->pluck('id')->all();
+
+        expect($ids(['entry_type' => 'walk_in', 'status' => 'checked_out']))->toBe([$this->walkInLog->id])
+            ->and($ids(['entry_type' => 'walk_in', 'status' => 'inside']))->toBe([])
+            ->and($ids(['entry_type' => 'access_code', 'status' => 'inside']))->toBe([$this->codeLog->id]);
+    });
+
+    it('lists walk-ins inside alongside access-code visitors', function () {
+        EstateSettings::forEstate($this->estate->id)->update(['visitor_checkout_enabled' => true]);
+
+        $inside = collect($this->actingAs($this->admin)->get(route('admin.visitors.index'))->inertiaPage()['props']['currentlyInsideList']);
+
+        expect($inside->pluck('entry_type')->sort()->values()->all())->toBe(['access_code', 'walk_in'])
+            ->and($inside->firstWhere('entry_type', 'walk_in')['tag'])->toBe('K7PQ');
+    });
+});
+
+it('reports the real stay for a visitor who has checked out, and elapsed time for one still inside', function () {
+    $this->travelTo(now()->setTime(13, 0));
+    $guard = User::factory()->create();
+
+    $base = ['estate_id' => $this->estate->id, 'verified_by' => $guard->id];
+
+    // Admitted 12:02, left 13:18 (the screenshot case): 76 minutes.
+    AccessLog::create($base + [
+        'verified_at' => now()->setTime(12, 2),
+        'checked_out_at' => now()->setTime(13, 18),
+        'meta' => ['entry_type' => 'quick_entry', 'tag' => 'AB12', 'visitor_name' => 'Gone Visitor'],
+    ]);
+    AccessLog::create($base + [
+        'verified_at' => now()->subMinutes(45),
+        'meta' => ['entry_type' => 'quick_entry', 'tag' => 'CD34', 'visitor_name' => 'Still Inside'],
+    ]);
+
+    $this->actingAs($this->admin)->get(route('admin.visitors.index'))
+        ->assertInertia(fn ($page) => $page->where('logs.data', function ($rows) {
+            $byName = collect($rows)->keyBy(fn ($r) => $r['visitor']['name']);
+
+            return $byName['Gone Visitor']['duration_minutes'] === 76 && $byName['Still Inside']['duration_minutes'] === 45;
+        }));
+});

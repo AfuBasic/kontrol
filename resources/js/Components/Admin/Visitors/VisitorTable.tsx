@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Eye } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import VisitEventIcon from './VisitEventIcon';
+import EntryTypeBadge from './EntryTypeBadge';
 import { formatStayDuration, hasActiveVisitorFilters, type SortDirection, type SortField, type VisitorFilters, type VisitorRecord } from './types';
 
 type Props = {
@@ -62,7 +63,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5">
                                         <p className="truncate text-sm font-bold text-gray-900">{log.visitor.name}</p>
-                                        {log.code && <span className="font-mono text-[10px] font-bold text-gray-400">#{log.code}</span>}
+                                        <EntryTypeBadge record={log} />
                                     </div>
 
                                     <p className="mt-0.5 text-xs font-medium text-gray-600">
@@ -128,6 +129,9 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     </td>
                                     <td className="px-4 py-3">
                                         <p className="font-semibold text-gray-900">{log.visitor.name}</p>
+                                        <div className="mt-0.5">
+                                            <EntryTypeBadge record={log} variant="inline" />
+                                        </div>
                                         {log.visitor.phone ? (
                                             <p className="mt-0.5 text-[11px] font-medium text-gray-400">{log.visitor.phone}</p>
                                         ) : null}

@@ -20,24 +20,31 @@ type ChainStep = {
  * Vertical chain of custody for a single visit record.
  */
 export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
-    const steps: ChainStep[] = [
-        {
+    const isWalkIn = record.entry_type === 'walk_in';
+    const gate = record.entry_point || record.gate || 'Gate';
+
+    const steps: ChainStep[] = [];
+
+    // A walk-in has no access code and no issuer: the guard admits them and issues a tag on the spot.
+    if (!isWalkIn) {
+        steps.push({
             key: 'issued',
             title: 'Access code issued',
             actor: record.issued_by ? `by ${record.issued_by}` : null,
             timestamp: record.issued_at,
             done: Boolean(record.issued_at),
             kind: 'issued',
-        },
-        {
-            key: 'verified',
-            title: `Verified at ${record.entry_point || record.gate || 'Gate'}`,
-            actor: record.verifier_name ? `by ${record.verifier_name}` : null,
-            timestamp: record.verified_at,
-            done: true,
-            kind: 'check_in',
-        },
-    ];
+        });
+    }
+
+    steps.push({
+        key: 'verified',
+        title: isWalkIn ? `Admitted at ${gate}${record.tag ? ` · tag ${record.tag}` : ''}` : `Verified at ${gate}`,
+        actor: record.verifier_name ? `by ${record.verifier_name}` : null,
+        timestamp: record.verified_at,
+        done: true,
+        kind: 'check_in',
+    });
 
     if (checkoutEnabled) {
         if (record.checked_out_at) {

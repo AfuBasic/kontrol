@@ -55,9 +55,7 @@ export default function DestinationPicker({ destinations, selected, onSelect }: 
         );
         const byName = (a: WalkInDestination, b: WalkInDestination) => a.name.localeCompare(b.name);
 
-        const recent = needle
-            ? []
-            : recentIds.map((id) => matches.find((d) => d.id === id)).filter((d): d is WalkInDestination => !!d && d.is_open);
+        const recent = needle ? [] : recentIds.map((id) => matches.find((d) => d.id === id)).filter((d): d is WalkInDestination => !!d && d.is_open);
         const recentSet = new Set(recent.map((d) => d.id));
 
         return [
@@ -133,7 +131,9 @@ export default function DestinationPicker({ destinations, selected, onSelect }: 
 
                     {sections.length === 0 ? (
                         <p className="py-8 text-center text-sm text-slate-500">
-                            {destinations.length === 0 ? 'No businesses take walk-ins in this estate yet.' : `Nothing matches “${query.trim()}”.`}
+                            {destinations.length === 0
+                                ? 'No businesses take walk-ins in this estate yet.'
+                                : `Nothing matches “${query.trim()}”. It may not accept walk-ins.`}
                         </p>
                     ) : (
                         sections.map((section) => (
