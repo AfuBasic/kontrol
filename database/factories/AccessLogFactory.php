@@ -5,10 +5,7 @@ namespace Database\Factories;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\Estate;
-use App\Models\EstateOrganization;
 use App\Models\User;
-use App\Models\VisitorProfile;
-use App\Models\Zone;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
