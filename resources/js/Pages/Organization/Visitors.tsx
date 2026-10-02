@@ -35,6 +35,8 @@ interface VisitorPass {
     purpose: string;
     type: string;
     status: 'active' | 'used' | 'revoked' | 'expired';
+    /** What is true right now: the stored status stays "active" after the window passes. */
+    display_status?: 'active' | 'used' | 'revoked' | 'expired';
     starts_at: string;
     expires_at: string;
     created_at?: string;
@@ -341,7 +343,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
                                     revoked: { label: 'Revoked', color: 'text-rose-600 font-semibold', bg: 'bg-rose-100' },
                                     expired: { label: 'Expired', color: 'text-slate-600 font-semibold', bg: 'bg-slate-100' },
                                 };
-                                const s = statusMap[pass.status] || statusMap.active;
+                                const s = statusMap[pass.display_status ?? pass.status] || statusMap.active;
 
                                 return (
                                     <div
@@ -443,7 +445,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
                                 </div>
 
                                 {/* Extend Pass Button (for active passes) */}
-                                {selectedPass.status === 'active' && selectedPass.type !== 'long_lived' && (
+                                {(selectedPass.display_status ?? selectedPass.status) === 'active' && selectedPass.type !== 'long_lived' && (
                                     <button
                                         type="button"
                                         onClick={() => setIsExtendModalOpen(true)}
@@ -455,7 +457,7 @@ export default function Visitors({ organization, membership, visitors, filters, 
                                 )}
 
                                 {/* Revoke Action */}
-                                {membership.is_admin && selectedPass.status === 'active' && (
+                                {membership.is_admin && (selectedPass.display_status ?? selectedPass.status) === 'active' && (
                                     <div>
                                         <button
                                             type="button"
