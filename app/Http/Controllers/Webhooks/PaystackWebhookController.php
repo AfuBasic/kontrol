@@ -47,7 +47,7 @@ class PaystackWebhookController extends Controller
 
                         // The signature above proves Paystack sent this. The settler locks the payment and credits
                         // the charge exactly once, however many times this webhook (or the status page) fires.
-                        app(CollectionPaymentSettler::class)->settle($reference);
+                        app(CollectionPaymentSettler::class)->settle($reference, isset($data['amount']) ? (int) $data['amount'] : null);
                     } else {
                         // Existing invoice logic
                         // Strip the -AUTO-XXXX-XX-XX suffix if it exists
