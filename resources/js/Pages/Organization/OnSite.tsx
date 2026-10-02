@@ -88,11 +88,8 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
         <OrganizationLayout title="Access - On-site" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - On-site Visitors`} />
 
-            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
-                <AccessHeader
-                    activeTab="on_site"
-                    activeCount={metrics.currently_inside ?? onSiteVisitors.length}
-                />
+            <div className="mx-auto flex max-w-[480px] flex-col gap-3.5 px-4 pt-1 pb-24">
+                <AccessHeader activeTab="on_site" activeCount={metrics.currently_inside ?? onSiteVisitors.length} />
 
                 {/* Directory with search, filters, and list */}
                 <div className="flex flex-col gap-3">
@@ -104,11 +101,11 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search on-site visitors..."
-                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
-<FilterChips
+                    <FilterChips
                         variant="status"
                         value={entryType}
                         onChange={(id) => {
@@ -133,10 +130,12 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
                     {displayVisitors.length === 0 ? (
                         <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
                             <p className="text-sm font-bold text-slate-900">No visitors currently on-site</p>
-                            <p className="mt-1 text-sm text-slate-500">{search ? `No active visitors matched "${search}".` : 'There are no active visitors on-site right now.'}</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {search ? `No active visitors matched "${search}".` : 'There are no active visitors on-site right now.'}
+                            </p>
                         </div>
                     ) : (
-                        <div className="mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                        <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
                             {displayVisitors.map((arrival, index) => {
                                 return (
                                     <div
@@ -153,9 +152,11 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
 
                                             {/* Identity */}
                                             <div className="min-w-0 flex-1 py-0.5">
-                                                <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{arrival.visitor_name}</div>
+                                                <div className="truncate text-[15px] leading-tight font-bold text-slate-900">
+                                                    {arrival.visitor_name}
+                                                </div>
                                                 <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
-                                                    <span className="text-emerald-600 font-semibold">On-site</span>
+                                                    <span className="font-semibold text-emerald-600">On-site</span>
                                                     {' · '}
                                                     {arrival.entry_type === 'walk_in' ? (
                                                         <>
@@ -175,7 +176,7 @@ export default function OnSite({ organization, onSiteVisitors, metrics, filters 
 
                                         {/* Right Column */}
                                         <div className="flex shrink-0 items-center justify-end">
-                                            <ChevronRight className="h-4 w-4 text-slate-300 ml-2" strokeWidth={2.5} />
+                                            <ChevronRight className="ml-2 h-4 w-4 text-slate-300" strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 );
