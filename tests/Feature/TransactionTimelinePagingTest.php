@@ -96,5 +96,5 @@ it('serves the next page over JSON for infinite scroll and ignores a malformed c
 it('reports how many payments were received today for the summary line', function () {
     $today = app(TransactionOverviewService::class)->todaySummary($this->estate);
 
-    expect($today)->toHaveKeys(['payments_today', 'refunds_today']);
+    expect($today)->toHaveKeys(['payments_today', 'failed_today'])->and($today)->not->toHaveKey('refunds_today');
 });
