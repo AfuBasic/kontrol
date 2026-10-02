@@ -8,7 +8,6 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateTransactionAdjustmentRequest;
-use App\Http\Requests\Admin\IssueRefundRequest;
 use App\Http\Requests\Admin\RecordOfflinePaymentRequest;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
@@ -174,7 +173,6 @@ class TransactionController extends Controller
             ],
             'permissions' => [
                 'export' => Gate::allows('transactions.export'),
-                'refund' => Gate::allows('transactions.refund'),
                 'adjust' => Gate::allows('transactions.adjust'),
                 'record_offline' => Gate::allows('transactions.record_offline_payment'),
                 'view_receipts' => Gate::allows('transactions.view_receipts'),
@@ -214,21 +212,6 @@ class TransactionController extends Controller
         ]);
 
         return back()->with('success', 'Offline payment recorded successfully.');
-    }
-
-    public function issueRefund(IssueRefundRequest $request, EstateTransaction $transaction): RedirectResponse
-    {
-        $this->authorize('transactions.refund');
-        $this->authorizeTransaction($transaction);
-
-        $this->ledgerService->issueRefund(
-            $transaction,
-            (int) $request->validated('amount'),
-            $request->validated('reason'),
-            auth()->user(),
-        );
-
-        return back()->with('success', 'Refund issued successfully.');
     }
 
     public function createAdjustment(CreateTransactionAdjustmentRequest $request, EstateTransaction $transaction): RedirectResponse
