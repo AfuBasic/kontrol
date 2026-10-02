@@ -6,10 +6,8 @@ import {
     Calendar,
     Check,
     ChevronRight,
-    Clock,
     Copy,
     EyeOff,
-    History,
     Loader2,
     MapPin,
     Plus,
@@ -17,7 +15,6 @@ import {
     Share2,
     Shield,
     ShieldCheck,
-    UserCircle,
     UserPlus,
     Users,
     Trash2,
@@ -66,16 +63,6 @@ interface MetricProps {
     today_entries: number;
 }
 
-interface ActivityItem {
-    id: number;
-    name: string;
-    category: string;
-    gate: string;
-    time_human: string;
-    type: 'arrival' | 'checkout';
-    is_active: boolean;
-}
-
 interface Props {
     organization: {
         id: number;
@@ -98,7 +85,6 @@ interface Props {
     };
     total_access_members?: number;
     metrics?: MetricProps;
-    recent_activity?: ActivityItem[];
 }
 
 const initialsFor = (name: string) => {
@@ -126,7 +112,7 @@ const getAvatarColor = (name: string) => {
     return colors[Math.abs(hash) % colors.length];
 };
 
-export default function AccessList({ organization, membership, members, filters, total_access_members = 0, metrics, recent_activity = [] }: Props) {
+export default function AccessList({ organization, membership, members, filters, total_access_members = 0, metrics }: Props) {
     const page = usePage();
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
@@ -140,7 +126,7 @@ export default function AccessList({ organization, membership, members, filters,
     const cardRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const [category, setCategory] = useState(filters.category ?? 'all');
-    const [status, setStatus] = useState(filters.status ?? 'all');
+    const [status] = useState(filters.status ?? 'all');
 
     type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | 'delete' | null;
     const [confirmAction, setConfirmAction] = useState<ConfirmActionType>(null);
@@ -183,12 +169,6 @@ export default function AccessList({ organization, membership, members, filters,
         if (member.is_valid_now) return { label: 'Active', color: 'emerald' };
         if (member.valid_until && new Date(member.valid_until) < new Date()) return { label: 'Expired', color: 'slate' };
         return { label: 'Pending', color: 'amber' };
-    };
-
-    const getActivityStatus = (item: ActivityItem) => {
-        if (item.type === 'checkout') return { label: 'Checked out', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
-        if (!item.is_active) return { label: 'Departed', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
-        return { label: 'Inside', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' };
     };
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
@@ -342,82 +322,6 @@ export default function AccessList({ organization, membership, members, filters,
                     <AccessTabs activeTab="people" activeCount={currentlyHere} showOnSiteTab={organization.visitor_checkout_enabled} />
                 </div>
 
-                {/* QUICK ACTIONS */}
-                <div className="flex flex-col">
-                    <h2 className="mb-2.5 px-1 text-[14px] font-bold tracking-tight text-[#071f4b]">Quick actions</h2>
-                    <div className="grid grid-cols-2 gap-3.5">
-                        <button
-                            type="button"
-                            onClick={gated(() => setAddPersonModalOpen(true))}
-                            className="soft-card group flex flex-col p-4 text-left transition-all active:scale-[0.98]"
-                        >
-                            <div className="icon-tile-blue mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
-                                <UserPlus className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="mt-auto flex w-full items-end justify-between">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">Add person</span>
-                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Recurring access</span>
-                                </div>
-                                <ChevronRight
-                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
-                                    strokeWidth={2.5}
-                                />
-                            </div>
-                        </button>
-
-                        <Link href="/org/visitors" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
-                            <div className="icon-tile-mint mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
-                                <UserCircle className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="mt-auto flex w-full items-end justify-between">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">Invite visitor</span>
-                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Create a pass</span>
-                                </div>
-                                <ChevronRight
-                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
-                                    strokeWidth={2.5}
-                                />
-                            </div>
-                        </Link>
-
-                        {organization.visitor_checkout_enabled && (
-                            <Link href="/org/on-site" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
-                                <div className="icon-tile-lavender mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
-                                    <Clock className="h-5 w-5" strokeWidth={2.2} />
-                                </div>
-                                <div className="mt-auto flex w-full items-end justify-between">
-                                    <div className="flex flex-col">
-                                        <span className="text-[14px] leading-tight font-bold text-[#071f4b]">On-site</span>
-                                        <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">See who's present</span>
-                                    </div>
-                                    <ChevronRight
-                                        className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
-                                        strokeWidth={2.5}
-                                    />
-                                </div>
-                            </Link>
-                        )}
-
-                        <Link href="/org/on-site/history" className="soft-card group flex flex-col p-4 transition-all active:scale-[0.98]">
-                            <div className="icon-tile-amber mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]">
-                                <History className="h-5 w-5" strokeWidth={2.2} />
-                            </div>
-                            <div className="mt-auto flex w-full items-end justify-between">
-                                <div className="flex flex-col">
-                                    <span className="text-[14px] leading-tight font-bold text-[#071f4b]">History</span>
-                                    <span className="mt-1 text-[11px] leading-tight font-medium text-slate-500">Past activity</span>
-                                </div>
-                                <ChevronRight
-                                    className="mb-0.5 h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-400"
-                                    strokeWidth={2.5}
-                                />
-                            </div>
-                        </Link>
-                    </div>
-                </div>
-
                 {/* TODAY MODULE */}
                 {metrics && (
                     <div className="soft-card flex flex-col p-3.5">
@@ -467,58 +371,6 @@ export default function AccessList({ organization, membership, members, filters,
                         </div>
                     </div>
                 )}
-
-                {/* RECENT ACTIVITY */}
-                <div className="flex flex-col">
-                    <div className="mb-2.5 flex items-center justify-between px-0.5">
-                        <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
-                        <Link
-                            href="/org/on-site/history"
-                            className="flex items-center text-[11px] font-semibold text-slate-500 transition hover:text-[#1a5dbf]"
-                        >
-                            View all <ChevronRight className="ml-0.5 h-3 w-3" />
-                        </Link>
-                    </div>
-
-                    {recent_activity.length === 0 ? (
-                        <p className="px-1 py-3 text-[12px] font-medium text-slate-400">No movement yet today</p>
-                    ) : (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_28px_rgba(28,65,115,0.07)]">
-                            {recent_activity.slice(0, 5).map((item, index) => {
-                                const actStatus = getActivityStatus(item);
-                                return (
-                                    <div
-                                        key={item.id}
-                                        className={`flex items-center gap-3 px-3.5 py-3 transition hover:bg-slate-50 ${index !== Math.min(recent_activity.length, 5) - 1 ? 'border-b border-slate-100' : ''}`}
-                                    >
-                                        <div
-                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}
-                                        >
-                                            {initialsFor(item.name)}
-                                        </div>
-                                        <div className="flex min-w-0 flex-1 flex-col">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="truncate text-[13px] font-bold text-[#071f4b]">{item.name}</span>
-                                                <div
-                                                    className={`flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-px text-[8.5px] font-bold tracking-wide uppercase ${actStatus.badge}`}
-                                                >
-                                                    <span className={`h-1 w-1 rounded-full ${actStatus.dot}`} />
-                                                    {actStatus.label}
-                                                </div>
-                                            </div>
-                                            <span className="mt-0.5 text-[11px] font-medium text-slate-400 capitalize">
-                                                {item.category} · {item.gate}
-                                            </span>
-                                        </div>
-                                        <div className="flex shrink-0 flex-col items-end gap-0.5">
-                                            <span className="text-[11px] font-medium text-slate-400">{item.time_human}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
 
                 {/* PEOPLE DIRECTORY */}
                 <div className="flex flex-col gap-3">
