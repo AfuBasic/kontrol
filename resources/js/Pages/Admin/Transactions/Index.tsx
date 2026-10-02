@@ -1,4 +1,4 @@
-import { Deferred, Head } from '@inertiajs/react';
+import { Deferred, Head, router } from '@inertiajs/react';
 import { Download, FileText, Plus, Activity, Table, Shield, Landmark } from 'lucide-react';
 import { type ReactNode, useState, useMemo } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -6,6 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import { format, parseISO } from 'date-fns';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import AttentionStrip, { type AttentionData, type AttentionKind } from '@/Components/Admin/Transactions/AttentionStrip';
 import ActivityFeed, { type ActivityPage } from '@/Components/Admin/Transactions/ActivityFeed';
 import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
@@ -66,6 +67,7 @@ interface Props {
         failed_today: number;
     };
     activity?: ActivityPage;
+    attention?: AttentionData;
     charts?: Record<string, unknown> | null;
     audits?: {
         data: AuditLogEntry[];
@@ -108,6 +110,7 @@ const fmtCompact = (n: number) => {
 export default function TransactionsIndex({
     todaySummary,
     activity,
+    attention,
     charts,
     audits,
     hasTransactions,
@@ -122,7 +125,22 @@ export default function TransactionsIndex({
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [offlineModalOpen, setOfflineModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'transactions' | 'reports' | 'audit'>('transactions');
-    const [view, setView] = useState<'timeline' | 'table'>('timeline');
+    // A review link can open straight onto the table (pending payments are not in the timeline).
+    const [view, setView] = useState<'timeline' | 'table'>(() =>
+        typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'table' ? 'table' : 'timeline',
+    );
+
+    const reviewAttention = (kind: AttentionKind) =>
+        router.get(TransactionController.index.url(), { attention: kind, ...(kind === 'stuck' ? { view: 'table' } : {}) }, { preserveScroll: true });
+
+    const clearAttention = () => router.get(TransactionController.index.url(), {}, { preserveScroll: true });
+
+    const attentionLabel =
+        filters.attention === 'failed'
+            ? "Failed payments from the last 7 days that haven't been paid since"
+            : filters.attention === 'stuck'
+              ? 'Payments still pending after 2 hours'
+              : null;
 
     const canExport = hasTransactions && transactions.total > 0;
 
@@ -223,6 +241,26 @@ export default function TransactionsIndex({
                     <LedgerEmptyState canRecordOffline={permissions.record_offline} onRecordOffline={() => setOfflineModalOpen(true)} />
                 ) : (
                     <div className="space-y-6">
+                        {/* What needs a human, if anything. Hidden while a review filter is already open. */}
+                        {!filters.attention && (
+                            <Deferred data="attention" fallback={null}>
+                                <AttentionStrip data={attention} onReview={reviewAttention} />
+                            </Deferred>
+                        )}
+
+                        {attentionLabel && (
+                            <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-2.5">
+                                <p className="text-xs font-semibold text-amber-900">Showing: {attentionLabel}</p>
+                                <button
+                                    type="button"
+                                    onClick={clearAttention}
+                                    className="shrink-0 text-xs font-bold text-amber-800 hover:text-amber-950"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        )}
+
                         {/* Search & Collapse Filter Box */}
                         <div className="rounded-3xl border border-slate-100 bg-white p-5 ring-1 ring-slate-100/50">
                             <LedgerFilters filters={filters} filterOptions={filterOptions as never} maxAmountLimit={maxAmountLimit} />
