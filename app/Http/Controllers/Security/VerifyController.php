@@ -112,7 +112,7 @@ class VerifyController extends Controller
                 $result['access_log_id'] = $log->id;
                 $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
                 $result['duration_minutes'] = $log->checked_out_at && $log->verified_at
-                    ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                    ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
                     : 0;
             } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
                 // The visitor is already inside: the guard confirms checkout via decision(),
@@ -248,7 +248,7 @@ class VerifyController extends Controller
                     'entry_point' => $log->entry_point ?? 'Main Gate',
                     'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
                     'duration_minutes' => $log->checked_out_at && $log->verified_at
-                        ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                        ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
                         : 0,
                 ]);
             }
