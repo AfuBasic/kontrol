@@ -60,3 +60,34 @@ it('does not count the same payment twice when Paystack sends the webhook again'
 
     expect($this->assignment->fresh()->amount_paid)->toBe(500000);
 });
+
+it('settles a bulk payment across every bill it covered, exactly once', function () {
+    $collection = Collection::factory()->create(['estate_id' => $this->estate->id, 'created_by' => $this->resident->id]);
+    $second = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id, 'estate_id' => $this->estate->id, 'user_id' => $this->resident->id,
+        'amount_due' => 300000, 'amount_paid' => 0, 'status' => 'pending', 'due_date' => now()->addWeek()->toDateString(),
+    ]);
+
+    Payment::create([
+        'user_id' => $this->resident->id, 'estate_id' => $this->estate->id, 'collection_assignment_id' => null,
+        'amount' => 800000, 'provider' => 'paystack', 'reference' => 'COLL-BULK-ABC123', 'status' => 'initiated',
+        'raw_payload' => ['assignment_ids' => [$this->assignment->id, $second->id], 'is_bulk' => true],
+    ]);
+
+    $send = function () {
+        $json = json_encode(['event' => 'charge.success', 'data' => ['reference' => 'COLL-BULK-ABC123', 'amount' => 80400000, 'channel' => 'bank_transfer', 'customer' => ['email' => 'a@b.c']]]);
+
+        return $this->call('POST', '/webhooks/paystack', [], [], [], [
+            'HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $json, 'test_secret_key'),
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
+    };
+
+    $send()->assertOk();
+    $send()->assertOk();
+
+    expect($this->assignment->fresh()->status)->toBe('paid')
+        ->and($this->assignment->fresh()->amount_paid)->toBe(500000)
+        ->and($second->fresh()->status)->toBe('paid')
+        ->and($second->fresh()->amount_paid)->toBe(300000);
+});
