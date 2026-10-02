@@ -52,7 +52,7 @@ class TransactionController extends Controller
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
-            'amount_min', 'amount_max', 'date_from', 'date_to',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
         ]);
 
         return response()->json($this->overviewService->timelinePage($estate, $filters, $request->string('cursor')->toString() ?: null));
@@ -71,7 +71,7 @@ class TransactionController extends Controller
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
-            'amount_min', 'amount_max', 'date_from', 'date_to',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
         ]);
 
         $transactions = $this->overviewService
@@ -141,6 +141,7 @@ class TransactionController extends Controller
 
         return Inertia::render('Admin/Transactions/Index', [
             'maxAmountLimit' => $maxAmountNaira,
+            'attention' => Inertia::defer(fn () => $this->overviewService->attention($estate)),
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
             'activity' => Inertia::defer(fn () => $this->overviewService->timelinePage($estate, $filters)),
             'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
@@ -264,7 +265,7 @@ class TransactionController extends Controller
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
-            'amount_min', 'amount_max', 'date_from', 'date_to',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
         ]);
 
         return match ($format) {
