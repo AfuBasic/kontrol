@@ -2,7 +2,7 @@ import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
 export interface Pulse {
     collected: { value: number; previous: number; delta_pct: number | null; spark: number[] };
-    refunded: { value: number; rate_pct: number | null };
+    residents_paid: { residents: number; payments: number; average: number | null };
     success_rate: { pct: number | null; succeeded: number; failed: number };
     outstanding: { value: number; overdue: number };
 }
@@ -41,7 +41,7 @@ export default function PulseTiles({ pulse, loading }: Props) {
 
     if (!pulse) return null;
 
-    const { collected, refunded, success_rate: success, outstanding } = pulse;
+    const { collected, residents_paid: payers, success_rate: success, outstanding } = pulse;
     const spark = collected.spark.map((value, i) => ({ i, value }));
     const delta = collected.delta_pct;
 
@@ -83,10 +83,12 @@ export default function PulseTiles({ pulse, loading }: Props) {
                 </div>
             </Tile>
 
-            <Tile label="Refunded · 30 days">
-                <p className="mt-1.5 text-2xl font-black tracking-tight text-white tabular-nums">{compact(refunded.value)}</p>
+            <Tile label="Residents who paid">
+                <p className="mt-1.5 text-2xl font-black tracking-tight text-white tabular-nums">{payers.residents.toLocaleString()}</p>
                 <p className="mt-0.5 text-[11px] font-semibold text-white/50">
-                    {refunded.rate_pct === null ? 'Nothing collected yet' : `${refunded.rate_pct}% of what was collected`}
+                    {payers.average === null
+                        ? 'No payments in 30 days'
+                        : `${payers.payments.toLocaleString()} payments, ${compact(payers.average)} on average`}
                 </p>
             </Tile>
 
