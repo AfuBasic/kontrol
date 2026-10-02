@@ -6,10 +6,20 @@ use App\Models\Estate;
 use App\Models\ResidentSubscription;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class SyncEstateTrialSettingsJob implements ShouldQueue
 {
     use Queueable;
+
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 3;
+
+    /** @var array<int, int> Seconds to wait between attempts. */
+    public array $backoff = [60, 300];
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 300;
 
     public function __construct(
         public Estate $estate
@@ -83,5 +93,13 @@ class SyncEstateTrialSettingsJob implements ShouldQueue
                 }
             }
         }
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }
