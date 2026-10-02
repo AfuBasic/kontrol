@@ -5,7 +5,7 @@ import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, Lis
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import CustomSelect from '@/Components/UI/CustomSelect';
-import { bulk_destroy } from '@/routes/admin/incidents';
+import { bulkDestroy } from '@/actions/App/Http/Controllers/Admin/IncidentController';
 type AdminUser = {
     id: number;
     name: string;
@@ -156,7 +156,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             confirmLabel: 'Delete',
             onConfirm: () => {
                 setIsDeleting(true);
-                router.delete(bulk_destroy.url(), {
+                router.delete(bulkDestroy.url(), {
                     data: { ids: selectedIncidents },
                     onSuccess: () => {
                         setSelectedIncidents([]);
@@ -868,9 +868,9 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                             <div className="min-h-[280px] overflow-x-auto">
                                 <table className="w-full table-auto border-collapse">
-                                    <thead className="border-b border-slate-100 bg-slate-50/70">
+                                    <thead className="sticky top-0 z-20 border-b border-slate-200/80 bg-slate-50/95 shadow-xs backdrop-blur-xs">
                                         <tr>
-                                            <th className="w-10 px-6 py-3.5 text-left">
+                                            <th className="w-10 px-3.5 py-3 text-left">
                                                 <input
                                                     type="checkbox"
                                                     className="cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
@@ -878,37 +878,37 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     onChange={toggleAllIncidents}
                                                 />
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Incident
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Priority
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Category
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Reporter
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Source
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Location
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Assignee
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Status
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Scope/Zone
                                             </th>
-                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            <th className="px-3.5 py-3 text-left text-[9px] font-black tracking-widest text-slate-500 uppercase">
                                                 Age
                                             </th>
-                                            <th className="w-10 px-6 py-3.5"></th>
+                                            <th className="sticky right-0 z-10 w-10 bg-slate-50/95 px-3.5 py-3 text-right backdrop-blur-xs"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
@@ -920,9 +920,9 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                             return (
                                                 <tr
                                                     key={incident.id}
-                                                    className={`transition hover:bg-slate-50/40 ${selectedIncidents.includes(incident.hashid) ? 'bg-indigo-50/40' : ''}`}
+                                                    className={`group transition hover:bg-slate-50/60 ${selectedIncidents.includes(incident.hashid) ? 'bg-indigo-50/40' : ''}`}
                                                 >
-                                                    <td className="w-10 px-6 py-3.5">
+                                                    <td className="w-10 px-3.5 py-3">
                                                         <input
                                                             type="checkbox"
                                                             className="cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
@@ -931,20 +931,20 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                         />
                                                     </td>
                                                     {/* Incident title */}
-                                                    <td className="px-6 py-3.5">
+                                                    <td className="px-3.5 py-3">
                                                         <Link
                                                             href={`/admin/incidents/${incident.hashid}`}
-                                                            className="block max-w-[220px] truncate text-xs font-bold text-slate-900 hover:text-indigo-600"
+                                                            className="block max-w-[200px] truncate text-xs font-bold text-slate-900 hover:text-indigo-600"
                                                         >
                                                             {incident.title}
                                                         </Link>
-                                                        <span className="mt-0.5 block max-w-[220px] truncate text-[10px] font-semibold text-slate-400">
+                                                        <span className="mt-0.5 block max-w-[200px] truncate text-[10px] font-semibold text-slate-400">
                                                             {incident.body}
                                                         </span>
                                                     </td>
 
                                                     {/* Priority */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <td className="px-3.5 py-3 whitespace-nowrap">
                                                         <span
                                                             className={`inline-flex rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
                                                         >
@@ -953,12 +953,12 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     </td>
 
                                                     {/* Category */}
-                                                    <td className="px-6 py-3.5 text-xs font-semibold whitespace-nowrap text-slate-600">
+                                                    <td className="px-3.5 py-3 text-xs font-semibold whitespace-nowrap text-slate-600">
                                                         {categoryLabel.replace('_', ' ')}
                                                     </td>
 
                                                     {/* Reporter */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <td className="px-3.5 py-3 whitespace-nowrap">
                                                         <div className="text-xs font-semibold text-slate-800">
                                                             <span>{incident.reporter.name}</span>
                                                             <span className="block text-[9px] font-bold text-slate-400">
@@ -968,18 +968,18 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     </td>
 
                                                     {/* Source */}
-                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
+                                                    <td className="px-3.5 py-3 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         <span className="rounded border border-slate-200/60 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
                                                             {incident.source.replace('_', ' ')}
                                                         </span>
                                                     </td>
                                                     {/* Location */}
-                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
+                                                    <td className="max-w-[160px] truncate px-3.5 py-3 text-xs font-bold text-slate-500" title={incident.location || undefined}>
                                                         {incident.location || '-'}
                                                     </td>
 
                                                     {/* Assignee */}
-                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-700">
+                                                    <td className="px-3.5 py-3 text-xs font-bold whitespace-nowrap text-slate-700">
                                                         {incident.assignee ? (
                                                             incident.assignee.name
                                                         ) : (
@@ -988,7 +988,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     </td>
 
                                                     {/* Status */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <td className="px-3.5 py-3 whitespace-nowrap">
                                                         <span
                                                             className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${statusInfo.color}`}
                                                         >
@@ -997,7 +997,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     </td>
 
                                                     {/* Scope/Zone */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <td className="px-3.5 py-3 whitespace-nowrap">
                                                         {incident.zone ? (
                                                             <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 uppercase">
                                                                 {incident.zone.name}
@@ -1010,12 +1010,12 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                                     </td>
 
                                                     {/* Age */}
-                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
+                                                    <td className="px-3.5 py-3 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         {formatDistanceToNow(new Date(incident.created_at))}
                                                     </td>
 
                                                     {/* Quick View Link */}
-                                                    <td className="px-6 py-3.5 text-right text-sm whitespace-nowrap">
+                                                    <td className="sticky right-0 z-10 bg-white/95 px-3.5 py-3 text-right text-sm whitespace-nowrap backdrop-blur-xs group-hover:bg-slate-50/95">
                                                         <Link
                                                             href={`/admin/incidents/${incident.hashid}`}
                                                             className="text-slate-400 hover:text-slate-800"
