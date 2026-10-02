@@ -40,7 +40,6 @@ beforeEach(function () {
         'name' => 'St. Jude Academy',
         'type' => 'school',
         'access_policy' => 'managed',
-        'quick_entry_enabled' => true,
         'is_active' => true,
     ]);
 
