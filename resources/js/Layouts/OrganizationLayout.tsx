@@ -1,9 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Link, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { Bell, ChevronDown, CreditCard, Home, KeyRound, LogOut, Megaphone, User } from 'lucide-react';
 import React, { type ReactNode, useEffect, useState } from 'react';
+import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
@@ -35,7 +35,6 @@ export default function OrganizationLayout({
     const { url } = page;
     const props = page.props as any;
 
-    const organization = props.organization || {};
     const auth = props.auth || {};
     const user = auth.user || {};
 
@@ -107,6 +106,9 @@ export default function OrganizationLayout({
 
     return (
         <div className="flex min-h-screen flex-col font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
+            <div className="fixed top-0 right-0 left-0 z-[60]">
+                <OfflineBanner />
+            </div>
             <header
                 className={`fixed inset-x-0 top-0 z-40 px-3 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-10 ${
                     transparentHeader
@@ -204,16 +206,12 @@ export default function OrganizationLayout({
                 className="w-full flex-1 lg:pb-12"
                 style={{
                     paddingTop: 'calc(88px + env(safe-area-inset-top))',
-                    paddingBottom: hideBottomNav 
-                        ? 'calc(24px + env(safe-area-inset-bottom))' 
-                        : 'calc(72px + env(safe-area-inset-bottom))'
+                    paddingBottom: hideBottomNav ? 'calc(24px + env(safe-area-inset-bottom))' : 'calc(72px + env(safe-area-inset-bottom))',
                 }}
             >
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 px-3 sm:px-6 lg:px-10 ${contentClassName}`}>
-                        {user.resident_subscription && (
-                            <SubscriptionBanner subscription={user.resident_subscription} />
-                        )}
+                        {user.resident_subscription && <SubscriptionBanner subscription={user.resident_subscription} />}
 
                         {props.flash?.success && (
                             <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xs sm:text-sm">
