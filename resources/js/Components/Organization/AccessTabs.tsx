@@ -40,15 +40,10 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
     };
 
     // Insert On-site tab before History only when checkout tracking is enabled
-    const tabs = onSiteEnabled
-        ? [...baseTabs.slice(0, 3), onSiteTab, ...baseTabs.slice(3)]
-        : baseTabs;
+    const tabs = onSiteEnabled ? [...baseTabs.slice(0, 3), onSiteTab, ...baseTabs.slice(3)] : baseTabs;
 
     return (
-        <nav
-            aria-label="Access workspace tabs"
-            className="flex items-center w-full"
-        >
+        <nav aria-label="Access workspace tabs" className="flex w-full items-center">
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 const Icon = tab.icon;
@@ -97,14 +92,7 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
                 }
 
                 return (
-                    <Link
-                        key={tab.id}
-                        href={tab.href}
-                        prefetch
-                        preserveScroll
-                        aria-current={isActive ? 'page' : undefined}
-                        className={tabClassName}
-                    >
+                    <Link key={tab.id} href={tab.href} prefetch preserveScroll aria-current={isActive ? 'page' : undefined} className={tabClassName}>
                         {content}
                     </Link>
                 );
@@ -112,4 +100,3 @@ export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 
         </nav>
     );
 }
-
