@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
