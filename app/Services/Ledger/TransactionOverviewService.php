@@ -28,14 +28,6 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Success)
             ->sum('amount');
 
-        $moneyOutToday = $this->baseQuery($estate)
-            ->where(function ($query) use ($today) {
-                $query->whereDate('reversed_at', $today)
-                    ->orWhere(fn ($q) => $q->whereDate('failed_at', $today)->where('direction', TransactionDirection::Debit));
-            })
-            ->where('status', TransactionStatus::Success)
-            ->sum('amount');
-
         $pendingToday = $this->baseQuery($estate)
             ->whereDate('created_at', $today)
             ->where('status', TransactionStatus::Pending)
@@ -52,16 +44,9 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Success)
             ->count();
 
-        $refundsToday = $this->baseQuery($estate)
-            ->whereDate('reversed_at', $today)
-            ->where('status', TransactionStatus::Success)
-            ->count();
-
         return [
             'payments_today' => $paymentsToday,
-            'refunds_today' => $refundsToday,
             'money_in_today' => (int) $moneyInToday,
-            'money_out_today' => (int) $moneyOutToday,
             'pending_today' => $pendingToday,
             'failed_today' => $failedToday,
         ];
@@ -202,28 +187,26 @@ class TransactionOverviewService
         $windowStart = $today->copy()->subDays(59);
         $effective = 'COALESCE(paid_at, reversed_at, created_at)';
 
-        // Successful money, per day and direction, for the last 60 days (30 current + 30 previous).
+        // Money collected per day for the last 60 days (30 current + 30 previous). A payment either succeeds or fails.
         $byDay = [];
         $this->baseQuery($estate)
             ->where('status', TransactionStatus::Success)
             ->whereRaw("{$effective} >= ?", [$windowStart])
-            ->selectRaw("DATE({$effective}) as day, direction, SUM(amount) as total")
-            ->groupByRaw("DATE({$effective}), direction")
+            ->where('direction', TransactionDirection::Credit)
+            ->selectRaw("DATE({$effective}) as day, SUM(amount) as total")
+            ->groupByRaw("DATE({$effective})")
             ->get()
             ->each(function ($row) use (&$byDay) {
-                $direction = $row->direction instanceof TransactionDirection ? $row->direction->value : $row->direction;
-                $byDay[Carbon::parse($row->day)->toDateString()][$direction] = (int) $row->total;
+                $byDay[Carbon::parse($row->day)->toDateString()] = (int) $row->total;
             });
 
         $flow = [];
         $previousCollected = 0;
         $collected = 0;
-        $refunded = 0;
 
         for ($i = 59; $i >= 0; $i--) {
             $date = $today->copy()->subDays($i)->toDateString();
-            $in = $byDay[$date][TransactionDirection::Credit->value] ?? 0;
-            $out = $byDay[$date][TransactionDirection::Debit->value] ?? 0;
+            $in = $byDay[$date] ?? 0;
 
             if ($i >= 30) {
                 $previousCollected += $in;
@@ -232,8 +215,7 @@ class TransactionOverviewService
             }
 
             $collected += $in;
-            $refunded += $out;
-            $flow[] = ['date' => $date, 'money_in' => $in, 'money_out' => $out];
+            $flow[] = ['date' => $date, 'money_in' => $in];
         }
 
         // Success rate: of the payments that resolved in the last 30 days, how many went through.
@@ -247,6 +229,14 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Failed)
             ->whereRaw('COALESCE(failed_at, created_at) >= ?', [$since])
             ->count();
+
+        $payers = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->selectRaw('COUNT(DISTINCT user_id) as residents, COUNT(*) as payments')
+            ->first();
+        $payments = (int) ($payers->payments ?? 0);
 
         // What is still owed across every open charge, and how much of it is already late.
         $owed = DB::table('collection_assignments')
@@ -308,9 +298,10 @@ class TransactionOverviewService
                     'delta_pct' => $previousCollected > 0 ? round(($collected - $previousCollected) / $previousCollected * 100, 1) : null,
                     'spark' => array_column($flow, 'money_in'),
                 ],
-                'refunded' => [
-                    'value' => $refunded,
-                    'rate_pct' => $collected > 0 ? round($refunded / $collected * 100, 1) : null,
+                'residents_paid' => [
+                    'residents' => (int) ($payers->residents ?? 0),
+                    'payments' => $payments,
+                    'average' => $payments > 0 ? intdiv($collected, max(1, $payments)) : null,
                 ],
                 'success_rate' => [
                     'pct' => ($succeeded + $failed) > 0 ? round($succeeded / ($succeeded + $failed) * 100, 1) : null,
