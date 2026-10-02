@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 
 class TransactionOverviewService
 {
@@ -267,6 +268,145 @@ class TransactionOverviewService
                 'date' => $date,
                 'amount' => $amount,
             ])->values()->all(),
+        ];
+    }
+
+    /**
+     * The numbers behind the page header and the Reports tab: a 30-day pulse against the 30 days
+     * before it, daily money flow, how far each collection has got, when residents pay, and how.
+     *
+     * @return array<string, mixed>
+     */
+    public function insights(Estate $estate): array
+    {
+        $today = Carbon::today();
+        $windowStart = $today->copy()->subDays(59);
+        $effective = 'COALESCE(paid_at, reversed_at, created_at)';
+
+        // Successful money, per day and direction, for the last 60 days (30 current + 30 previous).
+        $byDay = [];
+        $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->whereRaw("{$effective} >= ?", [$windowStart])
+            ->selectRaw("DATE({$effective}) as day, direction, SUM(amount) as total")
+            ->groupByRaw("DATE({$effective}), direction")
+            ->get()
+            ->each(function ($row) use (&$byDay) {
+                $direction = $row->direction instanceof TransactionDirection ? $row->direction->value : $row->direction;
+                $byDay[Carbon::parse($row->day)->toDateString()][$direction] = (int) $row->total;
+            });
+
+        $flow = [];
+        $previousCollected = 0;
+        $collected = 0;
+        $refunded = 0;
+
+        for ($i = 59; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i)->toDateString();
+            $in = $byDay[$date][TransactionDirection::Credit->value] ?? 0;
+            $out = $byDay[$date][TransactionDirection::Debit->value] ?? 0;
+
+            if ($i >= 30) {
+                $previousCollected += $in;
+
+                continue;
+            }
+
+            $collected += $in;
+            $refunded += $out;
+            $flow[] = ['date' => $date, 'money_in' => $in, 'money_out' => $out];
+        }
+
+        // Success rate: of the payments that resolved in the last 30 days, how many went through.
+        $since = $today->copy()->subDays(29);
+        $succeeded = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->count();
+        $failed = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Failed)
+            ->whereRaw('COALESCE(failed_at, created_at) >= ?', [$since])
+            ->count();
+
+        // What is still owed across every open charge, and how much of it is already late.
+        $owed = DB::table('collection_assignments')
+            ->where('estate_id', $estate->id)
+            ->where('status', '!=', 'paid')
+            ->selectRaw(
+                'COALESCE(SUM(amount_due - amount_paid), 0) as outstanding,
+                 COALESCE(SUM(CASE WHEN status = ? OR (status = ? AND COALESCE(grace_until, due_date) < ?) THEN amount_due - amount_paid ELSE 0 END), 0) as overdue',
+                ['overdue', 'partial', $today->toDateString()],
+            )
+            ->first();
+
+        $collections = DB::table('collection_assignments as a')
+            ->join('collections as c', 'c.id', '=', 'a.collection_id')
+            ->where('a.estate_id', $estate->id)
+            ->groupBy('a.collection_id', 'c.name')
+            ->havingRaw('SUM(a.amount_due) > 0')
+            ->orderByRaw('SUM(a.amount_due) - SUM(a.amount_paid) DESC')
+            ->limit(6)
+            ->selectRaw('a.collection_id as id, c.name, SUM(a.amount_due) as due, SUM(a.amount_paid) as paid')
+            ->get()
+            ->map(fn ($row) => ['id' => (int) $row->id, 'name' => $row->name, 'due' => (int) $row->due, 'paid' => (int) $row->paid])
+            ->all();
+
+        $methods = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->selectRaw('payment_method, SUM(amount) as total, COUNT(*) as n')
+            ->groupBy('payment_method')
+            ->orderByRaw('SUM(amount) DESC')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->payment_method?->label() ?? 'Other',
+                'amount' => (int) $row->total,
+                'count' => (int) $row->n,
+            ])
+            ->all();
+
+        // When residents pay: weekday (Mon-Sun) by four-hour block, over the last 90 days.
+        $rhythm = array_fill(0, 7, array_fill(0, 6, 0));
+        $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '>=', $today->copy()->subDays(90))
+            ->latest('paid_at')
+            ->limit(20000)
+            ->pluck('paid_at')
+            ->each(function ($paidAt) use (&$rhythm) {
+                $rhythm[$paidAt->dayOfWeekIso - 1][intdiv($paidAt->hour, 4)]++;
+            });
+
+        return [
+            'pulse' => [
+                'collected' => [
+                    'value' => $collected,
+                    'previous' => $previousCollected,
+                    'delta_pct' => $previousCollected > 0 ? round(($collected - $previousCollected) / $previousCollected * 100, 1) : null,
+                    'spark' => array_column($flow, 'money_in'),
+                ],
+                'refunded' => [
+                    'value' => $refunded,
+                    'rate_pct' => $collected > 0 ? round($refunded / $collected * 100, 1) : null,
+                ],
+                'success_rate' => [
+                    'pct' => ($succeeded + $failed) > 0 ? round($succeeded / ($succeeded + $failed) * 100, 1) : null,
+                    'succeeded' => $succeeded,
+                    'failed' => $failed,
+                ],
+                'outstanding' => [
+                    'value' => (int) ($owed->outstanding ?? 0),
+                    'overdue' => (int) ($owed->overdue ?? 0),
+                ],
+            ],
+            'flow' => $flow,
+            'collections' => $collections,
+            'methods' => $methods,
+            'rhythm' => ['matrix' => $rhythm, 'max' => max(array_map('max', $rhythm))],
         ];
     }
 
