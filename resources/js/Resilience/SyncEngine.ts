@@ -54,6 +54,12 @@ type Listener = (state: SyncState) => void;
 
 const QUEUE_STORE = 'operations';
 
+/**
+ * A queued write that gets no answer in this long counts as a network failure and goes back to the
+ * retry schedule. Without a limit one hung request on a half-dead connection blocks the whole queue.
+ */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 const queueConfig: StoreConfig = {
     dbName: 'kontrol-sync',
     version: 1,
@@ -303,12 +309,16 @@ class SyncEngineImpl {
         await put(queueConfig, QUEUE_STORE, op);
         await this.emit();
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
         try {
             const response = await fetch(op.endpoint, {
                 method: op.method,
                 headers: getCsrfHeaders(),
                 credentials: 'same-origin',
                 body: JSON.stringify(op.payload),
+                signal: controller.signal,
             });
 
             let body: unknown = null;
@@ -440,10 +450,11 @@ class SyncEngineImpl {
                 response: body,
             };
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Network error';
+            const timedOut = controller.signal.aborted;
+            const message = timedOut ? 'The server took too long to answer' : error instanceof Error ? error.message : 'Network error';
             op.retryCount += 1;
             op.lastError = message;
-            op.lastErrorCode = 'NETWORK_ERROR';
+            op.lastErrorCode = timedOut ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR';
 
             if (hasExhaustedRetries(policy, op.retryCount) || !policy.autoRetry) {
                 op.status = SyncStatus.Failed;
@@ -459,6 +470,8 @@ class SyncEngineImpl {
             await this.emit();
 
             return { operationId: op.id, status: SyncStatus.Pending, error: message };
+        } finally {
+            clearTimeout(timeout);
         }
     }
 
