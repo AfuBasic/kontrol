@@ -17,6 +17,9 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
 {
     use Queueable;
 
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 180;
+
     public int $tries = 3;
 
     /**
