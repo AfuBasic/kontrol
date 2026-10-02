@@ -113,7 +113,7 @@ class HistoryController extends Controller
                 $destinationName = $isQuickEntry ? $orgName : ($code?->user?->name ?? 'N/A');
 
                 $durationMinutes = $log->checked_out_at && $log->verified_at
-                    ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                    ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
                     : null;
 
                 return [
