@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\Visitor\ActiveVisitService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,8 +33,8 @@ class HistoryController extends Controller
 
         $checkoutEnabled = $this->activeVisitService->isCheckoutMonitoringEnabled($estate->id);
         $activeVisits = $checkoutEnabled
-            ? $this->activeVisitService->getSecurityActiveVisits($estate->id, $user, $filters['search'] ?? null)
-            : collect();
+            ? $this->activeVisitService->getSecurityActiveVisits($estate->id, $user, $filters['search'] ?? null, 15)
+            : new LengthAwarePaginator([], 0, 15);
         $activeCount = $checkoutEnabled
             ? $this->activeVisitService->countEstateActiveVisits($estate->id)
             : 0;
@@ -185,7 +186,7 @@ class HistoryController extends Controller
             'filters' => (object) $filters,
             'hosts' => $hosts,
             'checkoutEnabled' => $checkoutEnabled,
-            'activeVisits' => $activeVisits,
+            'activeVisits' => Inertia::scroll(fn () => $activeVisits),
             'activeCount' => $activeCount,
         ]);
     }
