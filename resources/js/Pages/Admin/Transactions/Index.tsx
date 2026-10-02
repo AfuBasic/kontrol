@@ -61,9 +61,7 @@ interface AuditLogEntry {
 interface Props {
     todaySummary?: {
         payments_today: number;
-        refunds_today: number;
         money_in_today: number;
-        money_out_today: number;
         pending_today: number;
         failed_today: number;
     };
@@ -161,7 +159,6 @@ export default function TransactionsIndex({
     // Derived Summary Phrases
     const moneyInToday = todaySummary?.money_in_today ?? 0;
     const successPaymentsCount = todaySummary?.payments_today ?? 0;
-    const refundsTodayCount = todaySummary?.refunds_today ?? 0;
     const failedTodayCount = todaySummary?.failed_today ?? 0;
 
     const summaryPhrase = useMemo(() => {
@@ -175,14 +172,11 @@ export default function TransactionsIndex({
         if (moneyInToday > 0) {
             parts.push(`${fmtCompact(moneyInToday)} entered the estate.`);
         }
-        if (refundsTodayCount > 0) {
-            parts.push(`${refundsTodayCount} refund${refundsTodayCount === 1 ? ' was' : 's were'} processed.`);
-        }
         if (failedTodayCount > 0) {
             parts.push(`${failedTodayCount} failed payment${failedTodayCount === 1 ? ' requires' : 's require'} attention.`);
         }
         return parts.join(' ');
-    }, [todaySummary, moneyInToday, successPaymentsCount, refundsTodayCount, failedTodayCount]);
+    }, [todaySummary, moneyInToday, successPaymentsCount, failedTodayCount]);
 
     return (
         <>
