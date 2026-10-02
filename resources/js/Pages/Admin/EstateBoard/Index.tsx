@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
 import { Search, X, Pin, FileText } from 'lucide-react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 
@@ -39,9 +39,7 @@ const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
 ];
 
 export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }: Props) {
-    const loadMoreRef = useRef<HTMLDivElement>(null);
     const composerRef = useRef<HTMLDivElement>(null);
-    const isLoadingMore = useRef(false);
 
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -74,41 +72,6 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
         setSearch('');
         router.get(boardIndex.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
     }, []);
-
-    const loadMore = useCallback(() => {
-        if (!posts.next_page_url || isLoadingMore.current) return;
-
-        isLoadingMore.current = true;
-        router.get(
-            posts.next_page_url,
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['posts'],
-                onFinish: () => {
-                    isLoadingMore.current = false;
-                },
-            },
-        );
-    }, [posts.next_page_url]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMore();
-                }
-            },
-            { threshold: 0.1 },
-        );
-
-        if (loadMoreRef.current) {
-            observer.observe(loadMoreRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [loadMore]);
 
     const handleFocusComposer = () => {
         if (composerRef.current) {
@@ -264,23 +227,24 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
             {posts.data.length === 0 ? (
                 <EmptyState hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} onFocusComposer={handleFocusComposer} />
             ) : (
-                <div className="space-y-8">
+                <InfiniteScroll
+                    data="posts"
+                    className="space-y-8"
+                    loading={
+                        <div className="mt-8 flex justify-center pb-12">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+                                <span>Loading more announcements...</span>
+                            </div>
+                        </div>
+                    }
+                >
                     {/* Dedicated Pinned Section */}
                     {!hasActiveFilters && pinnedPosts.length > 0 && <PinnedSection pinnedPosts={pinnedPosts} />}
 
                     {/* Chronological Feed (Grouped by Today / Yesterday / This Week / Earlier) */}
                     <FeedGroup posts={regularPosts} hasActiveFilters={hasActiveFilters} />
-                </div>
-            )}
-
-            {/* Infinite Scroll Loader */}
-            {posts.next_page_url && (
-                <div ref={loadMoreRef} className="mt-8 flex justify-center pb-12">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-                        <span>Loading more announcements...</span>
-                    </div>
-                </div>
+                </InfiniteScroll>
             )}
         </div>
     );
