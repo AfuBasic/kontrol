@@ -41,3 +41,8 @@ GEMINI.md
 context.md
 zeus_master_plan.md
 /screenshots-editor
+
+# Demo / local-only scripts (never commit these)
+/database/seeders/DemoSeeder.php
+/app/Console/Commands/Demo/
+/tests/Feature/DemoSeederTest.php
