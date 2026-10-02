@@ -3,6 +3,7 @@
 use App\Jobs\Admin\RecurringAssignmentJob;
 use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
+use App\Jobs\Billing\RecheckInitiatedCollectionPaymentsJob;
 use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
@@ -41,6 +42,9 @@ Schedule::command('sitemap:generate')->dailyAt('03:00');
 // Partner commission close – previous month lock on the 1st at 00:30 (does not mark paid)
 Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartnerEarningsJob::MODE_CLOSE))
     ->monthlyOn(1, '00:30');
+
+// Heal collection payments whose webhook was missed: ask Paystack about anything still initiated.
+Schedule::job(new RecheckInitiatedCollectionPaymentsJob)->everyTenMinutes()->withoutOverlapping(15);
 
 // Scheduled Visitor Pass Reminders
 Schedule::job(new SendVisitorPassRemindersJob)->everyMinute();
