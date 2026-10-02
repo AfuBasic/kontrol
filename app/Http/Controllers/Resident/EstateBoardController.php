@@ -50,7 +50,7 @@ class EstateBoardController extends Controller
         $unreadCount = $this->boardService->getResidentUnreadCount($estateId, $this->allowedAudiences, $filter);
 
         return Inertia::render('Resident/EstateBoard/Index', [
-            'posts' => $posts,
+            'posts' => Inertia::scroll(fn () => $posts),
             'filter' => $filter,
             'category' => $category ?: null,
             'unread_only' => $unreadOnly,
