@@ -94,9 +94,18 @@ class WipeDemoData extends Command
                 ->delete();
             $this->line('  ✓ Transactions wiped');
 
-            // Orgs
+            // Orgs — identified by their seeded names
+            $demoOrgNames = [
+                'Greenfield Academy', 'St. Paul\'s Church', 'Heritage Hospital',
+                'Apex Tech Solutions', 'Sunrise Islamic Centre', 'Golden Heights Clinic',
+                'Brilla FC Academy', 'Meridian Supermarket', 'Valley Primary School',
+                'Omega Pharmacy', 'Christ Embassy Branch', 'EduBridge Tutors',
+                'Radiant Beauty Salon', 'Wellbeing Physiotherapy', 'Trinity Chapel',
+                'Pinnacle Construction Ltd', 'Kids Corner Daycare', 'Fresh Fields Catering',
+                'Impact Labs', 'Community Mosque',
+            ];
             $demoOrgIds = EstateOrganization::where('estate_id', 1)
-                ->where('notes', 'like', '[DEMO]%')
+                ->whereIn('name', $demoOrgNames)
                 ->pluck('id');
             $demoInviteIds = OrganizationBulkInvite::whereIn('organization_id', $demoOrgIds)->pluck('id');
             OrganizationBulkInviteRecipient::whereIn('bulk_invite_id', $demoInviteIds)->delete();

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\AccessCodeSource;
-use App\Enums\AccessCodeStatus;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
@@ -14,27 +13,21 @@ use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\AccessCode;
-use App\Models\AccessLog;
 use App\Models\Collection;
-use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateOrganization;
-use App\Models\EstateTransaction;
 use App\Models\HouseholdMember;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\OrganizationBulkInvite;
-use App\Models\OrganizationBulkInviteRecipient;
 use App\Models\OrganizationMembership;
 use App\Models\Property;
 use App\Models\SecurityEvent;
 use App\Models\SosEvent;
 use App\Models\User;
-use App\Models\VisitorProfile;
 use App\Models\Zone;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -352,7 +345,6 @@ class DemoSeeder extends Seeder
                     'type' => $def['type'],
                     'access_policy' => $def['access_policy'],
                     'is_active' => true,
-                    'notes' => '[DEMO] Seeded organization.',
                 ],
             );
 
