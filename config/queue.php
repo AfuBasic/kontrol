@@ -40,7 +40,9 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Must exceed the longest job timeout (900s). At 90s a long job was handed to a second worker
+            // while the first was still running it.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 960),
             'after_commit' => false,
         ],
 
