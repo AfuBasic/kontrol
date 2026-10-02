@@ -79,9 +79,9 @@ const KIND: Record<Kind, { label: string; tile: string; text: string; Icon: type
     adjust: { label: 'Adjustment', tile: 'border-blue-100 bg-blue-50 text-blue-600', text: 'text-blue-700', Icon: PenLine },
 };
 
-/** Net money for the day: successful credits minus successful debits. Failed attempts move no money. */
-const netFor = (entries: ActivityEntry[]) =>
-    entries.reduce((sum, e) => (e.status !== 'success' ? sum : sum + (e.direction === 'debit' ? -e.amount : e.amount)), 0);
+/** Money collected that day: successful payments in. Failed attempts move no money. */
+const collectedFor = (entries: ActivityEntry[]) =>
+    entries.reduce((sum, e) => (e.status === 'success' && e.direction === 'credit' ? sum + e.amount : sum), 0);
 
 export default function ActivityFeed({ initial, filters = {}, loading, onSelect }: Props) {
     const [entries, setEntries] = useState<ActivityEntry[]>(initial?.entries ?? []);
@@ -168,7 +168,7 @@ export default function ActivityFeed({ initial, filters = {}, loading, onSelect 
             {days.map((day, index) => {
                 // The newest day on screen is only complete once an older day (or the end of the list) follows it.
                 const isComplete = index < days.length - 1 || cursor === null;
-                const net = netFor(day.items);
+                const collected = collectedFor(day.items);
 
                 return (
                     <section key={day.key}>
@@ -177,10 +177,7 @@ export default function ActivityFeed({ initial, filters = {}, loading, onSelect 
                             {isComplete && (
                                 <p className="text-[11px] font-semibold text-slate-400">
                                     {day.items.length} {day.items.length === 1 ? 'event' : 'events'}
-                                    <span className={`ml-2 font-black ${net < 0 ? 'text-violet-600' : 'text-slate-700'}`}>
-                                        {net < 0 ? '-' : '+'}
-                                        {formatCurrency(Math.abs(net))} net
-                                    </span>
+                                    <span className="ml-2 font-black text-slate-700">{formatCurrency(collected)} collected</span>
                                 </p>
                             )}
                         </div>
