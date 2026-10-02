@@ -6,7 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import { format, parseISO } from 'date-fns';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
-import ActivityFeed from '@/Components/Admin/Transactions/ActivityFeed';
+import ActivityFeed, { type ActivityPage } from '@/Components/Admin/Transactions/ActivityFeed';
 import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
 import LedgerFilters from '@/Components/Admin/Transactions/LedgerFilters';
@@ -58,29 +58,14 @@ interface AuditLogEntry {
 
 interface Props {
     todaySummary?: {
+        payments_today: number;
+        refunds_today: number;
         money_in_today: number;
         money_out_today: number;
         pending_today: number;
         failed_today: number;
     };
-    activity?: Array<{
-        id: string;
-        headline: string;
-        type: string;
-        direction: string;
-        status: string;
-        amount: number;
-        description: string | null;
-        reason: string | null;
-        failure_reason: string | null;
-        reference_number: string;
-        payment_method_label: string | null;
-        resident_name: string | null;
-        collection_name: string | null;
-        coupon_code: string | null;
-        occurred_at: string | null;
-        time_ago: string | null;
-    }>;
+    activity?: ActivityPage;
     charts?: Record<string, unknown> | null;
     audits?: {
         data: AuditLogEntry[];
@@ -136,7 +121,8 @@ export default function TransactionsIndex({
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [offlineModalOpen, setOfflineModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'activity' | 'ledger' | 'reports' | 'audit'>('activity');
+    const [activeTab, setActiveTab] = useState<'transactions' | 'reports' | 'audit'>('transactions');
+    const [view, setView] = useState<'timeline' | 'table'>('timeline');
 
     const canExport = hasTransactions && transactions.total > 0;
 
@@ -155,12 +141,8 @@ export default function TransactionsIndex({
 
     // Derived Summary Phrases
     const moneyInToday = todaySummary?.money_in_today ?? 0;
-    const refundsTodayCount = todaySummary?.money_out_today ? 1 : 0; // Simple approximation for phrase
-    const successPaymentsCount =
-        activity?.filter((a) => {
-            const occurredToday = a.occurred_at && new Date(a.occurred_at).toDateString() === new Date().toDateString();
-            return occurredToday && a.status === 'success';
-        }).length ?? 0;
+    const successPaymentsCount = todaySummary?.payments_today ?? 0;
+    const refundsTodayCount = todaySummary?.refunds_today ?? 0;
     const failedTodayCount = todaySummary?.failed_today ?? 0;
 
     const summaryPhrase = useMemo(() => {
@@ -250,22 +232,13 @@ export default function TransactionsIndex({
                         <div className="flex flex-col gap-4 border-b border-slate-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="scrollbar-none flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-slate-100/75 p-1 whitespace-nowrap sm:w-fit">
                                 <button
-                                    onClick={() => setActiveTab('activity')}
+                                    onClick={() => setActiveTab('transactions')}
                                     className={cn(
                                         'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                                        activeTab === 'activity' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
+                                        activeTab === 'transactions' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                     )}
                                 >
-                                    <Activity className="h-3.5 w-3.5" /> Activity
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('ledger')}
-                                    className={cn(
-                                        'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                                        activeTab === 'ledger' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
-                                    )}
-                                >
-                                    <Table className="h-3.5 w-3.5" /> Ledger
+                                    <Activity className="h-3.5 w-3.5" /> Transactions
                                 </button>
                                 {permissions.reports && (
                                     <button
@@ -293,28 +266,50 @@ export default function TransactionsIndex({
                         </div>
 
                         {/* Content Switching Area */}
-                        {activeTab === 'activity' && (
+                        {activeTab === 'transactions' && (
                             <div className="space-y-4">
-                                <div className="mb-2 flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2">
-                                        <Activity className="h-4 w-4 text-slate-400" />
-                                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Live Activity Feed</h3>
+                                {/* One list, two ways to read it. Filters above apply to both. */}
+                                <div className="flex items-center justify-between px-1">
+                                    <p className="text-xs font-semibold text-slate-400">
+                                        {transactions.total.toLocaleString()} {transactions.total === 1 ? 'transaction' : 'transactions'}
+                                    </p>
+                                    <div className="flex items-center gap-0.5 rounded-lg bg-slate-100/75 p-0.5" role="tablist" aria-label="Layout">
+                                        {(
+                                            [
+                                                { id: 'timeline', label: 'Timeline', Icon: Activity },
+                                                { id: 'table', label: 'Table', Icon: Table },
+                                            ] as const
+                                        ).map(({ id, label, Icon }) => (
+                                            <button
+                                                key={id}
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={view === id}
+                                                onClick={() => setView(id)}
+                                                className={cn(
+                                                    'flex items-center gap-1.5 rounded-md px-3 py-1 text-[10px] font-black tracking-widest uppercase transition-all',
+                                                    view === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
+                                                )}
+                                            >
+                                                <Icon className="h-3.5 w-3.5" /> {label}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <span className="text-slate-350 text-[10px] font-bold uppercase">Timeline Events</span>
                                 </div>
-                                <Deferred data="activity" fallback={<ActivityFeed loading />}>
-                                    <ActivityFeed entries={activity as never} onSelect={openTransaction} />
-                                </Deferred>
-                            </div>
-                        )}
 
-                        {activeTab === 'ledger' && (
-                            <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
-                                <TransactionsTable
-                                    transactions={transactions}
-                                    onSelect={(tx) => openTransaction(tx.ulid)}
-                                    permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
-                                />
+                                {view === 'timeline' ? (
+                                    <Deferred data="activity" fallback={<ActivityFeed loading />}>
+                                        <ActivityFeed initial={activity} filters={filters} onSelect={openTransaction} />
+                                    </Deferred>
+                                ) : (
+                                    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
+                                        <TransactionsTable
+                                            transactions={transactions}
+                                            onSelect={(tx) => openTransaction(tx.ulid)}
+                                            permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
 
