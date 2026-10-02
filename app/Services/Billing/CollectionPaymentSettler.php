@@ -27,12 +27,14 @@ use Illuminate\Support\Facades\Log;
 class CollectionPaymentSettler
 {
     /**
+     * @param  int|null  $paystackAmountKobo  What Paystack reports it collected. When the payment recorded how much
+     *                                        it expected, anything less is refused and left for a person to review.
      * @return array{message?: string, error?: string, status: int, settled: bool}
      */
-    public function settle(string $reference): array
+    public function settle(string $reference, ?int $paystackAmountKobo = null): array
     {
         Log::info("Paystack Verification Endpoint Hit: Ref={$reference}");
-        $result = DB::transaction(function () use ($reference) {
+        $result = DB::transaction(function () use ($reference, $paystackAmountKobo) {
             // 1. Find the payment and lock it
             $payment = Payment::withoutGlobalScope(PaymentScope::class)
                 ->where('reference', $reference)
@@ -52,6 +54,14 @@ class CollectionPaymentSettler
                 Log::info("Paystack Verification: Already success for Ref={$reference}");
 
                 return ['message' => 'Payment already verified', 'status' => 200, 'settled' => false];
+            }
+
+            // Never credit more than Paystack actually received.
+            $expectedKobo = (int) data_get($payment->raw_payload, 'expected_kobo', 0);
+            if ($expectedKobo > 0 && $paystackAmountKobo !== null && $paystackAmountKobo < $expectedKobo) {
+                Log::error("Collection payment amount mismatch. Ref={$reference}, expected={$expectedKobo} kobo, Paystack reports={$paystackAmountKobo} kobo");
+
+                return ['error' => 'The amount received is less than expected', 'status' => 409, 'settled' => false];
             }
 
             // Update payment to success
