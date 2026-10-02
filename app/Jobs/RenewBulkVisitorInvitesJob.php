@@ -20,6 +20,12 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
 {
     use Queueable;
 
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 1;
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 900;
+
     /**
      * Create a new job instance.
      */
@@ -216,5 +222,13 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
                 NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
             });
         });
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }
