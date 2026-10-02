@@ -18,7 +18,6 @@ beforeEach(function () {
         'name' => 'OSBA',
         'type' => 'school',
         'is_active' => true,
-        'quick_entry_enabled' => true,
         'access_policy' => 'public_window',
     ]);
 
