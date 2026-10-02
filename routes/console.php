@@ -4,6 +4,7 @@ use App\Jobs\Admin\RecurringAssignmentJob;
 use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
 use App\Jobs\Billing\RecheckInitiatedCollectionPaymentsJob;
+use App\Jobs\Billing\RecheckPendingInvoicePaymentsJob;
 use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
@@ -43,8 +44,9 @@ Schedule::command('sitemap:generate')->dailyAt('03:00');
 Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartnerEarningsJob::MODE_CLOSE))
     ->monthlyOn(1, '00:30');
 
-// Heal collection payments whose webhook was missed: ask Paystack about anything still initiated.
+// Heal payments whose webhook was missed: ask Paystack about collection and invoice payments still waiting.
 Schedule::job(new RecheckInitiatedCollectionPaymentsJob)->everyTenMinutes()->withoutOverlapping(15);
+Schedule::job(new RecheckPendingInvoicePaymentsJob)->everyTenMinutes()->withoutOverlapping(15);
 
 // Scheduled Visitor Pass Reminders
 Schedule::job(new SendVisitorPassRemindersJob)->everyMinute();
