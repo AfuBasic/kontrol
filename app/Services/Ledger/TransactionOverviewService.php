@@ -45,7 +45,20 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Failed)
             ->count();
 
+        $paymentsToday = $this->baseQuery($estate)
+            ->whereDate('paid_at', $today)
+            ->where('direction', TransactionDirection::Credit)
+            ->where('status', TransactionStatus::Success)
+            ->count();
+
+        $refundsToday = $this->baseQuery($estate)
+            ->whereDate('reversed_at', $today)
+            ->where('status', TransactionStatus::Success)
+            ->count();
+
         return [
+            'payments_today' => $paymentsToday,
+            'refunds_today' => $refundsToday,
             'money_in_today' => (int) $moneyInToday,
             'money_out_today' => (int) $moneyOutToday,
             'pending_today' => $pendingToday,
@@ -58,13 +71,72 @@ class TransactionOverviewService
      */
     public function timeline(Estate $estate, array $filters = [], int $limit = 12): SupportCollection
     {
-        return $this->query($estate, $filters)
+        return $this->timelinePage($estate, $filters, null, $limit)['entries'];
+    }
+
+    /**
+     * One page of the activity feed, newest first.
+     *
+     * Keyset (cursor) pagination on (effective time, id): new payments arriving while someone is
+     * scrolling never shift rows, so nothing is repeated or skipped the way offset pages would.
+     *
+     * @return array{entries: SupportCollection<int, array<string, mixed>>, next_cursor: string|null}
+     */
+    public function timelinePage(Estate $estate, array $filters = [], ?string $cursor = null, int $limit = 25): array
+    {
+        $effective = 'COALESCE(paid_at, failed_at, reversed_at, created_at)';
+
+        $query = $this->query($estate, $filters)
             ->reorder()
-            ->whereNot('status', TransactionStatus::Pending)
-            ->orderByRaw('COALESCE(paid_at, failed_at, reversed_at, created_at) DESC')
-            ->limit($limit)
-            ->get()
-            ->map(fn (EstateTransaction $transaction) => $this->formatTimelineEntry($transaction));
+            ->select('estate_transactions.*')
+            ->selectRaw("{$effective} as occurred_sort")
+            ->whereNot('status', TransactionStatus::Pending);
+
+        if ($decoded = $this->decodeCursor($cursor)) {
+            [$time, $id] = $decoded;
+
+            $query->where(function (Builder $q) use ($effective, $time, $id) {
+                $q->whereRaw("{$effective} < ?", [$time])
+                    ->orWhere(fn (Builder $same) => $same->whereRaw("{$effective} = ?", [$time])->where('estate_transactions.id', '<', $id));
+            });
+        }
+
+        $rows = $query
+            ->orderByRaw("{$effective} DESC")
+            ->orderByDesc('estate_transactions.id')
+            ->limit($limit + 1)
+            ->get();
+
+        $page = $rows->take($limit);
+        $last = $page->last();
+
+        return [
+            'entries' => $page->map(fn (EstateTransaction $transaction) => $this->formatTimelineEntry($transaction))->values(),
+            'next_cursor' => $rows->count() > $limit && $last ? $this->encodeCursor((string) $last->occurred_sort, (int) $last->id) : null,
+        ];
+    }
+
+    private function encodeCursor(string $time, int $id): string
+    {
+        return rtrim(strtr(base64_encode(json_encode([$time, $id])), '+/', '-_'), '=');
+    }
+
+    /**
+     * @return array{0: string, 1: int}|null
+     */
+    private function decodeCursor(?string $cursor): ?array
+    {
+        if (! $cursor) {
+            return null;
+        }
+
+        $decoded = json_decode((string) base64_decode(strtr($cursor, '-_', '+/'), true), true);
+
+        if (! is_array($decoded) || count($decoded) !== 2 || ! is_string($decoded[0]) || ! is_numeric($decoded[1])) {
+            return null;
+        }
+
+        return [$decoded[0], (int) $decoded[1]];
     }
 
     /**
