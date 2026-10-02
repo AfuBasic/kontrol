@@ -144,8 +144,8 @@ class TransactionController extends Controller
             'attention' => Inertia::defer(fn () => $this->overviewService->attention($estate)),
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
             'activity' => Inertia::defer(fn () => $this->overviewService->timelinePage($estate, $filters)),
-            'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
-                ? $this->overviewService->charts($estate)
+            'insights' => Inertia::defer(fn () => Gate::allows('transactions.reports')
+                ? $this->overviewService->insights($estate)
                 : null),
             'audits' => Inertia::defer(fn () => $audits),
             'hasTransactions' => $this->overviewService->hasTransactions($estate),
