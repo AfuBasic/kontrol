@@ -68,19 +68,30 @@ it('has no percentage change when there was nothing to compare against', functio
     expect(($this->insights)()['pulse']['collected']['delta_pct'])->toBeNull();
 });
 
-it('works out refunds and the success rate', function () {
+it('works out the success rate and who has been paying', function () {
+    $other = User::factory()->create();
+
     ($this->pay)('in_a', 500000, now()->subDay());
-    ($this->pay)('in_b', 500000, now()->subDays(2));
-    ($this->pay)('refund', 100000, now()->subDay(), ['type' => TransactionType::Refund, 'direction' => TransactionDirection::Debit]);
+    ($this->pay)('in_b', 300000, now()->subDays(2));
+    ($this->pay)('in_c', 200000, now()->subDays(3), ['user_id' => $other->id]);
     ($this->pay)('failed', 500000, null, ['status' => TransactionStatus::Failed, 'type' => TransactionType::FailedPayment, 'failed_at' => now()->subDay()]);
 
     $pulse = ($this->insights)()['pulse'];
 
-    expect($pulse['refunded']['value'])->toBe(100000)
-        ->and($pulse['refunded']['rate_pct'])->toBe(10.0)
-        ->and($pulse['success_rate']['succeeded'])->toBe(2)
+    expect($pulse['success_rate']['succeeded'])->toBe(3)
         ->and($pulse['success_rate']['failed'])->toBe(1)
-        ->and($pulse['success_rate']['pct'])->toBe(66.7);
+        ->and($pulse['success_rate']['pct'])->toBe(75.0)
+        ->and($pulse['residents_paid'])->toBe(['residents' => 2, 'payments' => 3, 'average' => 333333]);
+});
+
+it('reports no refunds anywhere in the pulse or the daily flow', function () {
+    ($this->pay)('in_a', 500000, now()->subDay());
+
+    $insights = ($this->insights)();
+
+    expect($insights['pulse'])->not->toHaveKey('refunded')
+        ->and($insights['flow'][0])->toHaveKeys(['date', 'money_in'])
+        ->and($insights['flow'][0])->not->toHaveKey('money_out');
 });
 
 it('reports what is still owed and how much of it is late, ranked by outstanding', function () {
