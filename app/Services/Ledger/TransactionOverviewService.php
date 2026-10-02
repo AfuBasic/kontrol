@@ -139,6 +139,56 @@ class TransactionOverviewService
         return [$decoded[0], (int) $decoded[1]];
     }
 
+    /** Failed and stuck payments are only worth a look for this long. */
+    private const ATTENTION_DAYS = 7;
+
+    /** A payment still "pending" after this long is probably abandoned or missing its webhook. */
+    private const STUCK_AFTER_HOURS = 2;
+
+    /**
+     * What an estate admin should look at: payments that failed or stalled and were never made good.
+     * A later successful payment by the same resident for the same charge counts as resolved.
+     *
+     * @return array{failed: array{count: int, amount: int}, stuck: array{count: int, amount: int}}
+     */
+    public function attention(Estate $estate): array
+    {
+        $summarise = function (string $kind) use ($estate): array {
+            $query = $this->baseQuery($estate);
+            $this->applyAttention($query, $kind);
+
+            return ['count' => (clone $query)->count(), 'amount' => (int) (clone $query)->sum('amount')];
+        };
+
+        return ['failed' => $summarise('failed'), 'stuck' => $summarise('stuck')];
+    }
+
+    private function applyAttention(Builder $query, string $kind): void
+    {
+        $attempted = 'COALESCE(estate_transactions.failed_at, estate_transactions.created_at)';
+
+        match ($kind) {
+            'failed' => $query
+                ->where('estate_transactions.status', TransactionStatus::Failed)
+                ->whereRaw("{$attempted} >= ?", [now()->subDays(self::ATTENTION_DAYS)]),
+            'stuck' => $query
+                ->where('estate_transactions.status', TransactionStatus::Pending)
+                ->where('estate_transactions.created_at', '<=', now()->subHours(self::STUCK_AFTER_HOURS))
+                ->where('estate_transactions.created_at', '>=', now()->subDays(self::ATTENTION_DAYS)),
+            default => $query->whereRaw('1 = 0'),
+        };
+
+        if (in_array($kind, ['failed', 'stuck'], true)) {
+            $query->whereNotExists(fn ($later) => $later->selectRaw('1')
+                ->from('estate_transactions as later')
+                ->whereColumn('later.user_id', 'estate_transactions.user_id')
+                ->whereColumn('later.collection_assignment_id', 'estate_transactions.collection_assignment_id')
+                ->where('later.status', TransactionStatus::Success->value)
+                ->where('later.direction', TransactionDirection::Credit->value)
+                ->whereRaw("later.paid_at >= {$attempted}"));
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -265,6 +315,10 @@ class TransactionOverviewService
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['attention'])) {
+            $this->applyAttention($query, (string) $filters['attention']);
         }
 
         if (! empty($filters['payment_method'])) {
