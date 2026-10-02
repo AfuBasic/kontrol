@@ -234,17 +234,6 @@ class LedgerService
         ]);
     }
 
-    public function issueRefund(EstateTransaction $parent, int $amountKobo, string $reason, ?User $approvedBy = null): EstateTransaction
-    {
-        $refund = $this->recordAdjustment($parent, TransactionType::Refund, $amountKobo, $reason, $approvedBy);
-
-        $this->updateStatus($parent, TransactionStatus::Reversed, 'Refunded: '.$reason, [
-            'reversed_at' => now()->toDateTimeString(),
-        ]);
-
-        return $refund;
-    }
-
     /**
      * @param  array<string, mixed>  $changes
      */
