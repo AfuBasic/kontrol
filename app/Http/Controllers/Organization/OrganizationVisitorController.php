@@ -47,7 +47,12 @@ class OrganizationVisitorController extends Controller
             });
         }
 
-        $visitors = $visitorsQuery->paginate(15)->withQueryString();
+        $visitors = $visitorsQuery->paginate(15)->withQueryString()->through(function (AccessCode $pass) {
+            // The stored status stays "active" after the window passes; the screen needs what is true now.
+            $pass->setAttribute('display_status', $this->displayStatus($pass));
+
+            return $pass;
+        });
 
         return Inertia::render('Organization/Visitors', [
             'organization' => [
@@ -201,6 +206,10 @@ class OrganizationVisitorController extends Controller
             return back()->withErrors(['duration_minutes' => 'Long-term passes cannot be extended.']);
         }
 
+        if (! $pass->isActive()) {
+            return back()->withErrors(['duration_minutes' => 'Only a valid pass can be extended. Create a new pass instead.']);
+        }
+
         $validated = $request->validate([
             'duration_minutes' => ['required', 'integer', 'min:15'],
         ]);
@@ -228,10 +237,24 @@ class OrganizationVisitorController extends Controller
             abort(403, 'Unauthorized.');
         }
 
+        if (! $pass->isActive()) {
+            return back()->with('error', 'This pass is no longer valid, so there is nothing to revoke.');
+        }
+
         // We revoke it instead of hard deleting to keep audit trails
         $pass->update(['status' => 'revoked']);
 
         return back()->with('success', 'Visitor pass revoked.');
+    }
+
+    private function displayStatus(AccessCode $pass): string
+    {
+        return match (true) {
+            $pass->status === AccessCodeStatus::Revoked => 'revoked',
+            $pass->status === AccessCodeStatus::Used => 'used',
+            $pass->isActive() => 'active',
+            default => 'expired',
+        };
     }
 
     /**
