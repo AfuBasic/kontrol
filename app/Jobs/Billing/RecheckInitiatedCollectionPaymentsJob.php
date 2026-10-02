@@ -68,7 +68,7 @@ class RecheckInitiatedCollectionPaymentsJob implements ShouldQueue
                 return;
             }
 
-            $settler->settle($payment->reference);
+            $settler->settle($payment->reference, isset($verification['amount']) ? (int) $verification['amount'] : null);
 
             return;
         }
