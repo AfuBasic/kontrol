@@ -8,7 +8,8 @@ import { format, parseISO } from 'date-fns';
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import AttentionStrip, { type AttentionData, type AttentionKind } from '@/Components/Admin/Transactions/AttentionStrip';
 import ActivityFeed, { type ActivityPage } from '@/Components/Admin/Transactions/ActivityFeed';
-import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
+import LedgerInsights, { type Insights } from '@/Components/Admin/Transactions/LedgerInsights';
+import PulseTiles, { type Pulse } from '@/Components/Admin/Transactions/PulseTiles';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
 import LedgerFilters from '@/Components/Admin/Transactions/LedgerFilters';
 import RecordOfflinePaymentModal from '@/Components/Admin/Transactions/RecordOfflinePaymentModal';
@@ -68,7 +69,7 @@ interface Props {
     };
     activity?: ActivityPage;
     attention?: AttentionData;
-    charts?: Record<string, unknown> | null;
+    insights?: (Insights & { pulse: Pulse }) | null;
     audits?: {
         data: AuditLogEntry[];
         links: Array<{ url: string | null; label: string; active: boolean }>;
@@ -111,7 +112,7 @@ export default function TransactionsIndex({
     todaySummary,
     activity,
     attention,
-    charts,
+    insights,
     audits,
     hasTransactions,
     recordableAssignments,
@@ -233,6 +234,13 @@ export default function TransactionsIndex({
                                 )}
                             </div>
                         </div>
+
+                        {/* How money is doing, against the 30 days before. */}
+                        {!showEmpty && permissions.reports && (
+                            <Deferred data="insights" fallback={<PulseTiles loading />}>
+                                <PulseTiles pulse={insights?.pulse} />
+                            </Deferred>
+                        )}
                     </div>
                 </div>
 
@@ -352,8 +360,8 @@ export default function TransactionsIndex({
                         )}
 
                         {activeTab === 'reports' && permissions.reports && (
-                            <Deferred data="charts" fallback={<LedgerCharts loading />}>
-                                <LedgerCharts data={charts as never} />
+                            <Deferred data="insights" fallback={<LedgerInsights loading />}>
+                                <LedgerInsights data={insights} />
                             </Deferred>
                         )}
 
