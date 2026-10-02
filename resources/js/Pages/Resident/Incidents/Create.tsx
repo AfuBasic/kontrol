@@ -89,7 +89,8 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
         setCustomError(null);
         setOfflineSaved(false);
 
-        const online = isOnline && (await isServerReachable(2500));
+        // Generous on purpose: a slow server is still a server. Only a missing answer sends this to the offline queue.
+        const online = isOnline && (await isServerReachable(6000));
 
         // If offline
         if (!online) {
