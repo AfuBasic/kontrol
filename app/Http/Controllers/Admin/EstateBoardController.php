@@ -54,7 +54,7 @@ class EstateBoardController extends Controller
         $metrics = $this->boardService->getFeedMetrics($estateId, null);
 
         return Inertia::render('Admin/EstateBoard/Index', [
-            'posts' => $posts,
+            'posts' => Inertia::scroll(fn () => $posts),
             'metrics' => $metrics,
             'filters' => [
                 'search' => $search ?? '',
