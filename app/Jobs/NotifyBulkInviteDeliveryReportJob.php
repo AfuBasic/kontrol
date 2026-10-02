@@ -42,7 +42,7 @@ class NotifyBulkInviteDeliveryReportJob implements ShouldQueue
 
         if (count($failedRecipients) > 0) {
             $creator->notify(new BulkInviteDeliveryFailedNotification($bulkInvite, $failedRecipients));
-            Log::info("NotifyBulkInviteDeliveryReportJob: Notified creator of ".count($failedRecipients)." failed deliveries for bulk invite {$this->bulkInviteId}.");
+            Log::info('NotifyBulkInviteDeliveryReportJob: Notified creator of '.count($failedRecipients)." failed deliveries for bulk invite {$this->bulkInviteId}.");
         }
     }
 }
