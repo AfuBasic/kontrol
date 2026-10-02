@@ -22,6 +22,15 @@ interface NetworkInformationLike {
 const DEFAULT_PING_PATH = '/up';
 const POLL_INTERVAL_MS = 8_000;
 
+/**
+ * How long the background check waits for the server before counting a miss. Deliberately generous: a
+ * slow connection that answers in five seconds is a poor connection, not an offline one.
+ */
+const MEASURE_TIMEOUT_MS = 8_000;
+
+/** A server that takes this long to answer a tiny request is treated as a poor connection. */
+const SLOW_RESPONSE_MS = 2_500;
+
 function getConnection(): NetworkInformationLike | null {
     if (typeof navigator === 'undefined') {
         return null;
@@ -36,9 +45,14 @@ function getConnection(): NetworkInformationLike | null {
     return nav.connection ?? nav.mozConnection ?? nav.webkitConnection ?? null;
 }
 
-function qualityFromMetrics(rtt: number | null, effectiveType: string | null, online: boolean): NetworkQuality {
+function qualityFromMetrics(rtt: number | null, effectiveType: string | null, online: boolean, measuredMs: number | null = null): NetworkQuality {
     if (!online) {
         return 'offline';
+    }
+
+    // What the server actually did just now beats what the browser estimates.
+    if (measuredMs !== null && measuredMs >= SLOW_RESPONSE_MS) {
+        return 'poor';
     }
 
     const type = (effectiveType ?? '').toLowerCase();
@@ -108,7 +122,7 @@ class NetworkMonitorImpl {
         this.pingPath = path;
     }
 
-    async checkNow(timeoutMs = 2_500): Promise<NetworkSnapshot> {
+    async checkNow(timeoutMs = MEASURE_TIMEOUT_MS): Promise<NetworkSnapshot> {
         await this.measure(timeoutMs);
 
         return this.snapshot;
@@ -119,13 +133,22 @@ class NetworkMonitorImpl {
      * Returns true when the server responds (any status short of network failure).
      */
     async isServerReachable(timeoutMs = 2_000, path?: string): Promise<boolean> {
+        return (await this.ping(timeoutMs, path)).reachable;
+    }
+
+    /**
+     * One tiny request to the server: did it answer, and how long did that take?
+     * A network failure and a timeout both count as no answer.
+     */
+    private async ping(timeoutMs: number, path?: string): Promise<{ reachable: boolean; ms: number | null }> {
         if (typeof navigator !== 'undefined' && !navigator.onLine) {
-            return false;
+            return { reachable: false, ms: null };
         }
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
         const target = path ?? this.pingPath;
+        const startedAt = performance.now();
 
         try {
             const response = await fetch(`${target}${target.includes('?') ? '&' : '?'}ping=${Date.now()}`, {
@@ -135,9 +158,12 @@ class NetworkMonitorImpl {
                 credentials: 'same-origin',
             });
 
-            return response.ok || [401, 403, 404, 405, 419].includes(response.status);
+            return {
+                reachable: response.ok || [401, 403, 404, 405, 419].includes(response.status),
+                ms: Math.round(performance.now() - startedAt),
+            };
         } catch {
-            return false;
+            return { reachable: false, ms: null };
         } finally {
             clearTimeout(timer);
         }
@@ -200,7 +226,7 @@ class NetworkMonitorImpl {
 
     private failedPings = 0;
 
-    private async measure(timeoutMs = 2_500): Promise<void> {
+    private async measure(timeoutMs = MEASURE_TIMEOUT_MS): Promise<void> {
         if (this.measuring || typeof window === 'undefined') {
             return;
         }
@@ -225,7 +251,7 @@ class NetworkMonitorImpl {
                 return;
             }
 
-            const reachable = await this.isServerReachable(timeoutMs);
+            const { reachable, ms } = await this.ping(timeoutMs);
 
             if (!reachable) {
                 this.failedPings++;
@@ -244,12 +270,12 @@ class NetworkMonitorImpl {
 
             this.failedPings = 0;
 
-            // Fallback RTT when Network Information API is missing (Safari / Firefox).
+            // Fallback RTT when Network Information API is missing (Safari / Firefox): the ping we just made.
             if (rtt === null) {
-                rtt = await this.measureFetchRtt(timeoutMs);
+                rtt = ms;
             }
 
-            const quality = qualityFromMetrics(rtt, effectiveType, true);
+            const quality = qualityFromMetrics(rtt, effectiveType, true, ms);
 
             this.publish({
                 quality,
@@ -260,27 +286,6 @@ class NetworkMonitorImpl {
             });
         } finally {
             this.measuring = false;
-        }
-    }
-
-    private async measureFetchRtt(timeoutMs: number): Promise<number | null> {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-        const start = performance.now();
-
-        try {
-            await fetch(`${this.pingPath}?rtt=${Date.now()}`, {
-                method: 'HEAD',
-                signal: controller.signal,
-                cache: 'no-store',
-                credentials: 'same-origin',
-            });
-
-            return Math.round(performance.now() - start);
-        } catch {
-            return null;
-        } finally {
-            clearTimeout(timer);
         }
     }
 
