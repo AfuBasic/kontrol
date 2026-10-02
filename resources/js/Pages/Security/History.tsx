@@ -21,7 +21,7 @@ import { useState, useEffect } from 'react';
 import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
 import MobileSheet from '@/Components/MobileSheet';
-import SecurityActiveQueue, { type SecurityActiveVisit } from '@/Components/Security/SecurityActiveQueue';
+import SecurityActiveQueue, { type SecurityActiveVisit, type PaginatedActiveVisits } from '@/Components/Security/SecurityActiveQueue';
 import { useDebounce } from '@/Hooks/useDebounce';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 
@@ -104,11 +104,11 @@ type Props = {
     };
     hosts: Host[];
     checkoutEnabled?: boolean;
-    activeVisits?: SecurityActiveVisit[];
+    activeVisits?: PaginatedActiveVisits | SecurityActiveVisit[];
     activeCount?: number;
 };
 
-export default function History({ logs, filters, hosts, checkoutEnabled = false, activeVisits = [], activeCount = 0 }: Props) {
+export default function History({ logs, filters, hosts, checkoutEnabled = false, activeVisits, activeCount = 0 }: Props) {
     const paramTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
     const initialTab = paramTab === 'active' && checkoutEnabled ? 'active' : 'history';
     const [activeTab, setActiveTab] = useState<'active' | 'history'>(initialTab);
@@ -293,7 +293,7 @@ export default function History({ logs, filters, hosts, checkoutEnabled = false,
                 {/* Content Section */}
                 <div className="px-2">
                     {checkoutEnabled && activeTab === 'active' ? (
-                        <SecurityActiveQueue activeVisits={activeVisits} />
+                        <SecurityActiveQueue activeVisits={activeVisits} activeCount={activeCount} />
                     ) : logs.data.length > 0 ? (
                         <InfiniteScroll
                             data="logs"
