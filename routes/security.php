@@ -43,12 +43,12 @@ Route::middleware('role:security')->group(function (): void {
         Route::post('/verify/validate', [VerifyController::class, 'validate'])->name('security.verify.validate');
         Route::post('/verify/decision', [VerifyController::class, 'decision'])->name('security.verify.decision');
         Route::get('/verify/sync', [VerifyController::class, 'syncData'])->name('security.verify.sync');
-        Route::post('/verify/sync', [VerifyController::class, 'syncLogs'])->name('security.verify.sync-logs');
+        Route::post('/verify/sync', [VerifyController::class, 'syncLogs'])->middleware('idempotent')->name('security.verify.sync-logs');
 
         // Quick Entry (Gate Tool)
         Route::prefix('quick-entry')->name('security.quick-entry.')->group(function (): void {
             Route::post('/log', [QuickEntryController::class, 'store'])->name('store');
-            Route::post('/sync', [QuickEntryController::class, 'sync'])->name('sync');
+            Route::post('/sync', [QuickEntryController::class, 'sync'])->middleware('idempotent')->name('sync');
             Route::get('/lookup', [QuickEntryController::class, 'lookup'])->name('lookup');
             Route::post('/checkout', [QuickEntryController::class, 'checkout'])->name('checkout');
         });
