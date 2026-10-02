@@ -262,7 +262,8 @@ const CreateAccessCode = () => {
             expires_at: form.data.expires_at ? new Date(form.data.expires_at).toISOString() : null,
         };
 
-        const online = isOnline && (await isServerReachable(2500));
+        // Generous on purpose: a slow server is still a server. Only a missing answer sends this to the offline queue.
+        const online = isOnline && (await isServerReachable(6000));
 
         if (!online) {
             setQueuingOffline(true);
