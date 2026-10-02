@@ -78,7 +78,7 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
     // Access Code Generation and Visitor Management
     Route::middleware('check-estate-feature:access-code-generation')->group(function (): void {
         Route::middleware('resident.active')->group(function (): void {
-            Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
+            Route::post('/visitors', [AccessCodeController::class, 'store'])->middleware('idempotent')->name('resident.visitors.store');
         });
         Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
 
@@ -217,7 +217,7 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
         Route::get('/create', [IncidentController::class, 'create'])->name('create');
         Route::match(['GET', 'POST'], '/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
         Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
-        Route::post('/', [IncidentController::class, 'store'])->name('store');
+        Route::post('/', [IncidentController::class, 'store'])->middleware('idempotent')->name('store');
         Route::get('/{incident}', [IncidentController::class, 'show'])
             ->name('show')
             ->missing(function () {
