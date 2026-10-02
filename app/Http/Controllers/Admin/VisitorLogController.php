@@ -278,8 +278,8 @@ class VisitorLogController extends Controller
             'checked_out_at_time' => $log->checked_out_at?->format('g:i A'),
             'checkout_verifier_name' => $log->checkoutVerifier?->name,
             'duration_minutes' => $log->checked_out_at
-                ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
-                : (int) now()->diffInMinutes($log->verified_at),
+                ? (int) $log->verified_at->diffInMinutes($log->checked_out_at)
+                : (int) $log->verified_at->diffInMinutes(now()),
             'is_overstayed' => $isOverstayed,
             'code_expires_at' => $code?->expires_at?->format('M j, Y g:i A'),
             'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
