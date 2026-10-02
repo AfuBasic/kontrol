@@ -265,6 +265,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
     // Estate Transactions (Financial Ledger)
     Route::prefix('transactions')->name('transactions.')->middleware(['feature:payment-collection', 'permission:transactions.view'])->group(function (): void {
         Route::get('/', [TransactionController::class, 'index'])->name('index');
+        Route::get('/timeline', [TransactionController::class, 'timeline'])->name('timeline');
         Route::get('/export', [TransactionController::class, 'export'])->middleware('permission:transactions.export')->name('export');
         Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
         Route::get('/{transaction}/download', [TransactionController::class, 'downloadReceipt'])->middleware('permission:transactions.download_receipts')->name('download');
