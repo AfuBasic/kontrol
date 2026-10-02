@@ -89,7 +89,6 @@ interface Props {
     filterOptions: Record<string, unknown>;
     permissions: {
         export: boolean;
-        refund: boolean;
         adjust: boolean;
         record_offline: boolean;
         view_receipts: boolean;
@@ -424,7 +423,6 @@ export default function TransactionsIndex({
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 permissions={{
-                    refund: permissions.refund,
                     adjust: permissions.adjust,
                     audit: permissions.audit,
                     download_receipts: permissions.download_receipts,
