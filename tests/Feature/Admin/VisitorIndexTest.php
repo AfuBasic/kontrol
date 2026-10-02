@@ -394,3 +394,28 @@ describe('walk-ins and access codes in the visitor log', function () {
             ->and($inside->firstWhere('entry_type', 'walk_in')['tag'])->toBe('K7PQ');
     });
 });
+
+it('reports the real stay for a visitor who has checked out, and elapsed time for one still inside', function () {
+    $this->travelTo(now()->setTime(13, 0));
+    $guard = User::factory()->create();
+
+    $base = ['estate_id' => $this->estate->id, 'verified_by' => $guard->id];
+
+    // Admitted 12:02, left 13:18 (the screenshot case): 76 minutes.
+    AccessLog::create($base + [
+        'verified_at' => now()->setTime(12, 2),
+        'checked_out_at' => now()->setTime(13, 18),
+        'meta' => ['entry_type' => 'quick_entry', 'tag' => 'AB12', 'visitor_name' => 'Gone Visitor'],
+    ]);
+    AccessLog::create($base + [
+        'verified_at' => now()->subMinutes(45),
+        'meta' => ['entry_type' => 'quick_entry', 'tag' => 'CD34', 'visitor_name' => 'Still Inside'],
+    ]);
+
+    $this->actingAs($this->admin)->get(route('admin.visitors.index'))
+        ->assertInertia(fn ($page) => $page->where('logs.data', function ($rows) {
+            $byName = collect($rows)->keyBy(fn ($r) => $r['visitor']['name']);
+
+            return $byName['Gone Visitor']['duration_minutes'] === 76 && $byName['Still Inside']['duration_minutes'] === 45;
+        }));
+});
