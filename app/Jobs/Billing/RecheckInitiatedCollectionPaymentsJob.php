@@ -79,4 +79,12 @@ class RecheckInitiatedCollectionPaymentsJob implements ShouldQueue
 
         // Anything else ('ongoing', 'pending', 'processing') is still in flight: look again next time.
     }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
+    }
 }
