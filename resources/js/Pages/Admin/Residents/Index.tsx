@@ -19,7 +19,6 @@ import {
     Home,
     Eye,
     MapPin,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -27,6 +26,7 @@ import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Contr
 import ResidentCard from '@/Components/Admin/Residents/ResidentCard';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import CustomSelect from '@/Components/UI/CustomSelect';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -131,7 +131,6 @@ export default function Residents({
     const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
     const [copied, setCopied] = useState(false);
     const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
-    const [filtersOpen, setFiltersOpen] = useState(Boolean(filters.status || filters.role || filters.property || filters.sort));
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -429,101 +428,61 @@ export default function Residents({
                 </Deferred>
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
-                    <div className="flex flex-col gap-3">
-                        {/* Search Input */}
-                        <div className="flex items-center gap-2">
-                            <div className="relative min-w-0 flex-1">
-                                <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-500" />
-                                <input
-                                    type="search"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search residents"
-                                    aria-label="Search residents by name, email, phone or unit"
-                                    className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3.5 pr-4 pl-12 text-sm font-medium text-slate-900 shadow-xs placeholder:text-slate-500 focus:border-slate-800 focus:bg-white focus:ring-2 focus:ring-slate-800/10 focus:outline-hidden"
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setFiltersOpen((open) => !open)}
-                                aria-expanded={filtersOpen}
-                                className="relative inline-flex h-12 shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 shadow-xs transition active:scale-95 lg:hidden"
-                            >
-                                <SlidersHorizontal className="h-4 w-4" />
-                                Filters
-                                {activeFilterCount > 0 && (
-                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-900 px-1 text-[11px] font-black text-white">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Quick filters */}
-                        <div className={`${filtersOpen ? 'flex' : 'hidden'} flex-col gap-3 lg:flex lg:flex-row lg:items-start lg:justify-between`}>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6">
-                                <FilterChips
-                                    label="Status"
-                                    value={status}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    options={[
-                                        { value: '', label: 'All' },
-                                        { value: 'active', label: 'Active' },
-                                        { value: 'inactive', label: 'Inactive' },
-                                        { value: 'pending', label: 'Pending' },
-                                    ]}
-                                />
-                                <FilterChips
-                                    label="Role"
-                                    value={role}
-                                    onChange={(val) => handleFilterChange('role', val)}
-                                    options={[
-                                        { value: '', label: 'All' },
-                                        { value: 'resident', label: 'Residents' },
-                                        { value: 'tenant', label: 'Tenants' },
-                                        { value: 'property_owner', label: 'Landlords' },
-                                    ]}
-                                />
-                                <FilterChips
-                                    label="Unit"
-                                    value={property}
-                                    onChange={(val) => handleFilterChange('property', val)}
-                                    options={[
-                                        { value: '', label: 'Any' },
-                                        { value: 'has_property', label: 'Assigned' },
-                                        { value: 'no_property', label: 'Unassigned' },
-                                    ]}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                                <div className="min-w-[10rem] flex-1 lg:flex-none">
-                                    <CustomSelect
-                                        size="sm"
-                                        value={sort}
-                                        onChange={(val) => handleFilterChange('sort', String(val))}
-                                        options={[
-                                            { value: '', label: 'Sort: Default' },
-                                            { value: 'name', label: 'Sort: Name' },
-                                            { value: 'date_joined', label: 'Sort: Date joined' },
-                                            { value: 'last_active', label: 'Sort: Last active' },
-                                        ]}
-                                    />
-                                </div>
-                                {hasActiveFilters && (
-                                    <button
-                                        onClick={clearFilters}
-                                        className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-slate-500 underline-offset-4 transition hover:text-slate-900 hover:underline"
-                                    >
-                                        <X className="h-3.5 w-3.5" />
-                                        Reset
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <FilterBar
+                    search={search}
+                    onSearch={setSearch}
+                    placeholder="Search residents"
+                    searchLabel="Search residents by name, email, phone or unit"
+                    activeCount={activeFilterCount}
+                    hasActive={hasActiveFilters}
+                    onReset={clearFilters}
+                    trailing={
+                        <CustomSelect
+                            size="sm"
+                            value={sort}
+                            onChange={(val) => handleFilterChange('sort', String(val))}
+                            options={[
+                                { value: '', label: 'Sort: Default' },
+                                { value: 'name', label: 'Sort: Name' },
+                                { value: 'date_joined', label: 'Sort: Date joined' },
+                                { value: 'last_active', label: 'Sort: Last active' },
+                            ]}
+                        />
+                    }
+                >
+                    <FilterChips
+                        label="Status"
+                        value={status}
+                        onChange={(val) => handleFilterChange('status', val)}
+                        options={[
+                            { value: '', label: 'All' },
+                            { value: 'active', label: 'Active' },
+                            { value: 'inactive', label: 'Inactive' },
+                            { value: 'pending', label: 'Pending' },
+                        ]}
+                    />
+                    <FilterChips
+                        label="Role"
+                        value={role}
+                        onChange={(val) => handleFilterChange('role', val)}
+                        options={[
+                            { value: '', label: 'All' },
+                            { value: 'resident', label: 'Residents' },
+                            { value: 'tenant', label: 'Tenants' },
+                            { value: 'property_owner', label: 'Landlords' },
+                        ]}
+                    />
+                    <FilterChips
+                        label="Unit"
+                        value={property}
+                        onChange={(val) => handleFilterChange('property', val)}
+                        options={[
+                            { value: '', label: 'Any' },
+                            { value: 'has_property', label: 'Assigned' },
+                            { value: 'no_property', label: 'Unassigned' },
+                        ]}
+                    />
+                </FilterBar>
 
                 {/* SECTION 4 - TABLE REDESIGN */}
                 <div className="overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 md:overflow-hidden">
@@ -1203,43 +1162,6 @@ export default function Residents({
                 )}
             </AnimatePresence>
         </>
-    );
-}
-
-function FilterChips({
-    label,
-    value,
-    options,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    options: { value: string; label: string }[];
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{label}</span>
-            <div role="group" aria-label={label} className="inline-flex w-fit max-w-full overflow-x-auto rounded-xl bg-slate-100 p-1">
-                {options.map((option) => {
-                    const selected = (value ?? '') === option.value;
-
-                    return (
-                        <button
-                            key={option.value}
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => onChange(option.value)}
-                            className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap transition ${
-                                selected ? 'bg-white text-slate-900 shadow-xs ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'
-                            }`}
-                        >
-                            {option.label}
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
     );
 }
 
