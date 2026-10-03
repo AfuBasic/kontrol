@@ -98,6 +98,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::middleware('throttle:estate-board-posts')->group(function (): void {
             Route::post('/', [EstateBoardController::class, 'store'])->name('store');
             Route::put('/{post}', [EstateBoardController::class, 'update'])->name('update');
+            Route::post('/{post}/publish', [EstateBoardController::class, 'publish'])->name('publish');
             Route::delete('/{post}', [EstateBoardController::class, 'destroy'])->name('destroy');
         });
 
