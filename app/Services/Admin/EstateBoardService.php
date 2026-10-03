@@ -119,7 +119,7 @@ class EstateBoardService
                 'author:id,name,email',
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
             ])
-            ->withCount('comments')
+            ->withCount(['comments', 'reads'])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->cursorPaginate($perPage);
