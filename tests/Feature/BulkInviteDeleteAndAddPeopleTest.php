@@ -168,3 +168,74 @@ test('the group page tells the screen how many spots are left', function () {
 
     expect($props['capacity'])->toBe(['max' => 30, 'used' => 2, 'remaining' => 28]);
 });
+
+// ---------- Groups created with "send now" switched off ----------
+
+test('a group held back at creation can be sent later with one action', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(
+        organization: $this->org,
+        user: $this->orgAdmin,
+        emails: ['held1@example.com', 'held2@example.com', 'held3@example.com'],
+        name: 'Held',
+        sendImmediately: false,
+    );
+    Queue::fake();
+
+    expect($held->recipients()->pluck('delivery_status')->unique()->all())->toBe(['pending']);
+
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.send', $held))->assertRedirect()->assertSessionHas('success');
+
+    expect($held->recipients()->pluck('delivery_status')->unique()->all())->toBe(['queued']);
+    Queue::assertPushed(DeliverBulkVisitorPassJob::class, 3);
+});
+
+test('tapping send twice emails nobody twice', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(organization: $this->org, user: $this->orgAdmin, emails: ['a@example.com', 'b@example.com'], sendImmediately: false);
+    Queue::fake();
+
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.send', $held))->assertSessionHas('success');
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.send', $held))->assertSessionHas('error');
+
+    Queue::assertPushed(DeliverBulkVisitorPassJob::class, 2);
+});
+
+test('sending leaves alone passes that were already sent or that no longer work', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(organization: $this->org, user: $this->orgAdmin, emails: ['ok@example.com', 'sent@example.com', 'revoked@example.com'], sendImmediately: false);
+    Queue::fake();
+
+    $held->recipients()->where('email', 'sent@example.com')->update(['delivery_status' => 'sent']);
+    $revoked = $held->recipients()->where('email', 'revoked@example.com')->firstOrFail();
+    AccessCode::find($revoked->last_access_code_id)->revoke();
+
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.send', $held))->assertSessionHas('success');
+
+    Queue::assertPushed(DeliverBulkVisitorPassJob::class, 1);
+    expect($held->recipients()->where('email', 'sent@example.com')->value('delivery_status'))->toBe('sent');
+});
+
+test('people added to a held group wait to be sent with the rest', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(organization: $this->org, user: $this->orgAdmin, emails: ['first@example.com'], sendImmediately: false);
+    Queue::fake();
+
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.recipients.store', $held), ['emails' => ['later@example.com']])->assertSessionHas('success');
+
+    expect($held->recipients()->where('email', 'later@example.com')->value('delivery_status'))->toBe('pending');
+    Queue::assertNothingPushed();
+});
+
+test('only an organization admin can send a group', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(organization: $this->org, user: $this->orgAdmin, emails: ['x@example.com'], sendImmediately: false);
+
+    $this->actingAs($this->member)->post(route('org.bulk-invites.send', $held))->assertForbidden();
+
+    expect($held->recipients()->value('delivery_status'))->toBe('pending');
+});
+
+test('the group page says whether it sends on its own', function () {
+    $held = app(CreateBulkVisitorInviteAction::class)->execute(organization: $this->org, user: $this->orgAdmin, emails: ['x@example.com'], sendImmediately: false);
+
+    $props = fn ($group) => $this->actingAs($this->orgAdmin)->get(route('org.bulk-invites.show', $group))->inertiaPage()['props']['bulkInvite'];
+
+    expect($props($held)['send_immediately'])->toBeFalse()
+        ->and($props($this->group)['send_immediately'])->toBeTrue();
+});
