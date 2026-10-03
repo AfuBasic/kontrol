@@ -201,13 +201,14 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
 
             <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-                    <button
-                        onClick={() => window.history.back()}
+                    {/* Always return to the app, never to the sub-page we may have just come from (history.back() looped between them) */}
+                    <Link
+                        href="/resident/home"
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-                        aria-label="Back"
+                        aria-label="Back to home"
                     >
                         <ArrowLeftIcon className="h-5 w-5" strokeWidth={2.2} />
-                    </button>
+                    </Link>
 
                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] leading-tight font-black tracking-[0.18em] text-slate-400 uppercase">Resident billing</p>
@@ -434,7 +435,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
 }
 
 ResidentBillingHubPage.layout = (page: ReactNode) => (
-    <ResidentLayout hideHeader hideNav className="bg-[#f6f8fb]">
+    <ResidentLayout hideHeader hideNav floatingNav className="bg-[#f6f8fb]">
         {page}
     </ResidentLayout>
 );
