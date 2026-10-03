@@ -16,24 +16,15 @@ type Props = {
     historyTimeline: VisitorTimelineItem[];
     recentVisitors: RecentVisitor[];
     onInviteAgain: (visitor: RecentVisitor) => void;
-    initialSearch?: string;
+    /** Search is applied on the server so it covers the whole archive, not just the pages loaded so far. */
+    search: string;
+    onSearchChange: (value: string) => void;
 };
 
-export default function HistoryArchive({ historyTimeline, recentVisitors, onInviteAgain, initialSearch = '' }: Props) {
-    const [search, setSearch] = useState(initialSearch);
+export default function HistoryArchive({ historyTimeline, recentVisitors, onInviteAgain, search, onSearchChange }: Props) {
     const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
 
-    // Filter by search
-    const filtered = historyTimeline.filter((item) => {
-        if (!search) return true;
-        const q = search.toLowerCase();
-        return (
-            item.visitor_name?.toLowerCase().includes(q) ||
-            item.code?.toLowerCase().includes(q) ||
-            item.purpose?.toLowerCase().includes(q) ||
-            item.visitor_phone?.includes(q)
-        );
-    });
+    const filtered = historyTimeline;
 
     // Group history items by Month (e.g. "July 2026")
     const groupedByMonth = filtered.reduce<Record<string, VisitorTimelineItem[]>>((acc, item) => {
@@ -58,7 +49,7 @@ export default function HistoryArchive({ historyTimeline, recentVisitors, onInvi
                 <input
                     type="text"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => onSearchChange(e.target.value)}
                     placeholder="Search past visitors, phone numbers or codes..."
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition focus:border-primary-500 focus:outline-hidden"
                 />
