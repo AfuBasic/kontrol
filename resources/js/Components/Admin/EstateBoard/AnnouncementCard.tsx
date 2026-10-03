@@ -82,7 +82,8 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                     <div className="flex flex-wrap items-center gap-2">
                         {/* Category Tag */}
-                        <CategoryTag category={post.category} />
+                        {/* Defaults carry no information; only show category/audience when they are specific */}
+                        {post.category !== 'general' && <CategoryTag category={post.category} />}
 
                         {/* Draft Badge */}
                         {post.status === 'draft' && (
@@ -189,10 +190,14 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
             {/* Tertiary Tier (Footer Metrics & Actions) */}
             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3">
                 {/* Target Audience Badge */}
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                    <AudienceIcon className="h-3.5 w-3.5 text-slate-400" />
-                    <span>{audienceConfig.label}</span>
-                </div>
+                {post.audience !== 'all' ? (
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                        <AudienceIcon className="h-3.5 w-3.5 text-slate-400" />
+                        <span>{audienceConfig.label}</span>
+                    </div>
+                ) : (
+                    <span />
+                )}
 
                 {/* Counts & Actions Menu */}
                 <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
