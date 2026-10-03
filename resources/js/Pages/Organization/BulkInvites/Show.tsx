@@ -33,6 +33,7 @@ interface Recipient {
     code: string | null;
     pass_uuid: string | null;
     can_resend: boolean;
+    pass_used: boolean;
     pass_valid_label: string | null;
     pass_starts_later: boolean;
     pass_starts_at: string | null;
@@ -81,6 +82,7 @@ interface BulkInvite {
     elapsed_ratio: number;
     auto_renew: boolean;
     send_immediately: boolean;
+    single_entry: boolean;
     capacity: { max: number; used: number; remaining: number };
     next_renewal_label: string | null;
     renewal_blocked_reason_label: string | null;
@@ -783,6 +785,11 @@ function AddPeopleSheet({
 }
 
 function RecipientStatus({ recipient }: { recipient: Recipient }) {
+    // A single-entry pass that has been used is done, whatever its email status was.
+    if (recipient.pass_used) {
+        return <span className="text-emerald-600">Used</span>;
+    }
+
     switch (recipient.delivery_status) {
         case 'failed':
             return <span className="text-rose-600">Not delivered</span>;
