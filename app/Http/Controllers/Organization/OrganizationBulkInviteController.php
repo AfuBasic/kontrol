@@ -50,7 +50,9 @@ class OrganizationBulkInviteController extends Controller
                     'recipients' => fn ($q) => $q->where('status', 'active'),
                     'renewals',
                     'recipients as sent_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'sent'),
-                    'recipients as pending_recipients_count' => fn ($q) => $q->where('status', 'active')->whereIn('delivery_status', ['pending', 'queued']),
+                    // Waiting: created but not emailed yet. Sending: queued and on its way. They mean different things.
+                    'recipients as pending_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'pending'),
+                    'recipients as queued_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'queued'),
                     'recipients as failed_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'failed'),
                 ])
                 ->with(['recipients' => fn ($q) => $q->select(['id', 'bulk_invite_id', 'email'])->where('status', 'active')->oldest('id')->limit(3)]);
@@ -128,6 +130,7 @@ class OrganizationBulkInviteController extends Controller
                     'role' => $invite->role,
                     'valid_from' => $invite->valid_from?->toDateString(),
                     'valid_until' => $invite->valid_until?->toDateString(),
+                    'created_on_label' => $formatDateLabel($invite->created_at ? Carbon::parse($invite->created_at) : null),
                     'status' => $invite->status,
                     'recipients_count' => (int) $invite->recipients_count,
                     'recipient_preview' => $invite->recipients->pluck('email')->values()->all(),
@@ -148,6 +151,7 @@ class OrganizationBulkInviteController extends Controller
                         'total' => (int) $invite->recipients_count,
                         'sent' => (int) ($invite->sent_recipients_count ?? 0),
                         'pending' => (int) ($invite->pending_recipients_count ?? 0),
+                        'sending' => (int) ($invite->queued_recipients_count ?? 0),
                         'failed' => (int) ($invite->failed_recipients_count ?? 0),
                     ],
                 ];
@@ -665,9 +669,15 @@ class OrganizationBulkInviteController extends Controller
             abort(404);
         }
 
+        // Only the people currently in the group: the page lists exactly these, so live progress has to match.
         $recipients = $bulkInvite->recipients()
+            ->where('status', 'active')
             ->select(['id', 'bulk_invite_id', 'email', 'status', 'delivery_status', 'delivery_error', 'last_delivered_at'])
-            ->get();
+            ->get()
+            ->each(fn (OrganizationBulkInviteRecipient $recipient) => $recipient->setAttribute(
+                'delivered_label',
+                $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
+            ));
 
         $summary = [
             'total' => $recipients->count(),
