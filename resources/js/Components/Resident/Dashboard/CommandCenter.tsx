@@ -22,25 +22,32 @@ function CountUpNumber({ value }: { value: number }) {
     const [count, setCount] = useState(0);
 
     useEffect(() => {
-        let start = 0;
         const end = value;
-        if (start === end) {
+        const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+        if (end <= 0 || reduceMotion) {
             setCount(end);
             return;
         }
 
-        const duration = 800; // 0.8 seconds
-        const incrementTime = Math.max(Math.floor(duration / (end || 1)), 20);
+        // Always takes the same time however large the number is, easing out so it settles gently.
+        const duration = 800;
+        const startedAt = performance.now();
+        let frame = 0;
 
-        const timer = setInterval(() => {
-            start += 1;
-            setCount(start);
-            if (start >= end) {
-                clearInterval(timer);
+        const tick = (now: number) => {
+            const progress = Math.min((now - startedAt) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.round(end * eased));
+
+            if (progress < 1) {
+                frame = requestAnimationFrame(tick);
             }
-        }, incrementTime);
+        };
 
-        return () => clearInterval(timer);
+        frame = requestAnimationFrame(tick);
+
+        return () => cancelAnimationFrame(frame);
     }, [value]);
 
     return <>{count}</>;
