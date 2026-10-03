@@ -7,6 +7,8 @@ export type ResidentSubscription = {
     trial_ends_at: string | null;
     current_period_end: string | null;
     is_active: boolean;
+    /** True when the estate charges residents and this subscription has lapsed: only dues and profile remain available. */
+    access_restricted?: boolean;
     is_grace_period: boolean;
     plan_name: string;
     billing_interval: string;
