@@ -5,6 +5,20 @@
     <meta charset="UTF-8">
     <title>Visitor Pass - {{ $accessCode->code }}</title>
     <style>
+        /*
+         * Colours come from the app's own theme (resources/css/app.css) via App\Support\BrandTheme, never typed here.
+         * Typeface: the app's Inter, embedded when its files are present; otherwise DejaVu Sans, which DomPDF always has.
+         * DomPDF has no flexbox or grid, so layout is tables and blocks.
+         */
+        @foreach ($fonts as $weight => $path)
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: {{ $weight }};
+            src: url('file://{{ $path }}') format('{{ str_ends_with($path, '.woff') ? 'woff' : (str_ends_with($path, '.otf') ? 'opentype' : 'truetype') }}');
+        }
+        @endforeach
+
         @page {
             size: a4 portrait;
             margin: 0;
@@ -14,15 +28,15 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'DejaVu Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: {!! count($fonts) ? "'Inter', " : '' !!}'DejaVu Sans', Helvetica, Arial, sans-serif;
         }
 
         body {
-            color: #0f172a;
+            color: {{ $colors['ink'] }};
             background: #ffffff;
             font-size: 12px;
             line-height: 1.4;
-            padding: 40px;
+            padding: 26px 40px;
         }
 
         table {
@@ -31,298 +45,296 @@
             border-spacing: 0;
         }
 
-        .header-table {
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .header-table td {
-            vertical-align: middle;
-        }
-
-        .logo-img {
-            height: 28px;
-            width: auto;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .doc-descriptor {
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-            letter-spacing: 0.02em;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 11px;
+        .label {
+            font-size: 9px;
             font-weight: 700;
+            color: {{ $colors['muted'] }};
             text-transform: uppercase;
-            letter-spacing: 0.06em;
-            background-color: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
+            letter-spacing: 0.1em;
         }
 
-        /* Pass Container Card */
-        .pass-card {
-            border: 2px solid #0f172a;
-            border-radius: 12px;
-            background-color: #ffffff;
-            margin-bottom: 24px;
-            overflow: hidden;
+        /* One quiet frame: brand-blue header, hairline border, generous space. */
+        .card {
+            border: 1px solid {{ $colors['hairline'] }};
+            border-radius: 14px;
+            background: #ffffff;
+            margin-bottom: 12px;
         }
 
-        .pass-header {
-            background-color: #0f172a;
-            color: #ffffff;
-            padding: 16px 20px;
+        .header {
+            background: {{ $colors['header'] }};
+            border-radius: 13px 13px 0 0;
+            padding: 16px 26px;
         }
 
-        .pass-header-title {
-            font-size: 16px;
+        .header td { vertical-align: middle; }
+
+        .header-org {
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: 0.02em;
+            color: #ffffff;
+            letter-spacing: -0.01em;
         }
 
-        .pass-header-sub {
+        .header-sub {
             font-size: 11px;
-            color: #94a3b8;
+            color: {{ $colors['headerSoft'] }};
+            margin-top: 3px;
+        }
+
+        .logo-img { height: 26px; width: auto; }
+
+        .issued {
+            margin-top: 7px;
+            font-size: 10px;
+            color: {{ $colors['headerSoft'] }};
+            text-align: right;
+        }
+
+        .body { padding: 18px 26px 16px 26px; }
+
+        .visiting-name {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            color: {{ $colors['ink'] }};
+            margin-top: 5px;
+        }
+
+        .visiting-unit {
+            font-size: 13px;
+            color: {{ $colors['body'] }};
             margin-top: 2px;
         }
 
-        .pass-body {
-            padding: 24px 20px;
+        .rule {
+            height: 1px;
+            background: {{ $colors['hairline'] }};
+            margin: 12px 0 4px 0;
         }
 
-        .qr-box {
-            text-align: center;
-            padding: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            width: 170px;
-            margin: 0 auto;
+        .details td {
+            padding: 5px 0;
+            border-bottom: 1px solid {{ $colors['hairline'] }};
+            vertical-align: top;
         }
 
-        .qr-img {
-            width: 140px;
-            height: 140px;
-            display: block;
-            margin: 0 auto;
+        .details tr:last-child td { border-bottom: none; }
+
+        .details .k {
+            width: 30%;
+            font-size: 10px;
+            font-weight: 600;
+            color: {{ $colors['muted'] }};
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding-top: 6px;
         }
+
+        .details .v {
+            font-size: 13px;
+            font-weight: 600;
+            color: {{ $colors['ink'] }};
+        }
+
+        .details .note {
+            font-size: 10px;
+            font-weight: 400;
+            color: {{ $colors['muted'] }};
+            margin-top: 2px;
+        }
+
+        /* The QR is what the pass exists for, so it gets the room. */
+        .qr-wrap { text-align: center; margin-top: 12px; }
+
+        .qr-frame {
+            display: inline-block;
+            padding: 8px;
+            border: 1px solid {{ $colors['hairline'] }};
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        .qr-img { width: 245px; height: 245px; display: block; }
 
         .qr-caption {
-            margin-top: 8px;
-            font-size: 10px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .code-display {
-            background-color: #f1f5f9;
-            border: 1px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 14px;
-            text-align: center;
-            margin-top: 16px;
-        }
-
-        .code-label {
+            margin-top: 6px;
             font-size: 10px;
             font-weight: 700;
-            color: #64748b;
+            color: {{ $colors['muted'] }};
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 4px;
+            letter-spacing: 0.1em;
+        }
+
+        .code-box {
+            margin: 8px auto 0 auto;
+            width: 300px;
+            background: {{ $colors['wash'] }};
+            border: 1px dashed {{ $colors['tintBorder'] }};
+            border-radius: 10px;
+            padding: 7px 14px 8px 14px;
+            text-align: center;
         }
 
         .code-val {
-            font-size: 26px;
+            font-size: 30px;
             font-weight: 800;
-            letter-spacing: 4px;
-            color: #0f172a;
+            letter-spacing: 7px;
+            color: {{ $colors['accent'] }};
+            margin-top: 3px;
         }
 
-        /* Details Table */
-        .details-table {
+        .guidelines {
+            background: {{ $colors['tint'] }};
+            border: 1px solid {{ $colors['tintBorder'] }};
+            border-radius: 12px;
+            padding: 10px 18px 9px 18px;
             margin-bottom: 12px;
         }
 
-        .details-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
-        }
-
-        .detail-label {
-            width: 35%;
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .detail-val {
-            width: 65%;
-            font-size: 12px;
-            color: #0f172a;
-            font-weight: 700;
-        }
-
-        /* Notice Box */
-        .instructions-box {
-            background-color: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 24px;
-        }
-
-        .instructions-title {
-            font-size: 11px;
-            font-weight: 700;
-            color: #0369a1;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-        }
-
-        .instructions-text {
-            font-size: 11px;
-            color: #0c4a6e;
-            line-height: 1.45;
-        }
-
-        /* Footer */
-        .footer-divider {
-            height: 1px;
-            background-color: #e2e8f0;
-            margin-bottom: 12px;
-        }
-
-        .footer-table {
+        .guidelines-title {
             font-size: 10px;
-            color: #64748b;
+            font-weight: 700;
+            color: {{ $colors['accent'] }};
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 3px;
         }
 
-        .footer-table td {
-            vertical-align: top;
+        .guidelines ul { margin-left: 15px; }
+
+        .guidelines li {
+            font-size: 11px;
+            line-height: 1.4;
+            color: {{ $colors['body'] }};
+            margin-bottom: 1px;
         }
+
+        .footer { font-size: 9.5px; color: {{ $colors['muted'] }}; }
+        .footer td { vertical-align: top; }
+        .footer-rule { height: 1px; background: {{ $colors['hairline'] }}; margin-bottom: 9px; }
     </style>
 </head>
 <body>
     @php
-        $logoPath = public_path('assets/images/kontrol-logo-horizontal.png');
+        // The white wordmark sits on the brand-blue header.
+        $logoPath = public_path('assets/images/kontrol-white-logo-new.png');
         $logoBase64 = file_exists($logoPath)
             ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
             : null;
     @endphp
 
-    <!-- Header -->
-    <table class="header-table">
-        <tr>
-            <td style="width: 60%;">
-                @if($logoBase64)
-                    <img src="{{ $logoBase64 }}" alt="Kontrol" class="logo-img">
-                @else
-                    <div style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">KONTROL</div>
-                @endif
-                <div class="doc-descriptor">Official Visitor Entry Pass</div>
-            </td>
-            <td style="width: 40%; text-align: right;">
-                <span class="status-badge">Valid Pass</span>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Main Card -->
-    <div class="pass-card">
-        <div class="pass-header">
-            <div class="pass-header-title">{{ $organizationName }}</div>
-            <div class="pass-header-sub">Authorized Visitor at {{ $estateName }}</div>
-        </div>
-
-        <div class="pass-body">
+    <div class="card">
+        <!-- Header: the organization and estate appear here, once. -->
+        <div class="header">
             <table>
                 <tr>
-                    <!-- Left: Details -->
-                    <td style="width: 58%; vertical-align: top; padding-right: 20px;">
-                        <table class="details-table">
-                            <tr>
-                                <td class="detail-label">Recipient:</td>
-                                <td class="detail-val">{{ $recipient->email }}</td>
-                            </tr>
-                            @if(!empty($role))
-                            <tr>
-                                <td class="detail-label">Role:</td>
-                                <td class="detail-val">{{ $role }}</td>
-                            </tr>
-                            @endif
-                            @if(!empty($purpose))
-                            <tr>
-                                <td class="detail-label">Purpose:</td>
-                                <td class="detail-val">{{ $purpose }}</td>
-                            </tr>
-                            @endif
-                            <tr>
-                                <td class="detail-label">Valid From:</td>
-                                <td class="detail-val">{{ $validFrom }}</td>
-                            </tr>
-                            <tr>
-                                <td class="detail-label">Valid Until:</td>
-                                <td class="detail-val">{{ $validUntil }}</td>
-                            </tr>
-                            <tr>
-                                <td class="detail-label">Issued By:</td>
-                                <td class="detail-val">{{ $organizationName }}</td>
-                            </tr>
-                        </table>
-
-                        <div class="code-display">
-                            <div class="code-label">Access Passcode</div>
-                            <div class="code-val">{{ $accessCode->code }}</div>
-                        </div>
+                    <td style="width: 64%;">
+                        <div class="header-org">{{ $organizationName }}</div>
+                        <div class="header-sub">Visitor entry pass &middot; {{ $estateName }}</div>
                     </td>
-
-                    <!-- Right: QR Code -->
-                    <td style="width: 42%; vertical-align: top; text-align: center;">
-                        <div class="qr-box">
-                            <img src="{{ $qrBase64 }}" alt="Pass QR Code" class="qr-img">
-                            <div class="qr-caption">Scan at Security Gate</div>
-                        </div>
+                    <td style="width: 36%; text-align: right;">
+                        @if($logoBase64)
+                            <img src="{{ $logoBase64 }}" alt="Kontrol" class="logo-img">
+                        @else
+                            <div style="font-size: 16px; font-weight: 800; color: #ffffff; text-align: right;">KONTROL</div>
+                        @endif
+                        {{-- Neutral on purpose: a PDF is a snapshot and cannot know if the pass is later revoked. The gate decides. --}}
+                        <div class="issued">Issued {{ $issuedOn }}</div>
                     </td>
                 </tr>
             </table>
         </div>
-    </div>
 
-    <!-- Security Instructions -->
-    <div class="instructions-box">
-        <div class="instructions-title">Entry Verification Guidelines</div>
-        <div class="instructions-text">
-            Please present this document (printed or on your mobile device) upon arriving at the security entrance gate. The security guard will scan the QR code or verify your 6-character access passcode against the registry.
+        <div class="body">
+            <!-- Who the visitor is coming to see: the first thing a guard asks. -->
+            <div class="label">Visiting</div>
+            <div class="visiting-name">{{ $hostName ?: $organizationName }}</div>
+            @if(!empty($hostUnit))
+                <div class="visiting-unit">{{ $hostUnit }}</div>
+            @endif
+
+            <div class="rule"></div>
+
+            <table class="details">
+                @if($passNumber)
+                <tr>
+                    <td class="k">Pass</td>
+                    <td class="v">Pass {{ $passNumber }} of {{ $passTotal }}</td>
+                </tr>
+                @endif
+                @if(!empty($batchLabel))
+                <tr>
+                    <td class="k">For</td>
+                    <td class="v">{{ $batchLabel }}</td>
+                </tr>
+                @endif
+                @if(!empty($role))
+                <tr>
+                    <td class="k">Role</td>
+                    <td class="v">{{ $role }}</td>
+                </tr>
+                @endif
+                <tr>
+                    <td class="k">Pass type</td>
+                    <td class="v">
+                        {{ $entryMode['label'] }}
+                        <div class="note">{{ $entryMode['hint'] }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="k">Valid from</td>
+                    <td class="v">{{ $validFrom }}</td>
+                </tr>
+                <tr>
+                    <td class="k">Valid until</td>
+                    <td class="v">{{ $validUntil }}</td>
+                </tr>
+                <tr>
+                    <td class="k">Sent to</td>
+                    <td class="v">
+                        {{ $maskedEmail }}
+                        <div class="note">Security may ask which email address this pass was sent to.</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- The QR and its typed fallback, as they were: only larger and central. -->
+            <div class="qr-wrap">
+                <div class="qr-frame">
+                    <img src="{{ $qrBase64 }}" alt="Pass QR Code" class="qr-img">
+                </div>
+                <div class="qr-caption">Scan at the security gate</div>
+            </div>
+
+            <div class="code-box">
+                <div class="label">Or give this passcode</div>
+                <div class="code-val">{{ $accessCode->code }}</div>
+            </div>
         </div>
     </div>
 
+    <!-- Guidelines: what we cannot verify by name, we ask for at the gate. -->
+    <div class="guidelines">
+        <div class="guidelines-title">At the gate</div>
+        <ul>
+            <li>Show this pass printed or on your phone when you arrive.</li>
+            <li>The guard will scan the QR code, or check your 6-character passcode.</li>
+            <li>Security may ask for valid photo ID.</li>
+        </ul>
+    </div>
+
     <!-- Footer -->
-    <div class="footer-divider"></div>
-    <table class="footer-table">
+    <div class="footer-rule"></div>
+    <table class="footer">
         <tr>
             <td style="width: 60%;">
-                Pass Reference: <strong>{{ $accessCode->pass_uuid }}</strong><br>
-                Issued for {{ $estateName }} via Kontrol Access Management.
+                Pass reference: <strong>{{ $accessCode->pass_uuid }}</strong><br>
+                Issued via Kontrol Access Management.
             </td>
             <td style="width: 40%; text-align: right;">
                 Generated on {{ now()->format('M d, Y H:i') }}<br>
-                © {{ date('Y') }} Kontrol. All rights reserved.
+                &copy; {{ date('Y') }} Kontrol. All rights reserved.
             </td>
         </tr>
     </table>
