@@ -1,12 +1,16 @@
-import { Head, Link, usePage, router } from '@inertiajs/react';
+import { Deferred, Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import { ChevronRight, Megaphone, AlertCircle } from 'lucide-react';
-import React, { useMemo } from 'react';
-
+import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, CheckCircle2, Clock, Activity, PlusCircle, XCircle, X, Lock } from 'lucide-react';
+import { useMemo } from 'react';
+import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import { FeedItemSkeleton } from '@/Components/Skeletons';
-import AnimatedLayout from '@/Layouts/AnimatedLayout';
-import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { EstateBoardPost, SharedData } from '@/types';
+import { OfflineState } from '@/Components/States';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
+import { useStaleData } from '@/Hooks/useStaleData';
+
+import type { SharedData } from '@/types';
+import type { EstateBoardPost } from '@/types';
 import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 
 type UnpaidDue = {
@@ -44,6 +48,26 @@ type Props = SharedData & {
     } | null;
 };
 
+/** A Today's Snapshot tile: a link normally, a visible-but-locked tile while the subscription has lapsed. */
+function SnapshotCard({ href, locked, children }: { href: string; locked: boolean; children: React.ReactNode }) {
+    const base = 'flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)]';
+
+    if (locked) {
+        return (
+            <div className={`${base} relative opacity-60`} aria-disabled="true" title="Locked until your subscription is settled">
+                {children}
+                <Lock className="absolute top-2 right-2 h-3 w-3 text-slate-500" />
+            </div>
+        );
+    }
+
+    return (
+        <Link href={href} className={`${base} transition-all hover:bg-slate-50/40 active:scale-97`}>
+            {children}
+        </Link>
+    );
+}
+
 export default function Home({
     auth,
     stats,
@@ -60,202 +84,449 @@ export default function Home({
     totalUnpaidDuesAmount,
     billingPrompt,
 }: Props) {
+    const { openExternalBilling } = useExternalBilling();
+    // Lapsed subscription: only dues and the profile stay available, so nothing here may point at locked pages.
+    const accessRestricted = Boolean(auth?.user?.resident_subscription?.access_restricted);
     const userRoles = auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth?.user?.household_parent_name;
+    const { quality, isOnline } = useNetworkQuality();
+
+    const shellSnapshot = useMemo(
+        () => ({
+            stats,
+            estateName,
+            openIncidentsCount,
+            activePassesCount,
+            upcomingPassesCount,
+            totalScheduledCount: totalScheduledCount ?? activePassesCount + upcomingPassesCount,
+        }),
+        [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount, totalScheduledCount],
+    );
+
+    const {
+        data: staleShell,
+        isStale,
+        cachedAt,
+    } = useStaleData({
+        key: 'resident-home',
+        serverData: shellSnapshot,
+        namespace: 'resident',
+        only: ['stats', 'activePassesCount', 'upcomingPassesCount', 'totalScheduledCount', 'openIncidentsCount'],
+        revalidate: isOnline && quality !== 'offline',
+    });
+
+    const displayEstateName = staleShell?.estateName ?? estateName;
+    const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
+    const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;
+    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? displayActivePasses + displayUpcomingPasses;
+    const displayOpenIncidents = staleShell?.openIncidentsCount ?? openIncidentsCount;
+    const codes = activeCodes ?? [];
+    const activity = recentActivity ?? [];
+    const announcements = latestAnnouncements ?? [];
+    const _dues = unpaidDues ?? [];
+    const duesCount = unpaidDuesCount ?? 0;
+    const duesAmount = totalUnpaidDuesAmount ?? 0;
 
     const { estate_plan } = usePage<SharedData & { estate_plan: { features: string[] } | null }>().props;
     const hasAccessCodeGen = estate_plan?.features?.includes('access-code-generation') ?? true;
+    const hasLiveFeed = estate_plan?.features?.includes('real-time-visit-feed') ?? true;
     const hasEstateBoard = estate_plan?.features?.includes('interactive-notice-board') ?? true;
+    const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
-    const codes = activeCodes ?? [];
-    const announcements = latestAnnouncements ?? [];
-    const duesCount = unpaidDuesCount ?? 0;
-    const duesAmount = totalUnpaidDuesAmount ?? 0;
-    const totalExpectedToday = activePassesCount + upcomingPassesCount;
+    // Greeting helper
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
 
-    // Build attention items - operational things that need action
-    const attentionItems: Array<{
-        title: string;
-        desc: string;
-        href: string;
-    }> = [];
+    // Calculate expiring passes (within 2 hours)
+    const now = new Date();
+    const expiringPasses = codes.filter((code) => {
+        if (!code.expires_at) return false;
+        const diffMs = new Date(code.expires_at).getTime() - now.getTime();
+        return diffMs > 0 && diffMs < 2 * 60 * 60 * 1000;
+    });
 
-    if (hasAccessCodeGen && totalExpectedToday > 0) {
-        let desc = '';
-        if (activePassesCount > 0 && upcomingPassesCount > 0) {
-            desc = `${activePassesCount} active, ${upcomingPassesCount} upcoming`;
-        } else if (activePassesCount > 0) {
-            desc = `${activePassesCount} active visitor pass${activePassesCount > 1 ? 'es' : ''}`;
-        } else {
-            desc = `${upcomingPassesCount} visitor pass${upcomingPassesCount > 1 ? 'es' : ''} expected today`;
-        }
-        attentionItems.push({ title: 'Visitors today', desc, href: '/resident/visitors' });
-    }
+    const attentionItems: any[] = [];
 
-    if (openIncidentsCount > 0) {
+    const activeSos = auth?.user?.active_sos;
+    if (activeSos) {
         attentionItems.push({
-            title: `${openIncidentsCount} open incident${openIncidentsCount > 1 ? 's' : ''}`,
-            desc: 'Unresolved security or estate incident',
-            href: '/resident/incidents',
+            type: 'active_sos',
+            title: activeSos.acknowledged_at ? 'SOS Alert Acknowledged' : 'Active Emergency SOS Alert',
+            desc: activeSos.acknowledged_at
+                ? 'Security has acknowledged your emergency alert and is currently responding.'
+                : 'Security has been notified. Responders are being dispatched.',
+            href: undefined,
+            color: 'border-rose-200 bg-rose-50/70 text-rose-800 ring-1 ring-rose-300/50',
         });
     }
 
-    if (duesCount > 0) {
+    if (hasPaymentCollection && duesCount > 0) {
         attentionItems.push({
-            title: `${duesCount} payment${duesCount > 1 ? 's' : ''} due`,
-            desc: `₦${duesAmount.toLocaleString()} outstanding`,
+            type: 'dues',
+            title: 'Outstanding Estate Dues',
+            desc: `You have ${duesCount} pending payment${duesCount > 1 ? 's' : ''} totaling ₦${duesAmount.toLocaleString()}`,
             href: '/resident/dues',
+            color: 'border-rose-100 bg-rose-50/30 text-rose-700',
         });
     }
 
-    // Determine state
-    const hasAttention = attentionItems.length > 0;
-    const hasActivity = codes.length > 0 || totalExpectedToday > 0;
-    const hasUpdates = announcements.length > 0;
+    const totalExpectedToday = displayActivePasses + displayUpcomingPasses;
+    if (totalExpectedToday > 0) {
+        let desc = '';
+        if (displayActivePasses > 0 && displayUpcomingPasses > 0) {
+            desc = `${displayActivePasses} active and ${displayUpcomingPasses} upcoming visitor pass${totalExpectedToday > 1 ? 'es' : ''} expected today`;
+        } else if (displayActivePasses > 0) {
+            desc = `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active and ready for check-in`;
+        } else {
+            desc = `${displayUpcomingPasses} visitor pass${displayUpcomingPasses > 1 ? 'es' : ''} scheduled for later today`;
+        }
+
+        attentionItems.push({
+            type: 'visitors',
+            title: 'Visitors Expected Today',
+            desc,
+            href: '/resident/visitors',
+            color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',
+        });
+    }
+
+    if (expiringPasses.length > 0) {
+        attentionItems.push({
+            type: 'expiring',
+            title: 'Visitor Pass Expiring Soon',
+            desc: `${expiringPasses[0].visitor_name || 'Visitor'}'s pass is expiring shortly`,
+            href: `/resident/visitors/${expiringPasses[0].id}`,
+            color: 'border-amber-100 bg-amber-50/30 text-amber-700',
+        });
+    }
+
+    if (displayOpenIncidents > 0) {
+        attentionItems.push({
+            type: 'incidents',
+            title: 'Pending Incidents',
+            desc: `You have ${displayOpenIncidents} unresolved security or estate incident${displayOpenIncidents > 1 ? 's' : ''}`,
+            href: '/resident/incidents',
+            color: 'border-slate-200 bg-slate-50/40 text-slate-700',
+        });
+    }
+
+    if (auth?.user?.unread_notifications_count && auth.user.unread_notifications_count > 0) {
+        attentionItems.push({
+            type: 'notifications',
+            title: 'Unread Notifications',
+            desc: `You have ${auth.user.unread_notifications_count} unread notification${auth.user.unread_notifications_count > 1 ? 's' : ''}`,
+            href: '/resident/activity?tab=notifications',
+            color: 'border-blue-100 bg-blue-50/20 text-blue-700',
+        });
+    }
+
+    if (billingPrompt?.show_auto_renew_suggestion && attentionItems.length === 0) {
+        const cardBrand = billingPrompt.payment_method?.brand || 'card';
+        const cardLast4 = billingPrompt.payment_method?.last4 ? ` ending in ${billingPrompt.payment_method.last4}` : '';
+        attentionItems.push({
+            type: 'auto_renew_suggestion',
+            title: 'Make renewals automatic',
+            desc: `Your ${cardBrand}${cardLast4} is ready. Turn on automatic renewal to pay future subscriptions seamlessly.`,
+            href: '/resident/billing?section=renewal',
+            color: 'border-indigo-100 bg-indigo-50/30 text-indigo-900',
+            isDismissible: true,
+        });
+    }
+
+    const visibleAttentionItems = accessRestricted
+        ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues')
+        : attentionItems;
+
+    const handleDismissBillingPrompt = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.post(
+            '/resident/billing/auto-renew/dismiss',
+            {},
+            {
+                preserveScroll: true,
+                only: ['billingPrompt'],
+            },
+        );
+    };
+
+    // Timeline icons helper
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'created':
+                return <PlusCircle className="h-4 w-4 text-indigo-500" />;
+            case 'used':
+                return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+            case 'expired':
+                return <Clock className="h-4 w-4 text-amber-500" />;
+            case 'revoked':
+                return <XCircle className="h-4 w-4 text-rose-500" />;
+            default:
+                return <Activity className="h-4 w-4 text-slate-400" />;
+        }
+    };
 
     return (
         <>
             <Head title="Home" />
 
-            <div className="mx-auto max-w-xl pb-24 text-left">
-                {/* Header: Greeting + Estate */}
-                <div className="px-1 pt-1">
-                    <p className="text-xs font-semibold text-slate-400">
-                        {(() => {
-                            const hour = new Date().getHours();
-                            if (hour < 12) return 'Good Morning';
-                            if (hour < 17) return 'Good Afternoon';
-                            return 'Good Evening';
-                        })()}
-                    </p>
-                    <h1 className="mt-0.5 text-lg font-black tracking-tight text-slate-900">{estateName}</h1>
-                    {isHouseholdMember && parentResidentName && (
-                        <p className="mt-0.5 text-[10px] font-medium text-slate-400">
-                            Household member of {parentResidentName}
-                        </p>
-                    )}
+            <div className="mx-auto max-w-xl space-y-3 px-0.5 pb-20">
+                {/* HEADER */}
+                <div className="flex items-center justify-between py-0.5">
+                    <div className="flex flex-col">
+                        <span className="text-slate-450 text-xs font-semibold">{getGreeting()}</span>
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900">{displayEstateName}</h1>
+                        {isHouseholdMember && parentResidentName && (
+                            <span className="text-[10px] font-medium text-slate-400">Household member of {parentResidentName}</span>
+                        )}
+                        {isStale && cachedAt && <span className="text-[10px] font-medium text-amber-600">Showing last saved home data</span>}
+                    </div>
                 </div>
 
-                {/* QUIET STATE: Nothing happening */}
-                {!hasAttention && !hasActivity && !hasUpdates && (
-                    <div className="mt-6 px-1">
-                        <p className="text-sm font-medium text-slate-600">Everything is quiet.</p>
-                        <p className="mt-1 text-xs text-slate-400">
-                            No arrivals expected today.
-                        </p>
-                    </div>
-                )}
+                {/* HERO COMMAND CENTER */}
+                <CommandCenter
+                    totalScheduled={displayTotalScheduled}
+                    expectedToday={totalExpectedToday}
+                    lastActivity={activity[0]?.message}
+                    onAction={() => router.visit('/resident/visitors/create')}
+                    canGenerate={hasAccessCodeGen && !accessRestricted}
+                    activeSos={activeSos}
+                    canTriggerSos={Boolean(
+                        auth?.user?.roles?.some((role: string) => ['resident', 'household_member', 'property_owner'].includes(role)),
+                    )}
+                />
 
-                {/* ATTENTION: Things needing action */}
-                {hasAttention && (
-                    <section className="mt-5 space-y-2">
-                        {attentionItems.map((item, i) => (
-                            <Link
-                                key={i}
-                                href={item.href}
-                                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 transition-all hover:bg-slate-50/50 active:scale-[0.99]"
-                            >
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-bold text-slate-900">{item.title}</p>
-                                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">{item.desc}</p>
-                                </div>
-                                <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                            </Link>
-                        ))}
-                    </section>
-                )}
-
-                {/* ACTIVE VISITORS - quick list if there are people currently here */}
-                {codes.length > 0 && (
-                    <section className="mt-5">
-                        <div className="space-y-1">
-                            {codes.slice(0, 3).map((code) => (
-                                <div
-                                    key={code.id}
-                                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3.5"
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-bold text-slate-900">{code.visitor_name || 'Visitor'}</p>
-                                        <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-                                            {code.expires_at
-                                                ? `Expires ${new Date(code.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
-                                                : 'Active'}
-                                        </p>
+                {/* SECTION 1: ATTENTION CENTER */}
+                <section className="space-y-2">
+                    <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Attention Center</h3>
+                    {visibleAttentionItems.length > 0 ? (
+                        <div className="space-y-2">
+                            {visibleAttentionItems.map((item, index) => {
+                                const CardContent = (
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
+                                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1.5">
+                                            {item.isDismissible && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDismissBillingPrompt}
+                                                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
+                                                    title="Dismiss for this billing period"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                            {item.href && <ChevronRight className="h-4 w-4 text-slate-400" />}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                                );
 
-                {/* RECENT UPDATES - feed-style, not a card */}
-                {hasEstateBoard && announcements.length > 0 && (
-                    <section className="mt-5">
-                        <div className="flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent updates</h3>
-                            <Link
-                                href="/resident/estate-board"
-                                className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
-                            >
-                                View all
-                            </Link>
-                        </div>
-                        <div className="mt-1">
-                            {announcements.slice(0, 4).map((post) => {
-                                const isUnread = !post.is_read;
-                                const bodyPreview = post.body
-                                    ? post.body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-                                    : '';
-                                const timeAgo = post.published_at
-                                    ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
-                                    : formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
-
-                                return (
+                                return item.href ? (
                                     <Link
-                                        key={post.id}
-                                        href={`/resident/estate-board/${post.hashid}`}
-                                        className="group block border-b border-slate-100 py-3.5 last:border-b-0"
+                                        key={index}
+                                        href={item.href}
+                                        className={`block rounded-2xl border p-3.5 transition-all hover:bg-slate-50/30 active:scale-99 ${item.color}`}
                                     >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex min-w-0 items-center gap-2">
-                                                {isUnread && (
-                                                    <span className="mt-[3px] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
-                                                )}
-                                                <span className="truncate text-xs font-semibold text-slate-700">
-                                                    {post.author?.name || 'Estate Office'}
-                                                </span>
-                                            </div>
-                                            <span className="shrink-0 text-[11px] font-medium text-slate-400">{timeAgo}</span>
-                                        </div>
-                                        <h4
-                                            className={`mt-1 text-[14px] leading-snug font-bold [overflow-wrap:anywhere] break-words transition-colors sm:text-[15px] ${
-                                                isUnread ? 'text-slate-900' : 'text-slate-800'
-                                            }`}
-                                        >
-                                            {post.title || 'Untitled Announcement'}
-                                        </h4>
-                                        {bodyPreview && (
-                                            <p className="mt-0.5 line-clamp-1 text-xs leading-relaxed text-slate-500 [overflow-wrap:anywhere] break-words">
-                                                {bodyPreview}
-                                            </p>
-                                        )}
-                                        <div className="mt-1.5 text-[11px] font-semibold text-slate-400">
-                                            {post.comments_count > 0 ? `${post.comments_count} comment${post.comments_count === 1 ? '' : 's'}` : 'Comment'}
-                                        </div>
+                                        {CardContent}
                                     </Link>
+                                ) : (
+                                    <div key={index} className={`rounded-2xl border p-3.5 ${item.color}`}>
+                                        {CardContent}
+                                    </div>
                                 );
                             })}
                         </div>
-                    </section>
+                    ) : accessRestricted ? null : (
+                        <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 p-4">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                                <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-emerald-800">Everything looks good</h4>
+                                <p className="mt-0.5 text-[11px] leading-tight font-medium text-emerald-600/90">
+                                    No outstanding dues • No expected visitors today • No unresolved incidents
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    {accessRestricted && (
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+                            <p className="text-xs font-bold text-slate-900">Some features are locked</p>
+                            <p className="mt-1 text-[11px] leading-relaxed font-medium text-slate-500">
+                                Visitor passes, estate updates, incidents and your family list unlock once your subscription is settled. Dues and your
+                                profile stay available.
+                            </p>
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => openExternalBilling({ destination: 'subscription' })}
+                                    className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white transition active:scale-95"
+                                >
+                                    Settle now
+                                </button>
+                                {hasPaymentCollection && (
+                                    <Link href="/resident/dues" className="rounded-xl px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                                        View dues
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </section>
+
+                {/* SECTION 2: TODAY'S SNAPSHOT (4 Compact Summary Cards) */}
+                <section className="space-y-2">
+                    <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Today's Snapshot</h3>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {/* Visitors Card */}
+                        <SnapshotCard href="/resident/visitors" locked={accessRestricted}>
+                            <div className="min-w-0">
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Visitors</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">{totalExpectedToday}</span>
+                            </div>
+                            <div className="text-indigo-650 flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+                                <Users className="h-4 w-4" />
+                            </div>
+                        </SnapshotCard>
+
+                        {/* Outstanding Dues Card */}
+                        <Link
+                            href="/resident/dues"
+                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] transition-all hover:bg-slate-50/40 active:scale-97"
+                        >
+                            <div className="min-w-0">
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Dues</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">₦{duesAmount.toLocaleString()}</span>
+                            </div>
+                            <div className="text-rose-650 flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50">
+                                <Wallet className="h-4 w-4" />
+                            </div>
+                        </Link>
+
+                        {/* Announcements Card */}
+                        <SnapshotCard href="/resident/estate-board" locked={accessRestricted}>
+                            <div className="min-w-0">
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Updates</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">{announcements.length}</span>
+                            </div>
+                            <div className="text-amber-650 flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+                                <Megaphone className="h-4 w-4" />
+                            </div>
+                        </SnapshotCard>
+
+                        {/* Open Incidents Card */}
+                        <SnapshotCard href="/resident/incidents" locked={accessRestricted}>
+                            <div className="min-w-0">
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Incidents</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">{displayOpenIncidents}</span>
+                            </div>
+                            <div className="text-slate-650 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50">
+                                <AlertCircle className="h-4 w-4" />
+                            </div>
+                        </SnapshotCard>
+                    </div>
+                </section>
+
+                {/* SECTION 4: ESTATE UPDATES */}
+                {hasEstateBoard && !accessRestricted && (
+                    <Deferred data="latestAnnouncements" fallback={<FeedItemSkeleton count={2} />}>
+                        {announcements.length > 0 && (
+                            <section className="space-y-2">
+                                <div className="flex items-center justify-between px-1">
+                                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Updates</h3>
+                                    <Link
+                                        href="/resident/estate-board"
+                                        className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                    >
+                                        View All
+                                    </Link>
+                                </div>
+                                <div className="divide-y divide-slate-50 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_1px_5px_rgba(0,0,0,0.01)]">
+                                    {announcements.slice(0, 3).map((post) => (
+                                        <Link
+                                            key={post.id}
+                                            href={`/resident/estate-board/${post.hashid}`}
+                                            className="group flex items-center gap-3 p-3.5 transition-colors hover:bg-slate-50/30"
+                                        >
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                                <Megaphone className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="group-hover:text-indigo-650 truncate text-xs font-semibold text-slate-800 transition-colors">
+                                                    {post.title}
+                                                </h4>
+                                                <p className="mt-0.5 text-[9px] font-medium text-slate-400">
+                                                    {formatDistanceToNow(new Date(post.published_at || post.created_at), { addSuffix: true })}
+                                                </p>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-800" />
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </Deferred>
                 )}
+
+                {/* SECTION 5: RECENT ACTIVITY */}
+                {hasLiveFeed &&
+                    !accessRestricted &&
+                    (!isOnline || quality === 'offline' ? (
+                        <section className="space-y-2">
+                            <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Activity</h3>
+                            <div className="rounded-2xl border border-slate-100 bg-white">
+                                <OfflineState
+                                    className="py-8"
+                                    title="Activity unavailable offline"
+                                    message="Reconnect to refresh your live visit feed."
+                                    lastCachedAt={cachedAt}
+                                />
+                            </div>
+                        </section>
+                    ) : (
+                        <Deferred data="recentActivity" fallback={<FeedItemSkeleton count={3} />}>
+                            {activity.length > 0 && (
+                                <section className="space-y-2">
+                                    <div className="flex items-center justify-between px-1">
+                                        <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Activity</h3>
+                                        <Link
+                                            href="/resident/activity"
+                                            className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                        >
+                                            View All
+                                        </Link>
+                                    </div>
+                                    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)]">
+                                        <div className="space-y-4">
+                                            {activity.slice(0, 3).map((item, i) => (
+                                                <div key={i} className="relative flex items-start gap-3 text-xs">
+                                                    {i < Math.min(activity.length, 3) - 1 && (
+                                                        <div className="absolute top-6 bottom-[-18px] left-[9px] w-0.5 bg-slate-50" />
+                                                    )}
+                                                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-slate-100/50 bg-slate-50">
+                                                        {getActivityIcon(item.type)}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="leading-normal font-semibold text-slate-700">{item.message}</p>
+                                                        <p className="mt-0.5 text-[9px] font-medium text-slate-400">{item.time}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
+                        </Deferred>
+                    ))}
             </div>
         </>
     );
 }
-
-Home.layout = (page: React.ReactNode) => (
-    <ResidentLayout>
-        <AnimatedLayout>{page}</AnimatedLayout>
-    </ResidentLayout>
-);
