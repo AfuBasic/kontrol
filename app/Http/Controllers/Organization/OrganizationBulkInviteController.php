@@ -9,6 +9,7 @@ use App\Actions\Organization\RemoveBulkInviteRecipientAction;
 use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\DeliverBulkVisitorPassJob;
+use App\Jobs\NotifyBulkInviteDeliveryReportJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
@@ -269,6 +270,7 @@ class OrganizationBulkInviteController extends Controller
                     ? round(min(1, max(0, $validFrom->diffInSeconds($now, false) / $validFrom->diffInSeconds($validUntil))), 4)
                     : 0,
                 'auto_renew' => (bool) $bulkInvite->auto_renew,
+                'send_immediately' => (bool) $bulkInvite->send_immediately,
                 'capacity' => [
                     'max' => OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS,
                     'used' => $bulkInvite->recipients->count(),
@@ -572,6 +574,51 @@ class OrganizationBulkInviteController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Email the passes of a group that was created (or added to) with "send now" switched off.
+     */
+    public function sendPending(Request $request, OrganizationBulkInvite $bulkInvite): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $waiting = $bulkInvite->recipients()
+            ->where('status', 'active')
+            ->where('delivery_status', 'pending')
+            ->whereNotNull('last_access_code_id')
+            ->with('lastAccessCode')
+            ->get()
+            ->filter(fn (OrganizationBulkInviteRecipient $recipient) => $this->isResendable($recipient));
+
+        $queued = 0;
+
+        foreach ($waiting as $recipient) {
+            // Claim each one atomically, so a double tap cannot email anyone twice.
+            $claimed = OrganizationBulkInviteRecipient::query()
+                ->whereKey($recipient->id)
+                ->where('delivery_status', 'pending')
+                ->update(['delivery_status' => 'queued', 'delivery_error' => null]);
+
+            if ($claimed === 1) {
+                DeliverBulkVisitorPassJob::dispatch($recipient->last_access_code_id, $recipient->id);
+                $queued++;
+            }
+        }
+
+        if ($queued === 0) {
+            return back()->with('error', 'There is nothing waiting to be sent.');
+        }
+
+        NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
+
+        return back()->with('success', $queued === 1 ? 'Sending 1 pass.' : "Sending {$queued} passes.");
     }
 
     public function retryFailed(Request $request, OrganizationBulkInvite $bulkInvite): JsonResponse
