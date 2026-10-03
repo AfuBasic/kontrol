@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Services\EstateContextService;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -198,21 +200,43 @@ class AccessCodeService
      */
     public function getUpcomingTimeline(?string $search = null): Collection
     {
-        $user = Auth::user();
-        $estate = $this->estateContext->getEstate();
+        return $this->upcomingTimelineQuery($search)->get();
+    }
 
-        $userIds = $user->getHouseholdUserIds();
+    /**
+     * One page of the Upcoming timeline (infinite scroll), soonest first.
+     */
+    public function paginateUpcomingTimeline(?string $search = null, int $perPage = 20): Paginator
+    {
+        return $this->upcomingTimelineQuery($search)->simplePaginate($perPage, ['*'], 'upcoming_page');
+    }
 
-        return AccessCode::query()
-            ->forEstate($estate->id)
-            ->whereIn('user_id', $userIds)
-            ->active()
-            ->search($search)
-            ->with('accessLogs')
-            // Order by starts_at when present, then expires_at for single_use/event,
-            // then created_at - mirrors the effective_visit_at precedence in the model.
-            ->orderByRaw('COALESCE(starts_at, CASE WHEN type IN (\'single_use\', \'event\') THEN expires_at ELSE NULL END, created_at) ASC')
-            ->get();
+    /**
+     * Numbers for the Upcoming header (how busy today is, who is arriving soon) without loading every pass.
+     *
+     * @return array{total: int, today: int, imminent: array{visitor_name: ?string, effective_visit_at: string}|null}
+     */
+    public function getUpcomingSummary(): array
+    {
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $visitAt = self::EFFECTIVE_VISIT_SQL;
+
+        $today = (clone $this->upcomingTimelineQuery(null))
+            ->whereRaw("{$visitAt} BETWEEN ? AND ?", [now($tz)->startOfDay(), now($tz)->endOfDay()])
+            ->count();
+
+        $imminent = (clone $this->upcomingTimelineQuery(null))
+            ->whereRaw("{$visitAt} BETWEEN ? AND ?", [now($tz), now($tz)->addMinutes(120)])
+            ->first();
+
+        return [
+            'total' => $this->upcomingTimelineQuery(null)->count(),
+            'today' => $today,
+            'imminent' => $imminent ? [
+                'visitor_name' => $imminent->visitor_name,
+                'effective_visit_at' => $imminent->effective_visit_at->toISOString(),
+            ] : null,
+        ];
     }
 
     /**
@@ -225,14 +249,54 @@ class AccessCodeService
      */
     public function getHistoryTimeline(int $limit = 50, ?string $search = null): Collection
     {
+        $query = $this->historyTimelineQuery($search);
+
+        if (! $search) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * One page of the History timeline (infinite scroll), most recent first.
+     */
+    public function paginateHistoryTimeline(?string $search = null, int $perPage = 20): Paginator
+    {
+        return $this->historyTimelineQuery($search)->simplePaginate($perPage, ['*'], 'history_page');
+    }
+
+    /**
+     * Order by starts_at when present, then expires_at for single_use/event, then created_at:
+     * mirrors the effective_visit_at precedence in the model.
+     */
+    private const EFFECTIVE_VISIT_SQL = "COALESCE(starts_at, CASE WHEN type IN ('single_use', 'event') THEN expires_at ELSE NULL END, created_at)";
+
+    /** @return Builder<AccessCode> */
+    private function upcomingTimelineQuery(?string $search): Builder
+    {
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
-        $userIds = $user->getHouseholdUserIds();
-
-        $query = AccessCode::query()
+        return AccessCode::query()
             ->forEstate($estate->id)
-            ->whereIn('user_id', $userIds)
+            ->whereIn('user_id', $user->getHouseholdUserIds())
+            ->active()
+            ->search($search)
+            ->with('accessLogs')
+            ->orderByRaw(self::EFFECTIVE_VISIT_SQL.' ASC')
+            ->orderBy('id');
+    }
+
+    /** @return Builder<AccessCode> */
+    private function historyTimelineQuery(?string $search): Builder
+    {
+        $user = Auth::user();
+        $estate = $this->estateContext->getEstate();
+
+        return AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $user->getHouseholdUserIds())
             ->where(function ($q) {
                 $q->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
                     ->orWhere(fn ($sq) => $sq->where('status', AccessCodeStatus::Active)
@@ -244,13 +308,8 @@ class AccessCodeService
             ->search($search)
             ->with('accessLogs')
             // Order by the same precedence as getCompletionAtAttribute()
-            ->orderByRaw('COALESCE(used_at, revoked_at, expires_at, created_at) DESC');
-
-        if (! $search) {
-            $query->limit($limit);
-        }
-
-        return $query->get();
+            ->orderByRaw('COALESCE(used_at, revoked_at, expires_at, created_at) DESC')
+            ->orderByDesc('id');
     }
 
     /**
