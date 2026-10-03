@@ -60,7 +60,7 @@ it('allows estate admin to view organizations index page', function () {
 });
 
 it('reports estate-wide organization counts regardless of filters', function () {
-    EstateOrganization::factory()->count(2)->create(['estate_id' => $this->estate->id, 'is_active' => true]);
+    EstateOrganization::factory()->count(2)->create(['estate_id' => $this->estate->id, 'is_active' => true, 'type' => 'church']);
     EstateOrganization::factory()->create(['estate_id' => $this->estate->id, 'is_active' => false, 'type' => 'school']);
 
     $this->actingAs($this->admin)
