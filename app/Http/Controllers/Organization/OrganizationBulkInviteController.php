@@ -195,6 +195,7 @@ class OrganizationBulkInviteController extends Controller
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'auto_renew' => 'boolean',
             'send_immediately' => 'boolean',
+            'single_entry' => 'boolean',
         ]);
 
         $validFrom = ! empty($validated['valid_from']) ? Carbon::parse($validated['valid_from']) : null;
@@ -211,6 +212,7 @@ class OrganizationBulkInviteController extends Controller
             validUntil: $validUntil,
             autoRenew: (bool) ($validated['auto_renew'] ?? false),
             sendImmediately: (bool) ($validated['send_immediately'] ?? true),
+            singleEntry: (bool) ($validated['single_entry'] ?? false),
         );
 
         $recipientCount = $bulkInvite->recipients->count();
@@ -275,6 +277,7 @@ class OrganizationBulkInviteController extends Controller
                     : 0,
                 'auto_renew' => (bool) $bulkInvite->auto_renew,
                 'send_immediately' => (bool) $bulkInvite->send_immediately,
+                'single_entry' => (bool) $bulkInvite->single_entry,
                 'capacity' => [
                     'max' => OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS,
                     'used' => $bulkInvite->recipients->count(),
@@ -297,6 +300,7 @@ class OrganizationBulkInviteController extends Controller
                     'delivered_label' => $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
                     ...$this->currentPassPayload($bulkInvite, $recipient),
                     'can_resend' => $this->isResendable($recipient),
+                    'pass_used' => $recipient->lastAccessCode?->status === AccessCodeStatus::Used,
                     'visits_count' => $visitStats['by_recipient'][$recipient->id]['visits'] ?? 0,
                     'last_visit_label' => $visits->recencyLabel($visitStats['by_recipient'][$recipient->id]['last_visit_at'] ?? null),
                 ])->values(),
