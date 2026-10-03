@@ -9,6 +9,7 @@ use App\Actions\Organization\RemoveBulkInviteRecipientAction;
 use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\DeliverBulkVisitorPassJob;
+use App\Jobs\NotifyBulkInviteDeliveryReportJob;
 use App\Jobs\RenewBulkVisitorInvitesJob;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
@@ -18,6 +19,7 @@ use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use App\Services\Organization\BulkInviteVisitService;
 use App\Services\OrganizationContextService;
 use App\Services\Visitor\BulkInvitePdfService;
+use App\Support\BulkInviteDeliveryFailure;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -49,7 +51,9 @@ class OrganizationBulkInviteController extends Controller
                     'recipients' => fn ($q) => $q->where('status', 'active'),
                     'renewals',
                     'recipients as sent_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'sent'),
-                    'recipients as pending_recipients_count' => fn ($q) => $q->where('status', 'active')->whereIn('delivery_status', ['pending', 'queued']),
+                    // Waiting: created but not emailed yet. Sending: queued and on its way. They mean different things.
+                    'recipients as pending_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'pending'),
+                    'recipients as queued_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'queued'),
                     'recipients as failed_recipients_count' => fn ($q) => $q->where('status', 'active')->where('delivery_status', 'failed'),
                 ])
                 ->with(['recipients' => fn ($q) => $q->select(['id', 'bulk_invite_id', 'email'])->where('status', 'active')->oldest('id')->limit(3)]);
@@ -127,6 +131,7 @@ class OrganizationBulkInviteController extends Controller
                     'role' => $invite->role,
                     'valid_from' => $invite->valid_from?->toDateString(),
                     'valid_until' => $invite->valid_until?->toDateString(),
+                    'created_on_label' => $formatDateLabel($invite->created_at ? Carbon::parse($invite->created_at) : null),
                     'status' => $invite->status,
                     'recipients_count' => (int) $invite->recipients_count,
                     'recipient_preview' => $invite->recipients->pluck('email')->values()->all(),
@@ -147,6 +152,7 @@ class OrganizationBulkInviteController extends Controller
                         'total' => (int) $invite->recipients_count,
                         'sent' => (int) ($invite->sent_recipients_count ?? 0),
                         'pending' => (int) ($invite->pending_recipients_count ?? 0),
+                        'sending' => (int) ($invite->queued_recipients_count ?? 0),
                         'failed' => (int) ($invite->failed_recipients_count ?? 0),
                     ],
                 ];
@@ -190,6 +196,7 @@ class OrganizationBulkInviteController extends Controller
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'auto_renew' => 'boolean',
             'send_immediately' => 'boolean',
+            'single_entry' => 'boolean',
         ]);
 
         $validFrom = ! empty($validated['valid_from']) ? Carbon::parse($validated['valid_from']) : null;
@@ -206,6 +213,7 @@ class OrganizationBulkInviteController extends Controller
             validUntil: $validUntil,
             autoRenew: (bool) ($validated['auto_renew'] ?? false),
             sendImmediately: (bool) ($validated['send_immediately'] ?? true),
+            singleEntry: (bool) ($validated['single_entry'] ?? false),
         );
 
         $recipientCount = $bulkInvite->recipients->count();
@@ -269,6 +277,8 @@ class OrganizationBulkInviteController extends Controller
                     ? round(min(1, max(0, $validFrom->diffInSeconds($now, false) / $validFrom->diffInSeconds($validUntil))), 4)
                     : 0,
                 'auto_renew' => (bool) $bulkInvite->auto_renew,
+                'send_immediately' => (bool) $bulkInvite->send_immediately,
+                'single_entry' => (bool) $bulkInvite->single_entry,
                 'capacity' => [
                     'max' => OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS,
                     'used' => $bulkInvite->recipients->count(),
@@ -287,10 +297,11 @@ class OrganizationBulkInviteController extends Controller
                     'id' => $recipient->id,
                     'email' => $recipient->email,
                     'delivery_status' => $recipient->delivery_status,
-                    'delivery_error' => $recipient->delivery_error,
+                    'delivery_error' => BulkInviteDeliveryFailure::friendly($recipient->delivery_error),
                     'delivered_label' => $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
                     ...$this->currentPassPayload($bulkInvite, $recipient),
                     'can_resend' => $this->isResendable($recipient),
+                    'pass_used' => $recipient->lastAccessCode?->status === AccessCodeStatus::Used,
                     'visits_count' => $visitStats['by_recipient'][$recipient->id]['visits'] ?? 0,
                     'last_visit_label' => $visits->recencyLabel($visitStats['by_recipient'][$recipient->id]['last_visit_at'] ?? null),
                 ])->values(),
@@ -574,6 +585,51 @@ class OrganizationBulkInviteController extends Controller
         return back()->with('success', $message);
     }
 
+    /**
+     * Email the passes of a group that was created (or added to) with "send now" switched off.
+     */
+    public function sendPending(Request $request, OrganizationBulkInvite $bulkInvite): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $waiting = $bulkInvite->recipients()
+            ->where('status', 'active')
+            ->where('delivery_status', 'pending')
+            ->whereNotNull('last_access_code_id')
+            ->with('lastAccessCode')
+            ->get()
+            ->filter(fn (OrganizationBulkInviteRecipient $recipient) => $this->isResendable($recipient));
+
+        $queued = 0;
+
+        foreach ($waiting as $recipient) {
+            // Claim each one atomically, so a double tap cannot email anyone twice.
+            $claimed = OrganizationBulkInviteRecipient::query()
+                ->whereKey($recipient->id)
+                ->where('delivery_status', 'pending')
+                ->update(['delivery_status' => 'queued', 'delivery_error' => null]);
+
+            if ($claimed === 1) {
+                DeliverBulkVisitorPassJob::dispatch($recipient->last_access_code_id, $recipient->id);
+                $queued++;
+            }
+        }
+
+        if ($queued === 0) {
+            return back()->with('error', 'There is nothing waiting to be sent.');
+        }
+
+        NotifyBulkInviteDeliveryReportJob::dispatch($bulkInvite->id)->delay(now()->addMinutes(2));
+
+        return back()->with('success', $queued === 1 ? 'Sending 1 pass.' : "Sending {$queued} passes.");
+    }
+
     public function retryFailed(Request $request, OrganizationBulkInvite $bulkInvite): JsonResponse
     {
         /** @var EstateOrganization $organization */
@@ -618,9 +674,16 @@ class OrganizationBulkInviteController extends Controller
             abort(404);
         }
 
+        // Only the people currently in the group: the page lists exactly these, so live progress has to match.
         $recipients = $bulkInvite->recipients()
+            ->where('status', 'active')
             ->select(['id', 'bulk_invite_id', 'email', 'status', 'delivery_status', 'delivery_error', 'last_delivered_at'])
-            ->get();
+            ->get()
+            ->each(function (OrganizationBulkInviteRecipient $recipient): void {
+                $recipient->setAttribute('delivered_label', $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null));
+                // Shown to the group creator, so it is always a plain-language reason (the raw error stays stored).
+                $recipient->setAttribute('delivery_error', BulkInviteDeliveryFailure::friendly($recipient->delivery_error));
+            });
 
         $summary = [
             'total' => $recipients->count(),

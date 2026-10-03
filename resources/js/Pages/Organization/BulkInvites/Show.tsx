@@ -17,6 +17,9 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
+import EmailPillInput from '@/Components/Organization/EmailPillInput';
+import ProgressRing from '@/Components/UI/ProgressRing';
+import { useDeliveryProgress } from '@/Hooks/useDeliveryProgress';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 import { shareAccessCode } from '@/Utils/share';
@@ -30,6 +33,7 @@ interface Recipient {
     code: string | null;
     pass_uuid: string | null;
     can_resend: boolean;
+    pass_used: boolean;
     pass_valid_label: string | null;
     pass_starts_later: boolean;
     pass_starts_at: string | null;
@@ -77,6 +81,8 @@ interface BulkInvite {
     days_left: number;
     elapsed_ratio: number;
     auto_renew: boolean;
+    send_immediately: boolean;
+    single_entry: boolean;
     capacity: { max: number; used: number; remaining: number };
     next_renewal_label: string | null;
     renewal_blocked_reason_label: string | null;
@@ -104,6 +110,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     const [isRetrying, setIsRetrying] = useState(false);
     const [isResending, setIsResending] = useState(false);
     const [addingPeople, setAddingPeople] = useState(false);
+    const [isSendingNow, setIsSendingNow] = useState(false);
 
     useEffect(() => {
         if (selected) {
@@ -117,11 +124,13 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
         }
     }, [confirming]);
 
-    const recipients = bulkInvite.recipients;
+    // Watches the emails go out and keeps these numbers live, only while something is actually sending.
+    const { recipients, stalled } = useDeliveryProgress(bulkInvite.id, bulkInvite.recipients);
     const total = recipients.length;
     const sent = recipients.filter((r) => r.delivery_status === 'sent').length;
     const failed = recipients.filter((r) => r.delivery_status === 'failed').length;
-    const sending = total - sent - failed;
+    const waiting = recipients.filter((r) => r.delivery_status === 'pending').length;
+    const sending = recipients.filter((r) => r.delivery_status === 'queued').length;
 
     const filtered = useMemo(() => {
         const needle = query.trim().toLowerCase();
@@ -206,6 +215,18 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 preserveScroll: true,
                 onSuccess: () => setSelected(null),
                 onFinish: () => setIsResending(false),
+            },
+        );
+    };
+
+    const sendWaiting = () => {
+        router.post(
+            `/org/bulk-invites/${bulkInvite.id}/send`,
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setIsSendingNow(true),
+                onFinish: () => setIsSendingNow(false),
             },
         );
     };
@@ -384,31 +405,49 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 {/* Delivery summary */}
                 {total > 0 && (
                     <div className="soft-card mt-3 flex min-h-[56px] items-center gap-3 px-3.5 py-3">
-                        <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${
-                                failed > 0 ? 'icon-tile-rose' : sending > 0 ? 'icon-tile-amber' : 'icon-tile-mint'
-                            }`}
-                        >
-                            {failed > 0 ? (
-                                <AlertTriangle className="h-4 w-4" strokeWidth={2.2} />
-                            ) : sending > 0 ? (
-                                <Clock className="h-4 w-4" strokeWidth={2.2} />
-                            ) : (
-                                <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
-                            )}
-                        </div>
+                        {failed === 0 && sending > 0 && !stalled ? (
+                            <ProgressRing value={sent} total={total} label={`${sent} of ${total} passes sent`} />
+                        ) : (
+                            <div
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${
+                                    failed > 0 ? 'icon-tile-rose' : waiting > 0 || sending > 0 ? 'icon-tile-amber' : 'icon-tile-mint'
+                                }`}
+                            >
+                                {failed > 0 ? (
+                                    <AlertTriangle className="h-4 w-4" strokeWidth={2.2} />
+                                ) : sending > 0 ? (
+                                    <Clock className="h-4 w-4" strokeWidth={2.2} />
+                                ) : waiting > 0 ? (
+                                    <Send className="h-4 w-4" strokeWidth={2.2} />
+                                ) : (
+                                    <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
+                                )}
+                            </div>
+                        )}
                         <div className="min-w-0 flex-1">
                             <p className="text-[14px] text-[#071f4b]">
                                 {failed > 0
                                     ? `${failed} of ${total} not delivered`
                                     : sending > 0
-                                      ? `Sending passes…`
-                                      : total === 1
-                                        ? 'Pass delivered'
-                                        : `All ${total} passes delivered`}
+                                      ? stalled
+                                          ? 'Taking longer than usual'
+                                          : 'Sending passes…'
+                                      : waiting > 0
+                                        ? waiting === total
+                                            ? 'Passes not sent yet'
+                                            : `${waiting} ${waiting === 1 ? 'pass' : 'passes'} not sent yet`
+                                        : total === 1
+                                          ? 'Pass delivered'
+                                          : `All ${total} passes delivered`}
                             </p>
                             <p className="mt-0.5 text-[12px] text-slate-500">
-                                {failed > 0 ? 'Check the addresses, then retry.' : `${sent} of ${total} emails sent with PDF pass`}
+                                {failed > 0
+                                    ? 'Check the addresses, then retry.'
+                                    : sending > 0 && stalled
+                                      ? 'Some passes are still on their way. Refresh in a moment.'
+                                      : sending === 0 && waiting > 0
+                                        ? 'Ready to go. Nothing is emailed until you send.'
+                                        : `${sent} of ${total} emails sent with PDF pass`}
                             </p>
                         </div>
                         {failed > 0 && membership.is_admin && (
@@ -420,6 +459,17 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             >
                                 {isRetrying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                 Retry
+                            </button>
+                        )}
+                        {failed === 0 && sending === 0 && waiting > 0 && canManage && (
+                            <button
+                                type="button"
+                                onClick={sendWaiting}
+                                disabled={isSendingNow}
+                                className="inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full bg-[#0b4aa2] px-3.5 text-[13px] font-medium text-white disabled:opacity-60"
+                            >
+                                {isSendingNow && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                {isSendingNow ? 'Sending…' : waiting === 1 ? 'Send pass' : `Send ${waiting} passes`}
                             </button>
                         )}
                     </div>
@@ -587,21 +637,23 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                     {copied ? 'Link copied' : 'Copy pass link'}
                                 </button>
                             )}
-                            {canManage && retainedSelected.can_resend && retainedSelected.delivery_status === 'failed' && (
-                                <button
-                                    type="button"
-                                    onClick={() => resendPass(retainedSelected)}
-                                    disabled={isResending}
-                                    className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50 disabled:opacity-60"
-                                >
-                                    {isResending ? (
-                                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
-                                    ) : (
-                                        <Send className="h-4 w-4 text-slate-500" />
-                                    )}
-                                    {isResending ? 'Resending…' : 'Resend pass'}
-                                </button>
-                            )}
+                            {canManage &&
+                                retainedSelected.can_resend &&
+                                (retainedSelected.delivery_status === 'failed' || retainedSelected.delivery_status === 'pending') && (
+                                    <button
+                                        type="button"
+                                        onClick={() => resendPass(retainedSelected)}
+                                        disabled={isResending}
+                                        className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50 disabled:opacity-60"
+                                    >
+                                        {isResending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                                        ) : (
+                                            <Send className="h-4 w-4 text-slate-500" />
+                                        )}
+                                        {isResending ? 'Sending…' : retainedSelected.delivery_status === 'pending' ? 'Send pass' : 'Resend pass'}
+                                    </button>
+                                )}
                             {canManage && (
                                 <button
                                     type="button"
@@ -623,6 +675,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 groupId={bulkInvite.id}
                 existing={existingEmails}
                 remaining={bulkInvite.capacity.remaining}
+                sendsOnItsOwn={bulkInvite.send_immediately}
             />
 
             <ConfirmationSheet
@@ -639,11 +692,9 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     );
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 /**
- * Paste or type email addresses, see at once how many are new, then add them. Each new person gets a
- * pass for the group's current period, emailed the same way as when the group was created.
+ * Add people to an existing group. The address box is the same one the group creation form uses, so it
+ * behaves identically: type an address and press Enter or comma, or paste a whole list.
  */
 function AddPeopleSheet({
     isOpen,
@@ -651,56 +702,40 @@ function AddPeopleSheet({
     groupId,
     existing,
     remaining,
+    sendsOnItsOwn,
 }: {
     isOpen: boolean;
     onClose: () => void;
     groupId: number;
     existing: Set<string>;
     remaining: number;
+    sendsOnItsOwn: boolean;
 }) {
-    const [text, setText] = useState('');
+    const [emails, setEmails] = useState<string[]>([]);
     const [processing, setProcessing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | undefined>();
 
-    const parsed = useMemo(() => {
-        const seen = new Set<string>();
-        const fresh: string[] = [];
-        const already: string[] = [];
-        const invalid: string[] = [];
-
-        for (const raw of text.split(/[\s,;]+/)) {
-            const email = raw.trim().toLowerCase();
-            if (!email || seen.has(email)) continue;
-            seen.add(email);
-
-            if (!EMAIL_PATTERN.test(email)) invalid.push(raw.trim());
-            else if (existing.has(email)) already.push(email);
-            else fresh.push(email);
-        }
-
-        return { fresh, already, invalid };
-    }, [text, existing]);
-
-    const overBy = parsed.fresh.length - remaining;
-    const canSubmit = parsed.fresh.length > 0 && overBy <= 0 && parsed.invalid.length === 0 && !processing;
+    const fresh = useMemo(() => emails.filter((email) => !existing.has(email)), [emails, existing]);
+    const alreadyIn = emails.length - fresh.length;
+    const canSubmit = fresh.length > 0 && !processing;
 
     const close = () => {
         if (processing) return;
-        setError(null);
+        setError(undefined);
         onClose();
     };
 
     const submit = () => {
         if (!canSubmit) return;
-        setError(null);
+        setError(undefined);
         router.post(
             `/org/bulk-invites/${groupId}/recipients`,
-            { emails: parsed.fresh },
+            { emails: fresh },
             {
                 preserveScroll: true,
                 onStart: () => setProcessing(true),
                 onSuccess: () => {
-                    setText('');
+                    setEmails([]);
                     onClose();
                 },
                 onError: (errors) => setError(errors.emails ?? Object.values(errors)[0] ?? 'Something went wrong. Please try again.'),
@@ -713,40 +748,26 @@ function AddPeopleSheet({
         <MobileSheet isOpen={isOpen} onClose={close} title="Add people">
             <div className="flex flex-col gap-4 pb-2">
                 <p className="text-[13px] leading-relaxed text-slate-500">
-                    Each person gets a pass for this group's current period, emailed with their PDF pass.
+                    {sendsOnItsOwn
+                        ? "Each person gets a pass for this group's current period, emailed with their PDF pass."
+                        : "Each person gets a pass for this group's current period. Nothing is emailed until you send the group's passes."}
                 </p>
 
-                <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    rows={5}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    placeholder="Paste or type emails, separated by commas, spaces or new lines"
-                    className="w-full resize-none rounded-2xl border border-slate-200/90 bg-white p-3.5 text-[16px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                <EmailPillInput
+                    value={emails}
+                    onChange={setEmails}
+                    maxEmails={remaining + alreadyIn}
+                    error={error}
+                    placeholder="Type an email and press Enter or comma..."
                 />
 
                 <div className="flex flex-col gap-1 text-[13px]">
                     <p className="text-slate-600">
-                        {parsed.fresh.length === 0
+                        {fresh.length === 0
                             ? `${remaining} ${remaining === 1 ? 'spot' : 'spots'} left in this group`
-                            : `${parsed.fresh.length} to add · ${Math.max(0, remaining - parsed.fresh.length)} ${Math.max(0, remaining - parsed.fresh.length) === 1 ? 'spot' : 'spots'} left`}
+                            : `${fresh.length} to add · ${Math.max(0, remaining - fresh.length)} ${Math.max(0, remaining - fresh.length) === 1 ? 'spot' : 'spots'} left`}
                     </p>
-                    {parsed.already.length > 0 && <p className="text-slate-500">{parsed.already.length} already in the group, skipped</p>}
-                    {parsed.invalid.length > 0 && (
-                        <p className="text-rose-600">
-                            {parsed.invalid.length === 1 ? "This doesn't look like an email" : `${parsed.invalid.length} don't look like emails`}:{' '}
-                            {parsed.invalid.slice(0, 3).join(', ')}
-                            {parsed.invalid.length > 3 ? '…' : ''}
-                        </p>
-                    )}
-                    {overBy > 0 && (
-                        <p className="text-rose-600">
-                            A group holds up to 30 people. You can add {remaining} more, so take off {overBy}.
-                        </p>
-                    )}
-                    {error && <p className="text-rose-600">{error}</p>}
+                    {alreadyIn > 0 && <p className="text-slate-500">{alreadyIn} already in the group, skipped</p>}
                 </div>
 
                 <button
@@ -756,13 +777,7 @@ function AddPeopleSheet({
                     className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#0b4aa2] px-4 text-[15px] font-semibold text-white transition active:scale-[0.99] disabled:opacity-40"
                 >
                     {processing && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {processing
-                        ? 'Adding…'
-                        : parsed.fresh.length > 1
-                          ? `Add ${parsed.fresh.length} people`
-                          : parsed.fresh.length === 1
-                            ? 'Add 1 person'
-                            : 'Add people'}
+                    {processing ? 'Adding…' : fresh.length > 1 ? `Add ${fresh.length} people` : fresh.length === 1 ? 'Add 1 person' : 'Add people'}
                 </button>
             </div>
         </MobileSheet>
@@ -770,11 +785,18 @@ function AddPeopleSheet({
 }
 
 function RecipientStatus({ recipient }: { recipient: Recipient }) {
+    // A single-entry pass that has been used is done, whatever its email status was.
+    if (recipient.pass_used) {
+        return <span className="text-emerald-600">Used</span>;
+    }
+
     switch (recipient.delivery_status) {
         case 'failed':
             return <span className="text-rose-600">Not delivered</span>;
         case 'sent':
             return <span>{recipient.delivered_label ? `Delivered ${recipient.delivered_label}` : 'Delivered'}</span>;
+        case 'pending':
+            return <span className="text-amber-600">Not sent yet</span>;
         default:
             return <span>Sending…</span>;
     }

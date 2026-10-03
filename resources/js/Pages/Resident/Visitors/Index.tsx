@@ -1,4 +1,4 @@
-import { Head, router, usePage, Link } from '@inertiajs/react';
+import { Head, InfiniteScroll, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Mail, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -7,13 +7,14 @@ import MobileSheet from '@/Components/MobileSheet';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
 import ActiveVisitsCallout from '@/Components/Visitors/ActiveVisitsCallout';
 import ResidentActiveVisits, { type ActiveVisitItem } from '@/Components/Visitors/ResidentActiveVisits';
-import ContextBanner from '@/Components/Visitors/ContextBanner';
+import ContextBanner, { type UpcomingSummary } from '@/Components/Visitors/ContextBanner';
 import HistoryArchive from '@/Components/Visitors/HistoryArchive';
 import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import QuickActions from '@/Components/Visitors/QuickActions';
 import TodaySchedule from '@/Components/Visitors/TodaySchedule';
 import UpcomingSchedule from '@/Components/Visitors/UpcomingSchedule';
 import VisitorScheduleEmptyState from '@/Components/Visitors/VisitorScheduleEmptyState';
+import { useDebounce } from '@/Hooks/useDebounce';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
@@ -28,9 +29,13 @@ type RecentVisitor = {
     type: string;
 };
 
+/** A page-by-page list: Inertia merges each new page into `data` as the viewer scrolls. */
+type ScrollList<T> = { data: T[] };
+
 type Props = {
-    upcomingTimeline: AccessCode[];
-    historyTimeline: AccessCode[];
+    upcomingTimeline: ScrollList<AccessCode>;
+    historyTimeline: ScrollList<AccessCode>;
+    upcomingSummary: UpcomingSummary;
     activeVisits?: ActiveVisitItem[];
     activeCount?: number;
     checkoutEnabled?: boolean;
@@ -61,15 +66,25 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
     }
 }
 
+const ListSpinner = () => (
+    <div className="flex justify-center py-4" role="status" aria-label="Loading more visitors">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+    </div>
+);
+
 export default function Visitors({
-    upcomingTimeline,
-    historyTimeline,
+    upcomingTimeline: upcomingList,
+    historyTimeline: historyList,
+    upcomingSummary,
+    filters,
     activeVisits = [],
     activeCount = 0,
     checkoutEnabled = false,
     recentVisitors = [],
     accessCodesEnabled = true,
 }: Props) {
+    const upcomingTimeline = upcomingList.data;
+    const historyTimeline = historyList.data;
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const { operations, retryOperation, isSyncing, syncNow } = useSyncStatus();
@@ -78,6 +93,21 @@ export default function Visitors({
     const initialTab: Tab = paramTab === 'active' && checkoutEnabled ? 'active' : paramTab === 'history' ? 'history' : 'schedule';
 
     const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+    // Archive search runs on the server so it covers every past visit, then the list restarts from page one.
+    const [historySearch, setHistorySearch] = useState(filters?.search_history ?? '');
+    const debouncedHistorySearch = useDebounce(historySearch, 350);
+    useEffect(() => {
+        if (debouncedHistorySearch === (filters?.search_history ?? '')) {
+            return;
+        }
+        router.get(
+            window.location.pathname,
+            { tab: 'history', search_history: debouncedHistorySearch || undefined },
+            { only: ['historyTimeline', 'filters'], reset: ['historyTimeline'], preserveState: true, preserveScroll: true, replace: true },
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedHistorySearch]);
 
     const switchTab = (tab: Tab) => {
         if (tab === 'active' && !checkoutEnabled) {
@@ -399,16 +429,16 @@ export default function Visitors({
                             ) : (
                                 <>
                                     {/* 1. Adaptive Context */}
-                                    <ContextBanner upcoming={upcomingTimeline as any} />
+                                    <ContextBanner summary={upcomingSummary} />
 
                                     {/* 2. Next Arrival Hero */}
                                     <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
 
-                                    {/* 3. Today's Schedule */}
-                                    <TodaySchedule visits={todayVisits as any} onCancel={promptCancelPass} />
-
-                                    {/* 4. Upcoming (Event-based) */}
-                                    <UpcomingSchedule visits={futureUpcomingVisits as any} />
+                                    {/* 3 + 4. Today's schedule and Upcoming load page by page as the viewer scrolls */}
+                                    <InfiniteScroll data="upcomingTimeline" loading={<ListSpinner />}>
+                                        <TodaySchedule visits={todayVisits as any} onCancel={promptCancelPass} />
+                                        <UpcomingSchedule visits={futureUpcomingVisits as any} />
+                                    </InfiniteScroll>
 
                                     {/* 5. Quick Actions & Invite Again */}
                                     <QuickActions
@@ -438,11 +468,15 @@ export default function Visitors({
                             exit={{ opacity: 0, x: -8 }}
                             transition={{ duration: 0.2, ease: 'easeOut' }}
                         >
-                            <HistoryArchive
-                                historyTimeline={historyTimeline as any}
-                                recentVisitors={recentVisitors}
-                                onInviteAgain={handleInviteAgain}
-                            />
+                            <InfiniteScroll data="historyTimeline" loading={<ListSpinner />}>
+                                <HistoryArchive
+                                    historyTimeline={historyTimeline as any}
+                                    recentVisitors={recentVisitors}
+                                    onInviteAgain={handleInviteAgain}
+                                    search={historySearch}
+                                    onSearchChange={setHistorySearch}
+                                />
+                            </InfiniteScroll>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -506,7 +540,7 @@ export default function Visitors({
                                 setShowCreateSheet(false);
                                 setShowBulkInviteModal(true);
                             }}
-                            className="group flex w-full items-start gap-3.5 text-left rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
+                            className="group flex w-full items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 text-left transition-all hover:border-slate-200 hover:bg-slate-100/80"
                         >
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
                                 <Users className="h-4 w-4" />
@@ -523,10 +557,7 @@ export default function Visitors({
             </MobileSheet>
 
             {/* Bulk Invite Modal */}
-            <BulkInviteModal
-                isOpen={showBulkInviteModal}
-                onClose={() => setShowBulkInviteModal(false)}
-            />
+            <BulkInviteModal isOpen={showBulkInviteModal} onClose={() => setShowBulkInviteModal(false)} />
 
             {/* Revoke Modal */}
             <ConfirmationModal

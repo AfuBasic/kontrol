@@ -87,8 +87,13 @@ class RecordCheckInAction
                 }
             }
 
-            // Mark as used if single-use (and estate enforces it) OR if it's an event pass that just reached its limit
-            if (($forceSingleUse && $accessCode->type === 'single_use') || $isEventFull) {
+            // A bulk group can be set to single entry: each of its passes opens the gate once, so a forwarded
+            // copy cannot be used again. Groups that did not choose it keep repeat entry until expiry.
+            $isSingleEntryBulk = (bool) $accessCode->bulkInviteRecipient?->bulkInvite?->single_entry;
+
+            // Mark as used if single-use (and estate enforces it), if its group is single entry,
+            // OR if it's an event pass that just reached its limit
+            if (($forceSingleUse && $accessCode->type === 'single_use') || $isSingleEntryBulk || $isEventFull) {
                 $accessCode->update([
                     'status' => AccessCodeStatus::Used,
                     'used_at' => $timestamp,

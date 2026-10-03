@@ -34,9 +34,6 @@ class AccessCodeController extends Controller
         $searchUpcoming = $request->input('search_upcoming');
         $searchHistory = $request->input('search_history');
 
-        $upcomingCodes = $this->accessCodeService->getUpcomingTimeline($searchUpcoming);
-        $historyCodes = $this->accessCodeService->getHistoryTimeline(50, $searchHistory);
-
         $residentAddress = $this->resolveResidentAddress();
 
         $estateId = null;
@@ -50,28 +47,30 @@ class AccessCodeController extends Controller
         $checkoutEnabled = $estateId ? $this->activeVisitService->isCheckoutMonitoringEnabled($estateId) : false;
         $userId = (int) auth()->id();
 
-        $activeVisits = ($checkoutEnabled && $estateId)
-            ? $this->activeVisitService->getResidentActiveVisits($estateId, $userId)
-            : collect();
-
-        $activeCount = ($checkoutEnabled && $estateId)
-            ? $this->activeVisitService->countResidentActiveVisits($estateId, $userId)
-            : 0;
-
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_upcoming' => $searchUpcoming,
                 'search_history' => $searchHistory,
             ],
-            'upcomingTimeline' => $upcomingCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress)),
-            'historyTimeline' => $historyCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress, withCompletion: true)),
-            'activeVisits' => $activeVisits,
-            'activeCount' => $activeCount,
+            // Infinite-scrolled lists: a scroll request only evaluates the prop it asked for.
+            'upcomingTimeline' => Inertia::scroll(fn () => $this->accessCodeService
+                ->paginateUpcomingTimeline($searchUpcoming)
+                ->through(fn ($code) => $this->serializeAccessCode($code, $residentAddress))),
+            'historyTimeline' => Inertia::scroll(fn () => $this->accessCodeService
+                ->paginateHistoryTimeline($searchHistory)
+                ->through(fn ($code) => $this->serializeAccessCode($code, $residentAddress, withCompletion: true))),
+            'upcomingSummary' => fn () => $this->accessCodeService->getUpcomingSummary(),
+            'activeVisits' => fn () => ($checkoutEnabled && $estateId)
+                ? $this->activeVisitService->getResidentActiveVisits($estateId, $userId)
+                : collect(),
+            'activeCount' => fn () => ($checkoutEnabled && $estateId)
+                ? $this->activeVisitService->countResidentActiveVisits($estateId, $userId)
+                : 0,
             'checkoutEnabled' => $checkoutEnabled,
-            'recentVisitors' => $this->accessCodeService->getRecentUniqueVisitors(5),
-            'recentActivity' => $this->accessCodeService->getRecentActivity(5),
-            'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
-            'visitorStats' => $this->accessCodeService->getHomeStats(),
+            'recentVisitors' => fn () => $this->accessCodeService->getRecentUniqueVisitors(5),
+            'recentActivity' => fn () => $this->accessCodeService->getRecentActivity(5),
+            'dailyUsage' => fn () => $this->accessCodeService->getDailyUsageAndLimit(),
+            'visitorStats' => fn () => $this->accessCodeService->getHomeStats(),
             'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
         ]);
     }

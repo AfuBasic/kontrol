@@ -48,6 +48,14 @@ return [
                 'isHtml5ParserEnabled' => true,
                 'isFontSubsettingEnabled' => true,
                 'isRemoteEnabled' => true,
+                // The app's typeface (Inter) is embedded from resources/fonts/inter when those files exist.
+                // DomPDF then needs a writable place for its converted fonts and permission to read the files.
+                // Until the files are added nothing here changes, and every PDF uses DejaVu Sans as before.
+                ...(is_dir(resource_path('fonts/inter')) ? [
+                    'fontDir' => storage_path('fonts'),
+                    'fontCache' => storage_path('fonts'),
+                    'chroot' => [base_path()],
+                ] : []),
             ],
         ],
         'fake' => [],

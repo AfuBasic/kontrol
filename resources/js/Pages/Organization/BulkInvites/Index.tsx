@@ -1,19 +1,11 @@
 import { Head, Link, router, WhenVisible } from '@inertiajs/react';
-import {
-    ChevronRight,
-    Mail,
-    Plus,
-    Users,
-    Search,
-    Loader2,
-} from 'lucide-react';
+import { ChevronRight, Mail, Plus, Users, Search, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import AccessHeader from '@/Components/Organization/AccessHeader';
 import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
 import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
 import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
-
 
 interface ValidityData {
     state: 'upcoming' | 'active' | 'expiring' | 'expired' | 'cancelled';
@@ -33,6 +25,7 @@ interface DeliveryData {
     total: number;
     sent: number;
     pending: number;
+    sending: number;
     failed: number;
 }
 
@@ -44,6 +37,7 @@ interface BulkInviteItem {
     role: string | null;
     valid_from: string;
     valid_until: string;
+    created_on_label?: string;
     status: string;
     recipients_count: number;
     recipient_preview?: string[];
@@ -70,6 +64,7 @@ const FIELD_TONE: Record<FieldTone, string> = {
 };
 
 const NOTICE_TONE = {
+    success: 'text-emerald-600',
     warning: 'text-amber-700',
     error: 'text-rose-600',
     muted: 'text-slate-500',
@@ -104,12 +99,7 @@ interface Props {
     currentStatus?: string;
 }
 
-export default function BulkInvitesIndex({
-    organization,
-    membership,
-    bulkInvites,
-    filters,
-}: Props) {
+export default function BulkInvitesIndex({ organization, membership, bulkInvites, filters }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
     const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -117,24 +107,15 @@ export default function BulkInvitesIndex({
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (search !== (filters?.search ?? '')) {
-                router.get(
-                    '/org/bulk-invites',
-                    { search: search.trim() || undefined },
-                    { preserveState: true, preserveScroll: true, replace: true }
-                );
+                router.get('/org/bulk-invites', { search: search.trim() || undefined }, { preserveState: true, preserveScroll: true, replace: true });
             }
         }, 300);
 
         return () => clearTimeout(timeout);
     }, [search]);
 
-
     return (
-        <OrganizationLayout
-            title="Access - Bulk Invites"
-            transparentHeader
-            contentClassName="w-full relative min-h-screen"
-        >
+        <OrganizationLayout title="Access - Bulk Invites" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - Bulk Visitor Invites`} />
 
             <div className="mx-auto flex max-w-[540px] flex-col gap-4 px-4 pt-1 pb-24">
@@ -154,20 +135,15 @@ export default function BulkInvitesIndex({
                     }
                 />
 
-
-
                 {/* Search Bar */}
                 <div className="relative">
-                    <Search
-                        className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        strokeWidth={2.5}
-                    />
+                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />
                     <input
                         type="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search groups..."
-                        className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                        className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                     />
                 </div>
 
@@ -196,9 +172,7 @@ export default function BulkInvitesIndex({
                             <Users className="h-6 w-6" />
                         </div>
                         <h3 className="text-sm font-bold text-slate-900">No groups yet</h3>
-                        <p className="mt-1 text-xs text-slate-500">
-                            Create one to send passes to several people at once.
-                        </p>
+                        <p className="mt-1 text-xs text-slate-500">Create one to send passes to several people at once.</p>
                         {membership.is_admin && (
                             <button
                                 type="button"
@@ -259,15 +233,27 @@ export default function BulkInvitesIndex({
                                             tone: isDeemphasized ? 'muted' : renewal?.auto ? 'positive' : 'default',
                                         };
 
+                            // Only the renewal problem is a "notice". Delivery has its own always-visible line below.
                             let notice: { text: string; tone: 'warning' | 'error' | 'muted' } | null = null;
                             if (isRenewalBlocked && renewal?.blocked_reason_label) {
                                 const reason = renewal.blocked_reason_label;
                                 notice = { text: reason.charAt(0).toUpperCase() + reason.slice(1), tone: 'warning' };
-                            } else if (delivery && delivery.failed > 0) {
-                                notice = { text: `${delivery.failed} not delivered`, tone: 'error' };
-                            } else if (delivery && delivery.pending > 0) {
-                                notice = { text: `Sending to ${delivery.pending}…`, tone: 'muted' };
                             }
+
+                            // Has this group gone out? One honest line, most urgent first.
+                            const deliveryLine = ((): { text: string; tone: keyof typeof NOTICE_TONE } | null => {
+                                if (!delivery || delivery.total === 0) return null;
+                                if (delivery.failed > 0) return { text: `${delivery.failed} not delivered`, tone: 'error' };
+                                if (delivery.sending > 0) return { text: `Sending · ${delivery.sent} of ${delivery.total} sent`, tone: 'warning' };
+                                if (delivery.pending > 0) {
+                                    return {
+                                        text: delivery.pending === delivery.total ? 'Not sent yet' : `${delivery.pending} not sent yet`,
+                                        tone: 'warning',
+                                    };
+                                }
+
+                                return { text: delivery.total === 1 ? 'Sent' : `Sent to all ${delivery.total}`, tone: 'success' };
+                            })();
 
                             return (
                                 <Link
@@ -277,9 +263,7 @@ export default function BulkInvitesIndex({
                                 >
                                     <div className={isDeemphasized ? 'opacity-60' : undefined}>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="truncate text-[16px] font-semibold tracking-[-0.01em] text-[#071f4b]">
-                                                {name}
-                                            </span>
+                                            <span className="truncate text-[16px] font-semibold tracking-[-0.01em] text-[#071f4b]">{name}</span>
                                             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" strokeWidth={2.25} />
                                         </div>
 
@@ -295,9 +279,7 @@ export default function BulkInvitesIndex({
                                                     </span>
                                                 ))}
                                                 {othersCount > 0 && (
-                                                    <span className="self-center text-[11px] font-medium text-slate-400">
-                                                        +{othersCount} more
-                                                    </span>
+                                                    <span className="self-center text-[11px] font-medium text-slate-400">+{othersCount} more</span>
                                                 )}
                                             </div>
                                         ) : (
@@ -306,19 +288,31 @@ export default function BulkInvitesIndex({
                                             </p>
                                         )}
 
-                                        {meta.length > 0 && (
-                                            <p className="mt-0.5 truncate text-[12px] text-slate-500">{meta.join(' · ')}</p>
-                                        )}
+                                        {meta.length > 0 && <p className="mt-0.5 truncate text-[12px] text-slate-500">{meta.join(' · ')}</p>}
 
                                         <div className="mt-3 grid grid-cols-2 gap-4">
                                             {validityField && <FieldBlock field={validityField} />}
                                             {renewalField && <FieldBlock field={renewalField} />}
                                         </div>
 
-                                        {notice && (
-                                            <p className={`mt-2.5 text-[12px] font-medium ${NOTICE_TONE[notice.tone]}`}>
-                                                {notice.text}
-                                            </p>
+                                        {notice && <p className={`mt-2.5 text-[12px] font-medium ${NOTICE_TONE[notice.tone]}`}>{notice.text}</p>}
+
+                                        {(deliveryLine || invite.created_on_label) && (
+                                            <div className="mt-2.5 flex items-center justify-between gap-3 text-[12px]">
+                                                {deliveryLine ? (
+                                                    <span
+                                                        className={`inline-flex min-w-0 items-center gap-1.5 font-medium ${NOTICE_TONE[deliveryLine.tone]}`}
+                                                    >
+                                                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                                                        <span className="truncate">{deliveryLine.text}</span>
+                                                    </span>
+                                                ) : (
+                                                    <span />
+                                                )}
+                                                {invite.created_on_label && (
+                                                    <span className="shrink-0 text-slate-400">Created {invite.created_on_label}</span>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </Link>

@@ -59,6 +59,22 @@ it('allows estate admin to view organizations index page', function () {
         );
 });
 
+it('reports estate-wide organization counts regardless of filters', function () {
+    EstateOrganization::factory()->count(2)->create(['estate_id' => $this->estate->id, 'is_active' => true, 'type' => 'church']);
+    EstateOrganization::factory()->create(['estate_id' => $this->estate->id, 'is_active' => false, 'type' => 'school']);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->get(route('admin.organizations.index', ['type' => 'school']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('organizations.data', 1)
+            ->where('summary.total', 3)
+            ->where('summary.inactive', 1)
+            ->where('summary.pending_invitations', 0)
+        );
+});
+
 it('allows estate admin to create a new organization with a walk-in policy', function () {
     $response = $this->actingAs($this->admin)
         ->withSession(['active_context_assignment_id' => $this->assignment->id])

@@ -45,7 +45,7 @@ use Illuminate\Support\Facades\Route;
 // ──────────────────────────────────────────────────────────────
 // Shared routes: accessible by residents, household members, and property owners
 // ──────────────────────────────────────────────────────────────
-Route::middleware('role:resident,household_member,property_owner')->group(function (): void {
+Route::middleware(['role:resident,household_member,property_owner', 'resident.active'])->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', fn () => redirect()->route('resident.home'))->name('resident.dashboard');
 
@@ -151,7 +151,7 @@ Route::middleware('resident.billing')->prefix('billing')->name('resident.billing
 // ──────────────────────────────────────────────────────────────
 // Primary resident & Property owner: coupons, collections & household management
 // ──────────────────────────────────────────────────────────────
-Route::middleware('role:resident,property_owner')->group(function (): void {
+Route::middleware(['role:resident,property_owner', 'resident.active'])->group(function (): void {
     // Coupons
     Route::get('/coupons', [CouponController::class, 'index'])->name('resident.coupons.index');
 
@@ -211,7 +211,7 @@ Route::middleware('role:property_owner')->prefix('property-owner')->name('reside
 });
 
 // Incidents: community issue tracker (accessible by resident, household_member, property_owner)
-Route::middleware('role:resident,household_member,property_owner')->group(function (): void {
+Route::middleware(['role:resident,household_member,property_owner', 'resident.active'])->group(function (): void {
     Route::prefix('incidents')->name('resident.incidents.')->middleware('resident.active')->group(function () {
         Route::get('/', [IncidentController::class, 'index'])->name('index');
         Route::get('/create', [IncidentController::class, 'create'])->name('create');

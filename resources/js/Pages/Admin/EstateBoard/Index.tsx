@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
-import { Search, X, Pin, FileText } from 'lucide-react';
-import CustomSelect from '@/Components/UI/CustomSelect';
+import { formatDistanceToNow } from 'date-fns';
+import { FileText } from 'lucide-react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 
-import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { edit, index as boardIndex, publish } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, PostCategory } from '@/types';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -40,6 +42,7 @@ const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
 
 export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }: Props) {
     const composerRef = useRef<HTMLDivElement>(null);
+    const { confirm } = useAdminConfirmation();
 
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -81,16 +84,23 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
         }
     };
 
-    const hasActiveFilters = Boolean(search || (filters.audience && filters.audience !== 'all') || filters.category || filters.priority);
+    const statusValue = filters.status && filters.status !== 'all' ? filters.status : '';
+    const audienceValue = filters.audience && filters.audience !== 'all' ? filters.audience : '';
+    const hasActiveFilters = Boolean(search || audienceValue || filters.category || filters.priority || statusValue);
 
     // Separate Pinned / High Priority posts from general chronological feed
-    const pinnedPosts = posts.data.filter((post) => post.priority === 'important' || post.priority === 'critical');
+    const pinnedPosts = posts.data.filter((post) => (post.priority === 'important' || post.priority === 'critical') && post.status !== 'draft');
 
-    // Feed posts excluding pinned (or including if filters active)
-    const regularPosts = hasActiveFilters ? posts.data : posts.data.filter((post) => post.priority !== 'important' && post.priority !== 'critical');
+    // Unpublished drafts get their own strip, unless the viewer is already filtering to drafts
+    const draftPosts = hasActiveFilters ? [] : posts.data.filter((post) => post.status === 'draft');
+
+    // Feed posts excluding pinned (or including if filters active) and drafts
+    const regularPosts = hasActiveFilters
+        ? posts.data
+        : posts.data.filter((post) => post.priority !== 'important' && post.priority !== 'critical' && post.status !== 'draft');
 
     return (
-        <div className="w-full space-y-6 pb-32">
+        <div className="mx-auto w-full max-w-4xl space-y-6 pb-32">
             <Head title="Estate Board" />
 
             {/* Header */}
@@ -118,110 +128,94 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                 <QuickComposer lastBroadcastNote={metrics.last_broadcast} zones={zones} />
             </div>
 
-            {/* Search & Category Filter Toolbar */}
-            <div className="space-y-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    {/* Search Input */}
-                    <div className="relative flex-1">
-                        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search title, content, or author..."
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-4 pl-9 text-xs font-semibold text-slate-900 shadow-2xs transition placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:outline-hidden"
-                        />
-                    </div>
+            <FilterBar
+                search={search}
+                onSearch={setSearch}
+                placeholder="Search announcements"
+                searchLabel="Search announcements by title, content or author"
+                activeCount={[statusValue, filters.category, audienceValue, filters.priority].filter((v) => v && v !== 'all').length}
+                hasActive={hasActiveFilters}
+                onReset={clearFilters}
+            >
+                <FilterChips
+                    label="Show"
+                    value={statusValue || 'all'}
+                    onChange={(val) => setFilter('status', val)}
+                    options={[
+                        { value: 'all', label: 'All' },
+                        { value: 'published', label: 'Published' },
+                        { value: 'draft', label: 'Drafts' },
+                    ]}
+                />
+                <FilterChips
+                    label="Category"
+                    value={filters.category || 'all'}
+                    onChange={(val) => setFilter('category', val)}
+                    options={CATEGORIES.map((cat) => ({ value: cat.value, label: cat.value === 'all' ? 'All' : cat.label }))}
+                />
+                <FilterChips
+                    label="Audience"
+                    value={audienceValue || 'all'}
+                    onChange={(val) => setFilter('audience', val)}
+                    options={[
+                        { value: 'all', label: 'Everyone' },
+                        { value: 'residents', label: 'Residents' },
+                        { value: 'security', label: 'Security' },
+                    ]}
+                />
+                <FilterChips
+                    label="Priority"
+                    value={filters.priority || 'all'}
+                    onChange={(val) => setFilter('priority', val)}
+                    options={[
+                        { value: 'all', label: 'Any' },
+                        { value: 'important', label: 'Pinned' },
+                    ]}
+                />
+            </FilterBar>
 
-                    {/* Audience, Status & Category Filter Controls */}
-                    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-                        {/* Status Filter */}
-                        <div className="w-32">
-                            <CustomSelect
-                                size="sm"
-                                value={filters.status || 'all'}
-                                onChange={(val) => setFilter('status', String(val))}
-                                options={[
-                                    { value: 'all', label: 'All Posts' },
-                                    { value: 'published', label: 'Published' },
-                                    { value: 'draft', label: 'Drafts' },
-                                ]}
-                            />
-                        </div>
-
-                        {/* Category Dropdown */}
-                        <div className="w-36">
-                            <CustomSelect
-                                size="sm"
-                                value={filters.category || 'all'}
-                                onChange={(val) => setFilter('category', String(val))}
-                                options={CATEGORIES.map((cat) => ({
-                                    value: cat.value,
-                                    label: cat.label,
-                                }))}
-                            />
-                        </div>
-
-                        {/* Audience Filter */}
-                        <div className="w-36">
-                            <CustomSelect
-                                size="sm"
-                                value={filters.audience || 'all'}
-                                onChange={(val) => setFilter('audience', String(val))}
-                                options={[
-                                    { value: 'all', label: 'All Audiences' },
-                                    { value: 'residents', label: 'Residents Only' },
-                                    { value: 'security', label: 'Security Only' },
-                                ]}
-                            />
-                        </div>
-
-                        {/* Priority / Important Filter */}
-                        <button
-                            onClick={() => setFilter('priority', 'important')}
-                            className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold shadow-2xs transition ${
-                                filters.priority === 'important'
-                                    ? 'border-amber-300 bg-amber-50 text-amber-700'
-                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                            }`}
-                        >
-                            <Pin className="h-3.5 w-3.5 text-amber-600" />
-                            <span>Pinned</span>
-                        </button>
-
-                        {/* Clear Filters */}
-                        {hasActiveFilters && (
-                            <button
-                                onClick={clearFilters}
-                                className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
-                            >
-                                <X className="h-3.5 w-3.5" />
-                                <span>Clear</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Category Chips Bar (Quick 1-tap filter) */}
-                <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto pb-1">
-                    {CATEGORIES.map((cat) => {
-                        const isActive = (filters.category || 'all') === cat.value;
-                        return (
-                            <button
-                                key={cat.value}
-                                onClick={() => setFilter('category', cat.value)}
-                                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition ${
-                                    isActive
-                                        ? 'bg-slate-950 text-white shadow-2xs'
-                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                }`}
-                            >
-                                <span>{cat.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* Drafts are unpublished: keep them out of the live feed and show them as their own strip */}
+            {draftPosts.length > 0 && (
+                <section aria-label="Drafts" className="space-y-2">
+                    <h2 className="flex items-center gap-2 text-xs font-extrabold tracking-wider text-slate-500 uppercase">
+                        Drafts
+                        <span className="font-semibold text-slate-400">{draftPosts.length}</span>
+                    </h2>
+                    <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white">
+                        {draftPosts.map((post) => (
+                            <li key={post.id} className="flex items-center gap-3 px-4 py-3">
+                                <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-semibold text-slate-800">{post.title || 'Untitled announcement'}</p>
+                                    <p className="text-[11px] text-slate-500">
+                                        Saved {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={edit.url({ post: post.hashid })}
+                                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        confirm({
+                                            title: 'Publish announcement',
+                                            message: 'This will send it to its audience right away. Publish now?',
+                                            confirmLabel: 'Publish',
+                                            onConfirm: () => router.post(publish.url({ post: post.hashid }), {}, { preserveScroll: true }),
+                                        })
+                                    }
+                                    className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-700"
+                                >
+                                    Publish
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
 
             {/* Main Feed Content Area */}
             {posts.data.length === 0 ? (

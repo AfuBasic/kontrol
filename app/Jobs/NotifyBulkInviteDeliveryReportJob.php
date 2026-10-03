@@ -7,6 +7,7 @@ use App\Notifications\BulkInviteDeliveryFailedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class NotifyBulkInviteDeliveryReportJob implements ShouldQueue
 {
@@ -33,13 +34,6 @@ class NotifyBulkInviteDeliveryReportJob implements ShouldQueue
             return;
         }
 
-        $creator = $bulkInvite->createdBy;
-        if (! $creator) {
-            Log::info("NotifyBulkInviteDeliveryReportJob: Creator missing for bulk invite {$this->bulkInviteId}.");
-
-            return;
-        }
-
         $failedRecipients = $bulkInvite->recipients
             ->where('delivery_status', 'failed')
             ->map(fn ($r) => [
@@ -49,10 +43,24 @@ class NotifyBulkInviteDeliveryReportJob implements ShouldQueue
             ->values()
             ->all();
 
-        if (count($failedRecipients) > 0) {
-            $creator->notify(new BulkInviteDeliveryFailedNotification($bulkInvite, $failedRecipients));
-            Log::info('NotifyBulkInviteDeliveryReportJob: Notified creator of '.count($failedRecipients)." failed deliveries for bulk invite {$this->bulkInviteId}.");
+        if (count($failedRecipients) === 0) {
+            return;
         }
+
+        $notification = new BulkInviteDeliveryFailedNotification($bulkInvite, $failedRecipients);
+
+        // The failure email goes to the Kontrol team only.
+        Notification::route('mail', config('zeus.notification_email', 'support@usekontrol.com'))->notify($notification);
+
+        // The batch creator is told in-app (and by push) so they know to retry, but is not emailed.
+        $creator = $bulkInvite->createdBy;
+        if ($creator) {
+            $creator->notify($notification);
+        } else {
+            Log::info("NotifyBulkInviteDeliveryReportJob: Creator missing for bulk invite {$this->bulkInviteId}.");
+        }
+
+        Log::info('NotifyBulkInviteDeliveryReportJob: Reported '.count($failedRecipients)." failed deliveries for bulk invite {$this->bulkInviteId}.");
     }
 
     /**

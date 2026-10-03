@@ -13,6 +13,25 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureResidentSubscriptionActive
 {
     /**
+     * Routes a resident can still reach once their subscription has lapsed.
+     * Everything else under the resident area is locked until they settle.
+     * Matched with Request::routeIs(), so wildcards are allowed.
+     *
+     * @var array<int, string>
+     */
+    public const ALLOWED_WHEN_LAPSED = [
+        'resident.home',
+        'resident.dashboard',
+        'resident.profile',
+        'resident.profile.update',
+        'resident.password.update',
+        'resident.collections.*',
+        'resident.coupons.index',
+        'resident.notifications.*',
+        'resident.sos.*',
+    ];
+
+    /**
      * Handle an incoming request.
      *
      * @param  Closure(Request): (Response)  $next
@@ -80,13 +99,18 @@ class EnsureResidentSubscriptionActive
                 $subscription = $service->createForUser($subject, $estate);
             }
 
-            if (! $subscription || ! $subscription->isActive()) {
+            if ((! $subscription || ! $subscription->isActive()) && ! $request->routeIs(...self::ALLOWED_WHEN_LAPSED)) {
                 $message = $user->isHouseholdMember()
                     ? 'Your access is currently restricted.'
                     : 'Your access is currently limited due to an inactive subscription. Please visit the billing section to restore access.';
 
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message], 403);
+                }
+
+                // A locked page reached by navigation goes home with the explanation, not back to a dead end.
+                if ($request->isMethod('GET') && $request->routeIs('resident.*')) {
+                    return redirect()->route('resident.home')->with('error', $message);
                 }
 
                 return back()->with('error', $message);

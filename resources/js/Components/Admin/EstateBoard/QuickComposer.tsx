@@ -281,7 +281,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                         onClick={handleExpand}
                         className="cursor-text rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-400 transition hover:border-slate-200 hover:bg-slate-50"
                     >
-                        What would you like to broadcast to the estate? Click to start writing...
+                        Write an announcement…
                     </div>
                 )}
 
@@ -302,143 +302,145 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                     </div>
                 )}
 
-                {/* Action Bar / Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                    {/* Selectors / Quick Toggles */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {/* Category Dropdown */}
-                        <div className="w-36">
-                            <CustomSelect
-                                size="sm"
-                                value={data.category}
-                                onChange={(val) => setData('category', val as PostCategory)}
-                                options={CATEGORIES.map((cat) => ({
-                                    value: cat.value,
-                                    label: cat.label,
-                                }))}
-                            />
-                        </div>
-
-                        {/* Audience Dropdown */}
-                        <div className="w-36">
-                            <CustomSelect
-                                size="sm"
-                                value={data.audience}
-                                onChange={(val) => setData('audience', val as PostAudience)}
-                                options={AUDIENCES.map((aud) => ({
-                                    value: aud.value,
-                                    label: aud.label,
-                                }))}
-                            />
-                        </div>
-
-                        {/* Zone Targeting */}
-                        {isZoneScoped && zoneName ? (
-                            <span className="inline-flex items-center gap-1 rounded-xl bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 ring-1 ring-amber-200/60">
-                                <span>Zone: {zoneName}</span>
-                            </span>
-                        ) : zones.length > 0 ? (
+                {/* Action Bar / Controls: only once the writer has started, so the feed isn't pushed down */}
+                {isExpanded && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                        {/* Selectors / Quick Toggles */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {/* Category Dropdown */}
                             <div className="w-36">
                                 <CustomSelect
                                     size="sm"
-                                    value={data.zone_ids[0] || ''}
-                                    onChange={(val) => {
-                                        const res = val ? [parseInt(String(val), 10)] : [];
-                                        setData('zone_ids', res);
-                                    }}
-                                    options={[
-                                        { value: '', label: 'All Zones' },
-                                        ...zones.map((z) => ({
-                                            value: z.id,
-                                            label: `Zone: ${z.name}`,
-                                        })),
-                                    ]}
+                                    value={data.category}
+                                    onChange={(val) => setData('category', val as PostCategory)}
+                                    options={CATEGORIES.map((cat) => ({
+                                        value: cat.value,
+                                        label: cat.label,
+                                    }))}
                                 />
                             </div>
-                        ) : null}
 
-                        {/* Priority Quick Toggle */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const next = data.priority === 'normal' ? 'important' : data.priority === 'important' ? 'critical' : 'normal';
-                                setData('priority', next);
-                            }}
-                            className={`flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${
-                                data.priority === 'important'
-                                    ? 'border-amber-200 bg-amber-50 text-amber-800'
-                                    : data.priority === 'critical'
-                                      ? 'border-rose-200 bg-rose-50 text-rose-800'
-                                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                            }`}
-                            title="Cycle Priority: Normal -> Important -> Critical"
-                        >
-                            {data.priority === 'important' ? (
+                            {/* Audience Dropdown */}
+                            <div className="w-36">
+                                <CustomSelect
+                                    size="sm"
+                                    value={data.audience}
+                                    onChange={(val) => setData('audience', val as PostAudience)}
+                                    options={AUDIENCES.map((aud) => ({
+                                        value: aud.value,
+                                        label: aud.label,
+                                    }))}
+                                />
+                            </div>
+
+                            {/* Zone Targeting */}
+                            {isZoneScoped && zoneName ? (
+                                <span className="inline-flex items-center gap-1 rounded-xl bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 ring-1 ring-amber-200/60">
+                                    <span>Zone: {zoneName}</span>
+                                </span>
+                            ) : zones.length > 0 ? (
+                                <div className="w-36">
+                                    <CustomSelect
+                                        size="sm"
+                                        value={data.zone_ids[0] || ''}
+                                        onChange={(val) => {
+                                            const res = val ? [parseInt(String(val), 10)] : [];
+                                            setData('zone_ids', res);
+                                        }}
+                                        options={[
+                                            { value: '', label: 'All Zones' },
+                                            ...zones.map((z) => ({
+                                                value: z.id,
+                                                label: `Zone: ${z.name}`,
+                                            })),
+                                        ]}
+                                    />
+                                </div>
+                            ) : null}
+
+                            {/* Priority Quick Toggle */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const next = data.priority === 'normal' ? 'important' : data.priority === 'important' ? 'critical' : 'normal';
+                                    setData('priority', next);
+                                }}
+                                className={`flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${
+                                    data.priority === 'important'
+                                        ? 'border-amber-200 bg-amber-50 text-amber-800'
+                                        : data.priority === 'critical'
+                                          ? 'border-rose-200 bg-rose-50 text-rose-800'
+                                          : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                }`}
+                                title="Cycle Priority: Normal -> Important -> Critical"
+                            >
+                                {data.priority === 'important' ? (
+                                    <>
+                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                                        <span>Important</span>
+                                    </>
+                                ) : data.priority === 'critical' ? (
+                                    <>
+                                        <AlertOctagon className="h-3.5 w-3.5 text-rose-600" />
+                                        <span>Critical</span>
+                                    </>
+                                ) : (
+                                    <span>Normal Priority</span>
+                                )}
+                            </button>
+
+                            {/* Attachment Button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
+                                title="Attach files or photos"
+                            >
+                                <Paperclip className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Attach</span>
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx"
+                            />
+                        </div>
+
+                        {/* Submit & Cancel Actions */}
+                        <div className="flex items-center gap-2">
+                            {isExpanded && (
                                 <>
-                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                                    <span>Important</span>
+                                    <Link
+                                        href={create.url()}
+                                        className="hidden items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                        title="Open Full Page Composer"
+                                    >
+                                        <Maximize2 className="h-3.5 w-3.5" />
+                                        <span>Full Page</span>
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancel}
+                                        className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    >
+                                        {isMeaningful ? 'Discard' : 'Cancel'}
+                                    </button>
                                 </>
-                            ) : data.priority === 'critical' ? (
-                                <>
-                                    <AlertOctagon className="h-3.5 w-3.5 text-rose-600" />
-                                    <span>Critical</span>
-                                </>
-                            ) : (
-                                <span>Normal Priority</span>
                             )}
-                        </button>
-
-                        {/* Attachment Button */}
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
-                            title="Attach files or photos"
-                        >
-                            <Paperclip className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">Attach</span>
-                        </button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            onChange={handleFileChange}
-                            className="hidden"
-                            accept="image/*,.pdf,.doc,.docx"
-                        />
+                            <button
+                                type="submit"
+                                disabled={processing || !data.body.trim()}
+                                className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-700"
+                            >
+                                <Send className="h-3.5 w-3.5" />
+                                <span>{processing ? 'Posting...' : 'Post Announcement'}</span>
+                            </button>
+                        </div>
                     </div>
-
-                    {/* Submit & Cancel Actions */}
-                    <div className="flex items-center gap-2">
-                        {isExpanded && (
-                            <>
-                                <Link
-                                    href={create.url()}
-                                    className="hidden items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                                    title="Open Full Page Composer"
-                                >
-                                    <Maximize2 className="h-3.5 w-3.5" />
-                                    <span>Full Page</span>
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={handleCancel}
-                                    className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                                >
-                                    {isMeaningful ? 'Discard' : 'Cancel'}
-                                </button>
-                            </>
-                        )}
-                        <button
-                            type="submit"
-                            disabled={processing || !data.body.trim()}
-                            className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-700"
-                        >
-                            <Send className="h-3.5 w-3.5" />
-                            <span>{processing ? 'Posting...' : 'Post Announcement'}</span>
-                        </button>
-                    </div>
-                </div>
+                )}
             </form>
         </div>
     );

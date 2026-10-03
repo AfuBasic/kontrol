@@ -9,8 +9,7 @@ import {
     Loader2,
     ChevronRight,
     Clock,
-    Users,
-} from 'lucide-react';
+    Users, Ticket } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import EmailPillInput from '@/Components/Organization/EmailPillInput';
@@ -52,11 +51,13 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        purpose: '',
         emails: [] as string[],
         valid_from: today,
         valid_until: defaultEnd,
         auto_renew: false,
         send_immediately: true,
+        single_entry: false,
     });
 
     // 30-day date range validation
@@ -202,6 +203,23 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
                                 </div>
 
+                                {/* Event or reason: printed on every pass in the batch */}
+                                <div>
+                                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+                                        Event or reason <span className="normal-case font-normal">(optional)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={255}
+                                        placeholder="e.g. Estate AGM, Annual Dinner, Contractor onboarding"
+                                        value={data.purpose}
+                                        onChange={(e) => setData('purpose', e.target.value)}
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-[#1a5dbf] focus:ring-2 focus:ring-[#1a5dbf]/20 focus:outline-none transition"
+                                    />
+                                    <p className="mt-1.5 text-[11px] text-slate-400">Printed on every pass in this batch, so guards know what it is for.</p>
+                                    {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.purpose}</p>}
+                                </div>
+
                                 {/* Recipient Emails */}
                                 <div>
                                     <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
@@ -296,6 +314,38 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         </button>
                                     </div>
 
+                                    {/* Single Entry Toggle */}
+                                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#eef4ff]">
+                                                <Ticket className="h-3.5 w-3.5 text-[#1a5dbf]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] font-semibold text-slate-900">Single entry</p>
+                                                <p className="text-[11px] text-slate-400">
+                                                    {data.single_entry
+                                                        ? 'Each pass works once. A forwarded copy will not work again.'
+                                                        : 'Passes work for repeat visits until they expire.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={data.single_entry}
+                                            onClick={() => setData('single_entry', !data.single_entry)}
+                                            className={`relative ml-3 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                                                data.single_entry ? 'bg-[#1a5dbf]' : 'bg-slate-200'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                    data.single_entry ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+
                                     {/* Auto-renew Toggle */}
                                     <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
                                         <div className="flex items-center gap-3">
@@ -363,6 +413,10 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     <span className="font-semibold text-slate-900">{data.name || <span className="text-slate-400 italic">Not set</span>}</span>
                                 </div>
                                 <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Event or reason</span>
+                                    <span className="font-semibold text-slate-900">{data.purpose || <span className="text-slate-400 italic">Not set</span>}</span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
                                     <span className="text-slate-500">Recipients</span>
                                     <span className="font-semibold text-slate-900">{data.emails.length}</span>
                                 </div>
@@ -372,6 +426,10 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         {data.valid_from} → {data.valid_until}
                                         {dateRangeValidation.days && <span className="ml-1.5 text-slate-400">({dateRangeValidation.days}d)</span>}
                                     </span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Entry</span>
+                                    <span className="font-semibold text-slate-900">{data.single_entry ? 'Single entry' : 'Multiple entry'}</span>
                                 </div>
                                 <div className="flex justify-between px-4 py-3 text-[13px]">
                                     <span className="text-slate-500">Delivery</span>

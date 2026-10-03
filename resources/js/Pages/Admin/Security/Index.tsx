@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Users, ShieldCheck, UserMinus, AlertCircle, Clock, X, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import SecurityActions from '@/Components/Admin/SecurityActions';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
-import CustomSelect from '@/Components/UI/CustomSelect';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -257,47 +257,27 @@ export default function SecurityPersonnel({
                 </Deferred>
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                        {/* Search Input */}
-                        <div className="relative flex-1">
-                            <MagnifyingGlassIcon className="pointer-events-none absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search security personnel by name or email..."
-                                className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
-                            />
-                        </div>
-
-                        {/* Status dropdown */}
-                        <div className="flex gap-2 sm:w-80">
-                            <div className="w-full">
-                                <CustomSelect
-                                    size="sm"
-                                    value={status}
-                                    onChange={(val) => handleFilterChange('status', String(val))}
-                                    options={[
-                                        { value: '', label: 'All Statuses' },
-                                        { value: 'active', label: 'Active' },
-                                        { value: 'pending', label: 'Pending' },
-                                        { value: 'suspended', label: 'Suspended' },
-                                    ]}
-                                />
-                            </div>
-
-                            <button
-                                onClick={clearFilters}
-                                disabled={!hasActiveFilters}
-                                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-black tracking-wider text-slate-600 uppercase shadow-xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <X className="h-3.5 w-3.5" />
-                                Reset
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <FilterBar
+                    search={search}
+                    onSearch={setSearch}
+                    placeholder="Search security staff"
+                    searchLabel="Search security personnel by name or email"
+                    activeCount={status ? 1 : 0}
+                    hasActive={hasActiveFilters}
+                    onReset={clearFilters}
+                >
+                    <FilterChips
+                        label="Status"
+                        value={status}
+                        onChange={(val) => handleFilterChange('status', val)}
+                        options={[
+                            { value: '', label: 'All' },
+                            { value: 'active', label: 'Active' },
+                            { value: 'pending', label: 'Pending' },
+                            { value: 'suspended', label: 'Suspended' },
+                        ]}
+                    />
+                </FilterBar>
 
                 {/* SECTION 4 - TABLE */}
                 <SectionErrorBoundary name="security-table">

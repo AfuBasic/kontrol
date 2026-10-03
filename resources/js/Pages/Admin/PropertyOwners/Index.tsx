@@ -1,4 +1,4 @@
-import { PlusIcon, MagnifyingGlassIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -23,6 +23,7 @@ import { properties, residents, create, makeResident } from '@/actions/App/Http/
 import PropertyOwnerCard from '@/Components/Admin/PropertyOwners/PropertyOwnerCard';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import CustomSelect from '@/Components/UI/CustomSelect';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -387,76 +388,50 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 <PropertyOwnerInsightsPanel insights={insights} incompleteOwners={incompleteOwners} />
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
-                    <div className="flex flex-col gap-3">
-                        {/* Search Input */}
-                        <div className="relative w-full">
-                            <MagnifyingGlassIcon className="pointer-events-none absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search landlords by name, email, phone..."
-                                className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
-                            />
-                        </div>
-
-                        {/* Dropdowns filters */}
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                            <div>
-                                <CustomSelect
-                                    size="sm"
-                                    value={status}
-                                    onChange={(val) => handleFilterChange('status', String(val))}
-                                    options={[
-                                        { value: '', label: 'All Statuses' },
-                                        { value: 'active', label: 'Active' },
-                                        { value: 'inactive', label: 'Inactive' },
-                                        { value: 'pending', label: 'Pending' },
-                                    ]}
-                                />
-                            </div>
-
-                            <div>
-                                <CustomSelect
-                                    size="sm"
-                                    value={property}
-                                    onChange={(val) => handleFilterChange('property', String(val))}
-                                    options={[
-                                        { value: '', label: 'Properties Owned' },
-                                        { value: 'has_properties', label: 'Has Assigned Properties' },
-                                        { value: 'no_properties', label: 'No Properties Assigned' },
-                                    ]}
-                                />
-                            </div>
-
-                            <div>
-                                <CustomSelect
-                                    size="sm"
-                                    value={sort}
-                                    onChange={(val) => handleFilterChange('sort', String(val))}
-                                    options={[
-                                        { value: '', label: 'Sort By' },
-                                        { value: 'name', label: 'Name' },
-                                        { value: 'date_joined', label: 'Date Joined' },
-                                        { value: 'properties_count', label: 'Properties Count' },
-                                    ]}
-                                />
-                            </div>
-
-                            <div className="col-span-2 sm:col-span-1">
-                                <button
-                                    onClick={clearFilters}
-                                    disabled={!hasActiveFilters}
-                                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black tracking-wider text-slate-600 uppercase shadow-xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                    Reset Filters
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <FilterBar
+                    search={search}
+                    onSearch={setSearch}
+                    placeholder="Search landlords"
+                    searchLabel="Search landlords by name, email or phone"
+                    activeCount={[status, property, sort].filter(Boolean).length}
+                    hasActive={hasActiveFilters}
+                    onReset={clearFilters}
+                    trailing={
+                        <CustomSelect
+                            size="sm"
+                            value={sort}
+                            onChange={(val) => handleFilterChange('sort', String(val))}
+                            options={[
+                                { value: '', label: 'Sort: Default' },
+                                { value: 'name', label: 'Sort: Name' },
+                                { value: 'date_joined', label: 'Sort: Date joined' },
+                                { value: 'properties_count', label: 'Sort: Properties' },
+                            ]}
+                        />
+                    }
+                >
+                    <FilterChips
+                        label="Status"
+                        value={status}
+                        onChange={(val) => handleFilterChange('status', val)}
+                        options={[
+                            { value: '', label: 'All' },
+                            { value: 'active', label: 'Active' },
+                            { value: 'inactive', label: 'Inactive' },
+                            { value: 'pending', label: 'Pending' },
+                        ]}
+                    />
+                    <FilterChips
+                        label="Properties"
+                        value={property}
+                        onChange={(val) => handleFilterChange('property', val)}
+                        options={[
+                            { value: '', label: 'Any' },
+                            { value: 'has_properties', label: 'Assigned' },
+                            { value: 'no_properties', label: 'None assigned' },
+                        ]}
+                    />
+                </FilterBar>
 
                 {/* SECTION 4 - TABLE */}
                 <div className="overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 md:overflow-hidden">

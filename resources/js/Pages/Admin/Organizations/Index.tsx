@@ -2,10 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     Building2,
     Plus,
-    Search,
     Pencil,
     Trash2,
-    X,
     AlertCircle,
     School,
     Church,
@@ -22,6 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import TextInput from '@/Components/UI/TextInput';
 import { destroy, index, resendInvitation, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import { useDebounce } from '@/Hooks/useDebounce';
@@ -82,6 +81,11 @@ interface Props {
         type?: string | null;
         status?: string | null;
     };
+    summary: {
+        total: number;
+        pending_invitations: number;
+        inactive: number;
+    };
 }
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -89,20 +93,52 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const isInvitationPending = (user?: { email_verified_at?: string | null; google_id?: string | null } | null) =>
     Boolean(user && user.email_verified_at === null && user.google_id === null);
 
-const buildOperationalDetail = (org: Organization): string => {
-    const count = org.access_members_count ?? 0;
+const toMinutes = (time: string): number => {
+    const [h, m] = time.split(':').map(Number);
 
+    return h * 60 + (m || 0);
+};
+
+type PolicyStatus = { label: string; live: boolean };
+
+/** Plain-language walk-in status; "live" means visitors can arrive right now. */
+const policyStatus = (org: Organization, now: Date = new Date()): PolicyStatus => {
     if (org.type === 'hospital' || org.access_policy === 'unrestricted') {
-        return 'Walk-ins any time';
+        return { label: 'Open any time', live: true };
     }
 
     if (org.access_policy === 'public_window') {
-        const nextWindow = org.public_windows?.[0];
-        const nextStr = nextWindow ? `Next: ${DAY_LABELS[nextWindow.day_of_week]} ${formatTime(nextWindow.start_time)}` : 'No windows configured';
-        return `Walk-ins during their hours · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
+        const windows = org.public_windows ?? [];
+
+        if (windows.length === 0) {
+            return { label: 'No walk-in hours set', live: false };
+        }
+
+        const minutesNow = now.getHours() * 60 + now.getMinutes();
+        const open = windows.find(
+            (w) => w.day_of_week === now.getDay() && toMinutes(w.start_time) <= minutesNow && minutesNow < toMinutes(w.end_time),
+        );
+
+        if (open) {
+            return { label: `Open now · until ${formatTime(open.end_time)}`, live: true };
+        }
+
+        // Soonest upcoming window, looking a week ahead.
+        const upcoming = windows
+            .map((w) => {
+                let days = (w.day_of_week - now.getDay() + 7) % 7;
+                if (days === 0 && toMinutes(w.start_time) <= minutesNow) {
+                    days = 7;
+                }
+
+                return { w, offset: days * 1440 + toMinutes(w.start_time) };
+            })
+            .sort((x, y) => x.offset - y.offset)[0].w;
+
+        return { label: `Closed · opens ${DAY_LABELS[upcoming.day_of_week]} ${formatTime(upcoming.start_time)}`, live: false };
     }
 
-    return `No walk-ins · ${count} member${count !== 1 ? 's' : ''}`;
+    return { label: 'By invitation only', live: false };
 };
 
 const TYPE_CONFIG = {
@@ -166,7 +202,7 @@ function formatTime(timeStr?: string | null): string {
     return `${hour12}:${String(m || 0).padStart(2, '0')} ${period}`;
 }
 
-export default function OrganizationsIndex({ organizations, filters }: Props) {
+export default function OrganizationsIndex({ organizations, filters, summary }: Props) {
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.type || 'all');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || 'all');
@@ -372,6 +408,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     };
 
     const isFiltered = Boolean(searchQuery || (selectedType && selectedType !== 'all') || (selectedStatus && selectedStatus !== 'all'));
+
+    const orgGroups = (Object.keys(TYPE_CONFIG) as Organization['type'][])
+        .map((type) => ({ type, orgs: organizations.data.filter((org) => (TYPE_CONFIG[org.type] ? org.type : 'other') === type) }))
+        .filter((group) => group.orgs.length > 0);
     const isZeroData = organizations.total === 0 && !isFiltered;
     const isSearchEmpty = organizations.total === 0 && isFiltered;
 
@@ -403,6 +443,25 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     )}
                 </div>
 
+                {!isZeroData && (
+                    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                        <span>
+                            <span className="font-bold text-slate-900">{summary.total}</span> organization{summary.total !== 1 ? 's' : ''}
+                        </span>
+                        {summary.pending_invitations > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => handleStatusFilterChange('pending')}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-800 transition hover:bg-amber-100"
+                            >
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                {summary.pending_invitations} invitation{summary.pending_invitations !== 1 ? 's' : ''} pending
+                            </button>
+                        )}
+                        {summary.inactive > 0 && <span>{summary.inactive} inactive</span>}
+                    </p>
+                )}
+
                 {/* Zero State (No records created yet) */}
                 {isZeroData ? (
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs sm:p-12">
@@ -427,64 +486,42 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     </div>
                 ) : (
                     <>
-                        {/* Operational Utility Bar (Search & Filters) */}
                         <div className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                                <div className="relative flex-1">
-                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search organizations..."
-                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-9 text-xs font-semibold text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSearchQuery('')}
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                        >
-                                            <X className="h-3.5 w-3.5" />
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-                                    <div className="min-w-[140px] flex-1 sm:flex-initial">
-                                        <CustomSelect
-                                            value={selectedType}
-                                            onChange={(val) => handleTypeFilterChange(String(val))}
-                                            options={[
-                                                { value: 'all', label: 'All Types' },
-                                                { value: 'school', label: 'School' },
-                                                { value: 'church', label: 'Church' },
-                                                { value: 'hospital', label: 'Hospital' },
-                                                { value: 'business', label: 'Business' },
-                                                { value: 'facility', label: 'Facility' },
-                                                { value: 'other', label: 'Other' },
-                                            ]}
-                                            size="sm"
-                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
-                                        />
-                                    </div>
-
-                                    <div className="min-w-[130px] flex-1 sm:flex-initial">
-                                        <CustomSelect
-                                            value={selectedStatus}
-                                            onChange={(val) => handleStatusFilterChange(String(val))}
-                                            options={[
-                                                { value: 'all', label: 'All Statuses' },
-                                                { value: 'active', label: 'Active' },
-                                                { value: 'pending', label: 'Pending' },
-                                                { value: 'inactive', label: 'Inactive' },
-                                            ]}
-                                            size="sm"
-                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <FilterBar
+                                search={searchQuery}
+                                onSearch={setSearchQuery}
+                                placeholder="Search organizations"
+                                searchLabel="Search organizations by name"
+                                activeCount={[selectedType, selectedStatus].filter((v) => v !== 'all').length}
+                                hasActive={isFiltered}
+                                onReset={handleClearFilters}
+                            >
+                                <FilterChips
+                                    label="Type"
+                                    value={selectedType}
+                                    onChange={handleTypeFilterChange}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'school', label: 'Schools' },
+                                        { value: 'church', label: 'Churches' },
+                                        { value: 'hospital', label: 'Hospitals' },
+                                        { value: 'business', label: 'Business' },
+                                        { value: 'facility', label: 'Facilities' },
+                                        { value: 'other', label: 'Other' },
+                                    ]}
+                                />
+                                <FilterChips
+                                    label="Status"
+                                    value={selectedStatus}
+                                    onChange={handleStatusFilterChange}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'pending', label: 'Pending' },
+                                        { value: 'inactive', label: 'Inactive' },
+                                    ]}
+                                />
+                            </FilterBar>
 
                             {/* Result Counter when filtering */}
                             {isFiltered && !isSearchEmpty && (
@@ -508,149 +545,204 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 </button>
                             </div>
                         ) : (
-                            /* Operational Directory Row List */
-                            <div className="divide-y divide-slate-100 overflow-visible rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                {organizations.data.map((org) => {
-                                    const config = TYPE_CONFIG[org.type] || TYPE_CONFIG.other;
-                                    const IconComponent = config.icon;
-                                    const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
-                                    const hasPendingInvitation = isInvitationPending(primaryAdmin);
+                            /* Operational Directory, grouped by type */
+                            <div className="space-y-6">
+                                {orgGroups.map((group) => (
+                                    <section key={group.type} aria-label={TYPE_CONFIG[group.type].label}>
+                                        <h2 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-slate-500 uppercase">
+                                            {TYPE_CONFIG[group.type].label}
+                                            {organizations.last_page === 1 && (
+                                                <span className="font-semibold text-slate-400">{group.orgs.length}</span>
+                                            )}
+                                        </h2>
+                                        <div className="divide-y divide-slate-100 overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs">
+                                            {group.orgs.map((org) => {
+                                                const config = TYPE_CONFIG[org.type] || TYPE_CONFIG.other;
+                                                const IconComponent = config.icon;
+                                                const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
+                                                const hasPendingInvitation = isInvitationPending(primaryAdmin);
 
-                                    return (
-                                        <article
-                                            key={org.id}
-                                            className="group relative flex items-start gap-4 p-4.5 transition-colors hover:bg-slate-50/70 sm:px-5"
-                                        >
-                                            {/* Organization Type Icon */}
-                                            <div
-                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${config.color} mt-0.5`}
-                                            >
-                                                <IconComponent className="h-4.5 w-4.5" />
-                                            </div>
-
-                                            {/* Central Operational Details */}
-                                            <div className="min-w-0 flex-1">
-                                                {/* Header: Name, Type, Status */}
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <h3 className="truncate text-sm font-bold text-slate-900">{org.name}</h3>
-                                                            <span
-                                                                className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${config.badgeColor}`}
-                                                            >
-                                                                {config.label}
-                                                            </span>
+                                                return (
+                                                    <article
+                                                        key={org.id}
+                                                        className="group relative flex items-start gap-4 p-4.5 transition-colors hover:bg-slate-50/70 sm:px-5"
+                                                    >
+                                                        {/* Organization Type Icon */}
+                                                        <div
+                                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${config.color} mt-0.5`}
+                                                        >
+                                                            <IconComponent className="h-4.5 w-4.5" />
                                                         </div>
-                                                    </div>
 
-                                                    {/* Three-State Status indicator */}
-                                                    <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
-                                                        <span
-                                                            className={`h-2 w-2 rounded-full ${
-                                                                hasPendingInvitation
-                                                                    ? 'bg-amber-500'
-                                                                    : org.is_active
-                                                                      ? 'bg-emerald-500'
-                                                                      : 'bg-slate-300'
-                                                            }`}
-                                                        />
-                                                        <span
-                                                            className={`text-[11px] font-semibold ${
-                                                                hasPendingInvitation
-                                                                    ? 'text-amber-700'
-                                                                    : org.is_active
-                                                                      ? 'text-emerald-700'
-                                                                      : 'text-slate-400'
-                                                            }`}
-                                                        >
-                                                            {hasPendingInvitation ? 'Pending' : org.is_active ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                        {/* Central Operational Details */}
+                                                        <div className="min-w-0 flex-1">
+                                                            {/* Header: Name, Type, Status */}
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="min-w-0">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <h3 className="truncate text-sm font-bold text-slate-900">{org.name}</h3>
+                                                                    </div>
+                                                                </div>
 
-                                                {/* Single Policy-Aware Prose Operational Detail */}
-                                                <p className="mt-1 text-xs leading-relaxed text-slate-600">{buildOperationalDetail(org)}</p>
+                                                                {/* Status shown only when it needs attention; "Active" is the default and adds no signal */}
+                                                                <div
+                                                                    className={`shrink-0 items-center gap-1.5 pt-0.5 ${hasPendingInvitation || !org.is_active ? 'flex' : 'hidden'}`}
+                                                                >
+                                                                    <span
+                                                                        className={`h-2 w-2 rounded-full ${
+                                                                            hasPendingInvitation
+                                                                                ? 'bg-amber-500'
+                                                                                : org.is_active
+                                                                                  ? 'bg-emerald-500'
+                                                                                  : 'bg-slate-300'
+                                                                        }`}
+                                                                    />
+                                                                    <span
+                                                                        className={`text-[11px] font-semibold ${
+                                                                            hasPendingInvitation
+                                                                                ? 'text-amber-700'
+                                                                                : org.is_active
+                                                                                  ? 'text-emerald-700'
+                                                                                  : 'text-slate-400'
+                                                                        }`}
+                                                                    >
+                                                                        {hasPendingInvitation ? 'Pending' : org.is_active ? 'Active' : 'Inactive'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
 
-                                                {/* Admin Information */}
-                                                {primaryAdmin && (
-                                                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                                                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
-                                                            <Mail className="h-3 w-3 text-slate-400" />
-                                                            {primaryAdmin.email}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                            {/* Single Policy-Aware Prose Operational Detail */}
+                                                            {(() => {
+                                                                const policy = policyStatus(org);
+                                                                const members = org.access_members_count ?? 0;
 
-                                            {/* Overflow Actions Menu */}
-                                            <div className="relative shrink-0 self-center" data-overflow-menu onClick={(e) => e.stopPropagation()}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setOpenMenuId(openMenuId === org.id ? null : org.id)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                                                    title="Organization actions"
-                                                >
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </button>
+                                                                return (
+                                                                    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-600">
+                                                                        <span className="inline-flex items-center gap-1.5">
+                                                                            <span
+                                                                                className={`h-1.5 w-1.5 rounded-full ${policy.live ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                                                            />
+                                                                            <span className={policy.live ? 'font-semibold text-emerald-700' : ''}>
+                                                                                {policy.label}
+                                                                            </span>
+                                                                        </span>
+                                                                        <span className="text-slate-300 sm:hidden">·</span>
+                                                                        <span className="sm:hidden">
+                                                                            {members} member{members !== 1 ? 's' : ''}
+                                                                        </span>
+                                                                    </p>
+                                                                );
+                                                            })()}
 
-                                                {openMenuId === org.id && (
-                                                    <div className="absolute top-full right-0 z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setOpenMenuId(null);
-                                                                openEditModal(org);
-                                                            }}
-                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                                                        >
-                                                            <Pencil className="h-3.5 w-3.5 text-slate-400" />
-                                                            Edit
-                                                        </button>
+                                                            {/* Admin Information */}
+                                                            {primaryAdmin && (
+                                                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                                    <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                                                        <Mail className="h-3 w-3 text-slate-400" />
+                                                                        {primaryAdmin.email}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Members */}
+                                                        <div className="hidden w-24 shrink-0 self-center text-right sm:block">
+                                                            <p className="text-sm font-bold text-slate-900">{org.access_members_count ?? 0}</p>
+                                                            <p className="text-[11px] text-slate-500">members</p>
+                                                        </div>
 
                                                         {primaryAdmin && hasPendingInvitation && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleResendInvite(org)}
                                                                 disabled={resendingInviteId === org.id}
-                                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+                                                                className="hidden shrink-0 items-center gap-1.5 self-center rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50 sm:inline-flex"
                                                             >
                                                                 {resendingInviteId === org.id ? (
-                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                                                                    <Loader2 className="h-3 w-3 animate-spin" />
                                                                 ) : (
-                                                                    <Send className="h-3.5 w-3.5 text-slate-400" />
+                                                                    <Send className="h-3 w-3" />
                                                                 )}
-                                                                Resend Invitation
+                                                                Resend invite
                                                             </button>
                                                         )}
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleToggleActive(org)}
-                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                        {/* Overflow Actions Menu */}
+                                                        <div
+                                                            className="relative shrink-0 self-center"
+                                                            data-overflow-menu
+                                                            onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <Power className="h-3.5 w-3.5 text-slate-400" />
-                                                            {org.is_active ? 'Deactivate' : 'Activate'}
-                                                        </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setOpenMenuId(openMenuId === org.id ? null : org.id)}
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                                                                title="Organization actions"
+                                                            >
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </button>
 
-                                                        <div className="my-1 border-t border-slate-100" />
+                                                            {openMenuId === org.id && (
+                                                                <div className="absolute top-full right-0 z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setOpenMenuId(null);
+                                                                            openEditModal(org);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5 text-slate-400" />
+                                                                        Edit
+                                                                    </button>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setOpenMenuId(null);
-                                                                setDeletingOrg(org);
-                                                            }}
-                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </article>
-                                    );
-                                })}
+                                                                    {primaryAdmin && hasPendingInvitation && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleResendInvite(org)}
+                                                                            disabled={resendingInviteId === org.id}
+                                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+                                                                        >
+                                                                            {resendingInviteId === org.id ? (
+                                                                                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                                                                            ) : (
+                                                                                <Send className="h-3.5 w-3.5 text-slate-400" />
+                                                                            )}
+                                                                            Resend Invitation
+                                                                        </button>
+                                                                    )}
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleToggleActive(org)}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                                    >
+                                                                        <Power className="h-3.5 w-3.5 text-slate-400" />
+                                                                        {org.is_active ? 'Deactivate' : 'Activate'}
+                                                                    </button>
+
+                                                                    <div className="my-1 border-t border-slate-100" />
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setOpenMenuId(null);
+                                                                            setDeletingOrg(org);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </article>
+                                                );
+                                            })}
+                                        </div>
+                                    </section>
+                                ))}
                             </div>
                         )}
 
