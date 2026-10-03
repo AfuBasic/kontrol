@@ -43,14 +43,34 @@ class BulkInvitePdfService
     /**
      * Everything the pass template shows, worked out in one place so it can be tested without rendering.
      *
-     * The pass says what it is for and who vouches for it. The visitor's email is the only identity we
-     * hold, so it is shown masked: enough for a guard to ask "which address did you receive this at?".
-     * It makes no claim about whether the pass is still valid: that is decided at the gate, never by this
-     * document.
-     *
      * @return array<string, mixed>
      */
     public function passViewData(OrganizationBulkInviteRecipient $recipient, AccessCode $accessCode): array
+    {
+        return [
+            ...$this->passFacts($recipient, $accessCode),
+            'recipient' => $recipient,
+            'accessCode' => $accessCode,
+            'bulkInvite' => $recipient->bulkInvite,
+            // The QR is scanned at the gate, so it must carry the scanner payload, not the web link.
+            'qrBase64' => $this->generateQrBase64($accessCode->gateQrPayload()),
+            'colors' => $this->colors(),
+            'fonts' => $this->embeddedFonts(),
+        ];
+    }
+
+    /**
+     * What a pass says, in words, for any place that shows it: the PDF and the email read from here so
+     * they never disagree.
+     *
+     * The pass says what it is for and who vouches for it. The visitor's email is the only identity we
+     * hold, so it is shown masked: enough for a guard to ask "which address did you receive this at?".
+     * It makes no claim about whether the pass is still valid: that is decided at the gate, never by a
+     * document or an email.
+     *
+     * @return array<string, mixed>
+     */
+    public function passFacts(OrganizationBulkInviteRecipient $recipient, AccessCode $accessCode): array
     {
         $bulkInvite = $recipient->bulkInvite;
         $organizationName = $bulkInvite->organization?->name ?? 'Organization';
@@ -69,23 +89,7 @@ class BulkInvitePdfService
         $purpose = trim((string) $bulkInvite->purpose);
         $batchLabel = $purpose !== '' && $purpose !== "{$organizationName} - Visitor Pass" ? $purpose : null;
 
-        $colors = [
-            'header' => BrandTheme::color('primary-600'),
-            'headerSoft' => BrandTheme::color('primary-100'),
-            'accent' => BrandTheme::color('primary-700'),
-            'tint' => BrandTheme::color('primary-50'),
-            'tintBorder' => BrandTheme::color('primary-200'),
-            'ink' => BrandTheme::color('gray-900'),
-            'body' => BrandTheme::color('gray-700'),
-            'muted' => BrandTheme::color('gray-500'),
-            'hairline' => BrandTheme::color('gray-200'),
-            'wash' => BrandTheme::color('gray-50'),
-        ];
-
         return [
-            'recipient' => $recipient,
-            'accessCode' => $accessCode,
-            'bulkInvite' => $bulkInvite,
             'organizationName' => $organizationName,
             'estateName' => $estateName,
             'hostName' => $host?->name,
@@ -100,10 +104,27 @@ class BulkInvitePdfService
             'validFrom' => $bulkInvite->valid_from?->format('M d, Y') ?? 'N/A',
             'validUntil' => $bulkInvite->valid_until?->format('M d, Y') ?? 'N/A',
             'passUrl' => route('public.pass', ['uuid' => $accessCode->pass_uuid]),
-            // The QR is scanned at the gate, so it must carry the scanner payload, not the web link.
-            'qrBase64' => $this->generateQrBase64($accessCode->gateQrPayload()),
-            'colors' => $colors,
-            'fonts' => $this->embeddedFonts(),
+        ];
+    }
+
+    /**
+     * The brand colours a pass uses, taken from the app theme.
+     *
+     * @return array<string, string>
+     */
+    public function colors(): array
+    {
+        return [
+            'header' => BrandTheme::color('primary-600'),
+            'headerSoft' => BrandTheme::color('primary-100'),
+            'accent' => BrandTheme::color('primary-700'),
+            'tint' => BrandTheme::color('primary-50'),
+            'tintBorder' => BrandTheme::color('primary-200'),
+            'ink' => BrandTheme::color('gray-900'),
+            'body' => BrandTheme::color('gray-700'),
+            'muted' => BrandTheme::color('gray-500'),
+            'hairline' => BrandTheme::color('gray-200'),
+            'wash' => BrandTheme::color('gray-50'),
         ];
     }
 
