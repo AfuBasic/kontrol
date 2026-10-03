@@ -69,3 +69,41 @@ it('requires category and priority when creating an estate board announcement', 
 
     expect(EstateBoardPost::query()->where('title', 'Missing Metadata')->exists())->toBeFalse();
 });
+
+it('publishes a draft without opening the editor', function () {
+    $draft = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->adminUser->id,
+        'status' => 'draft',
+        'published_at' => null,
+        'category' => 'general',
+        'priority' => 'normal',
+        'audience' => 'all',
+    ]);
+
+    $this->actingAs($this->adminUser)
+        ->post(route('admin.estate-board.publish', ['post' => $draft->hashid]))
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Announcement published.');
+
+    $draft->refresh();
+
+    expect($draft->status->value)->toBe('published')
+        ->and($draft->published_at)->not->toBeNull();
+});
+
+it('leaves an already published post untouched when publish is called again', function () {
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->adminUser->id,
+        'status' => 'published',
+        'published_at' => now()->subDay(),
+    ]);
+    $publishedAt = $post->published_at->toIso8601String();
+
+    $this->actingAs($this->adminUser)
+        ->post(route('admin.estate-board.publish', ['post' => $post->hashid]))
+        ->assertRedirect();
+
+    expect($post->fresh()->published_at->toIso8601String())->toBe($publishedAt);
+});
