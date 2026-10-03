@@ -362,7 +362,7 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
 }
 
 ReceiptsPage.layout = (page: ReactNode) => (
-    <ResidentLayout hideHeader hideNav className="bg-[#f6f8fb]">
+    <ResidentLayout hideHeader hideNav floatingNav className="bg-[#f6f8fb]">
         {page}
     </ResidentLayout>
 );
