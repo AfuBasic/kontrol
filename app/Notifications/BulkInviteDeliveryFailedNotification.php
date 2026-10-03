@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\OrganizationBulkInvite;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
@@ -30,7 +31,13 @@ class BulkInviteDeliveryFailedNotification extends Notification implements Shoul
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database', 'mail'];
+        // The failure email is for the Kontrol team only. The batch creator is told in-app and by push,
+        // never by email (the email carries internal error details they cannot act on).
+        if ($notifiable instanceof AnonymousNotifiable) {
+            return ['mail'];
+        }
+
+        $channels = ['database'];
 
         if (method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
@@ -47,27 +54,32 @@ class BulkInviteDeliveryFailedNotification extends Notification implements Shoul
     {
         $name = $this->bulkInvite->name ?: "Batch #{$this->bulkInvite->id}";
         $count = count($this->failedRecipients);
+        $organization = $this->bulkInvite->organization?->name ?? 'Unknown organization';
+        $estate = $this->bulkInvite->estate?->name ?? 'Unknown estate';
+        $creator = $this->bulkInvite->createdBy?->email ?? 'unknown';
 
         $mail = (new MailMessage)
             ->error()
-            ->subject("Delivery Issues: {$count} Bulk Visitor Passes Failed")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("{$count} recipient passes in group '{$name}' could not be delivered.")
+            ->subject("Delivery Issues: {$count} Bulk Visitor Pass".($count === 1 ? '' : 'es')." Failed ({$organization})")
+            ->greeting('Hello Kontrol Support,')
+            ->line("{$count} recipient pass".($count === 1 ? '' : 'es')." in group '{$name}' could not be delivered.")
+            ->line("Estate: {$estate}")
+            ->line("Organization: {$organization}")
+            ->line("Created by: {$creator}")
+            ->line("Bulk invite ID: {$this->bulkInvite->id}")
             ->line('Failed recipient addresses:');
 
-        foreach (array_slice($this->failedRecipients, 0, 5) as $recipient) {
+        foreach (array_slice($this->failedRecipients, 0, 10) as $recipient) {
             $err = $recipient['error'] ? " ({$recipient['error']})" : '';
             $mail->line("• {$recipient['email']}{$err}");
         }
 
-        if ($count > 5) {
-            $remaining = $count - 5;
+        if ($count > 10) {
+            $remaining = $count - 10;
             $mail->line("... and {$remaining} more.");
         }
 
-        return $mail
-            ->action('Review & Retry Failed', url("/org/bulk-invites/{$this->bulkInvite->id}"))
-            ->line('You can review errors and retry delivery from your bulk invite dashboard.');
+        return $mail->action('Open bulk invite', url("/org/bulk-invites/{$this->bulkInvite->id}"));
     }
 
     /**
