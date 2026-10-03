@@ -24,6 +24,7 @@ class OrganizationBulkInvite extends Model
         'valid_until',
         'auto_renew',
         'send_immediately',
+        'single_entry',
         'status',
         'renewal_blocked_reason',
         'last_renewed_at',
@@ -40,6 +41,7 @@ class OrganizationBulkInvite extends Model
             'valid_until' => 'date',
             'auto_renew' => 'boolean',
             'send_immediately' => 'boolean',
+            'single_entry' => 'boolean',
             'last_renewed_at' => 'datetime',
             'next_renewal_at' => 'date',
         ];
