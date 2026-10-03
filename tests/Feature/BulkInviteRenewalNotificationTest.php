@@ -128,7 +128,7 @@ test('NotifyBulkInviteDeliveryReportJob notifies creator when delivery failures 
     $job = new NotifyBulkInviteDeliveryReportJob($bulkInvite->id);
     $job->handle();
 
-    // The batch creator is told in-app, never by email.
+    // The batch creator gets a friendly email plus an in-app alert.
     Notification::assertSentTo(
         $this->orgAdmin,
         BulkInviteDeliveryFailedNotification::class,
@@ -136,11 +136,12 @@ test('NotifyBulkInviteDeliveryReportJob notifies creator when delivery failures 
             return $notification->bulkInvite->id === $bulkInvite->id
                 && count($notification->failedRecipients) === 1
                 && $notification->failedRecipients[0]['email'] === 'bounce@example.com'
-                && ! in_array('mail', $channels, true);
+                && in_array('mail', $channels, true)
+                && in_array('database', $channels, true);
         }
     );
 
-    // The failure email goes only to the Kontrol team.
+    // The technical email goes to the Kontrol team.
     Notification::assertSentOnDemand(
         BulkInviteDeliveryFailedNotification::class,
         function ($notification, array $channels, $notifiable) {
@@ -199,4 +200,40 @@ test('NotifyBulkInviteDeliveryReportJob does not notify creator when no delivery
     $job->handle();
 
     Notification::assertNothingSent();
+});
+
+test('the creator email explains each failure in plain language and never shows technical details', function () {
+    $bulkInvite = OrganizationBulkInvite::create([
+        'estate_id' => $this->estate->id,
+        'organization_id' => $this->org->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Audit Team',
+        'status' => 'active',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(7)->toDateString(),
+    ]);
+
+    $technical = 'Undefined variable $colors (View: /Library/WebServer/Documents/projects/kontrol/resources/views/mail/visitor/bulk-pass.blade.php)';
+
+    $notification = new BulkInviteDeliveryFailedNotification($bulkInvite, [
+        ['email' => 'a@example.com', 'error' => $technical],
+        ['email' => 'b@example.com', 'error' => 'Mailbox unavailable'],
+    ]);
+
+    $mail = $notification->toMail($this->orgAdmin);
+    $text = collect($mail->introLines)->merge($mail->outroLines)->implode("\n");
+
+    expect($mail->subject)->toBe("2 passes in 'Audit Team' weren't delivered")
+        ->and($mail->greeting)->toStartWith('Hi ')
+        ->and($text)->toContain('a@example.com: Something went wrong on our side')
+        ->and($text)->toContain("b@example.com: This email address couldn't be reached")
+        ->and($text)->toContain('nothing needs to be recreated')
+        ->and($text)->not->toContain('Undefined variable')
+        ->and($text)->not->toContain('/Library/')
+        ->and($text)->not->toContain('.php')
+        ->and($text)->not->toContain('Mailbox unavailable');
+
+    // The in-app and push payloads are friendly too.
+    $payload = $notification->toArray($this->orgAdmin);
+    expect(json_encode($payload))->not->toContain('Undefined variable')->not->toContain('.php');
 });
