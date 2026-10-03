@@ -239,6 +239,7 @@ class HandleInertiaRequests extends Middleware
                             $sub->only(['ulid', 'status', 'trial_ends_at', 'current_period_end']),
                             [
                                 'is_active' => $sub->isActive(),
+                                'access_restricted' => ($estate->settings->charge_type ?? null) === 'residents' && ! $sub->isActive(),
                                 'is_grace_period' => $sub->isGracePeriod(),
                                 'plan_name' => $estate->subscriptionRecord->plan->name ?? 'Standard',
                                 'billing_interval' => $estate->subscriptionRecord->billing_interval ?? 'monthly',
