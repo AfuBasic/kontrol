@@ -1,10 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
-import { Search, Shield } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { format, isToday, isYesterday } from 'date-fns';
+import { ChevronRight, Shield } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import * as SuspiciousActivityController from '@/actions/App/Http/Controllers/Admin/SuspiciousActivityController';
 import EmptyState from '@/Components/States/EmptyState';
 import MobileSheet from '@/Components/MobileSheet';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 
 type EventRow = {
     id: string;
@@ -60,6 +61,32 @@ const attentionFilters = [
     { value: 'resolved', label: 'Resolved' },
 ];
 
+function severityRail(severity: string): string {
+    if (severity === 'high') {
+        return 'bg-rose-500';
+    }
+    if (severity === 'elevated') {
+        return 'bg-amber-400';
+    }
+    return 'bg-slate-300';
+}
+
+function dayLabel(iso: string | null): string {
+    if (!iso) {
+        return 'Undated';
+    }
+    const date = new Date(iso);
+
+    if (isToday(date)) {
+        return 'Today';
+    }
+    if (isYesterday(date)) {
+        return 'Yesterday';
+    }
+
+    return format(date, 'EEE, d MMM yyyy');
+}
+
 function severityClass(severity: string): string {
     if (severity === 'high') {
         return 'bg-rose-50 text-rose-800';
@@ -87,8 +114,32 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
 
     const closeDetails = () => visit({ event: undefined, search, attention: filters.attention });
 
-    const rows = events.data ?? [];
+    useEffect(() => {
+        if (search === (filters.search ?? '')) {
+            return;
+        }
+        const timer = setTimeout(() => visit({ search }), 350);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
+    const rows = useMemo(() => events.data ?? [], [events.data]);
     const isEmpty = rows.length === 0;
+
+    const groups = useMemo(() => {
+        const map = new Map<string, EventRow[]>();
+        rows.forEach((row) => {
+            const label = dayLabel(row.detected_at);
+            map.set(label, [...(map.get(label) ?? []), row]);
+        });
+
+        return [...map.entries()].map(([label, items]) => ({ label, rows: items }));
+    }, [rows]);
+
+    const links = events.links ?? [];
+    const prevUrl = links.length > 2 ? links[0].url : null;
+    const nextUrl = links.length > 2 ? links[links.length - 1].url : null;
 
     const selectedTitle = useMemo(() => selected?.type_label ?? 'Event', [selected]);
 
@@ -105,48 +156,28 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                     </p>
                 </header>
 
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Event filters">
-                        {attentionFilters.map((filter) => (
-                            <button
-                                key={filter.value}
-                                type="button"
-                                onClick={() => visit({ attention: filter.value, search })}
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                    (filters.attention || 'all') === filter.value
-                                        ? 'bg-slate-900 text-white'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                            >
-                                {filter.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <form
-                        className="relative w-full max-w-sm"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            visit({ search, attention: filters.attention });
-                        }}
-                        noValidate
-                    >
-                        <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                        <label className="sr-only" htmlFor="security-search">
-                            Search by name or email
-                        </label>
-                        <input
-                            id="security-search"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search name or email"
-                            className="h-11 w-full rounded-2xl border border-slate-200 bg-white pr-4 pl-10 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10"
-                        />
-                    </form>
-                </div>
+                <FilterBar
+                    search={search}
+                    onSearch={setSearch}
+                    placeholder="Search by name or email"
+                    searchLabel="Search events by name or email"
+                    activeCount={(filters.attention || 'all') !== 'all' ? 1 : 0}
+                    hasActive={Boolean(search) || (filters.attention || 'all') !== 'all'}
+                    onReset={() => {
+                        setSearch('');
+                        visit({ search: '', attention: 'all' });
+                    }}
+                >
+                    <FilterChips
+                        label="Show"
+                        value={filters.attention || 'all'}
+                        onChange={(attention) => visit({ attention, search })}
+                        options={attentionFilters}
+                    />
+                </FilterBar>
 
                 {isEmpty ? (
-                    <div className="rounded-3xl border border-slate-200 bg-white">
+                    <div className="rounded-2xl border border-slate-100 bg-white">
                         <EmptyState
                             icon={Shield}
                             title="No suspicious activity"
@@ -154,79 +185,83 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                         />
                     </div>
                 ) : (
-                    <>
-                        <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white md:block">
-                            <table className="min-w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-                                    <tr>
-                                        <th className="px-5 py-3">Event</th>
-                                        <th className="px-5 py-3">Person</th>
-                                        <th className="px-5 py-3">Severity</th>
-                                        <th className="px-5 py-3">Status</th>
-                                        <th className="px-5 py-3">Device</th>
-                                        <th className="px-5 py-3">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {rows.map((event) => (
-                                        <tr key={event.id} className="hover:bg-slate-50/80">
-                                            <td className="px-5 py-4">
-                                                <Link
-                                                    href={SuspiciousActivityController.index.url({
-                                                        query: { ...filters, event: event.id },
-                                                    })}
-                                                    className="font-semibold text-slate-900 hover:text-indigo-700"
-                                                >
-                                                    {event.type_label}
-                                                </Link>
-                                            </td>
-                                            <td className="px-5 py-4 text-slate-600">{event.person_name}</td>
-                                            <td className="px-5 py-4">
+                    <div className="space-y-6">
+                        {groups.map((group) => (
+                            <section key={group.label} aria-label={group.label}>
+                                <h2 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-slate-500 uppercase">
+                                    {group.label}
+                                    <span className="font-semibold text-slate-400">{group.rows.length}</span>
+                                </h2>
+                                <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
+                                    {group.rows.map((event) => (
+                                        <li key={event.id}>
+                                            <Link
+                                                href={SuspiciousActivityController.index.url({
+                                                    query: { ...filters, event: event.id },
+                                                })}
+                                                className={`group relative flex items-center gap-3 py-3.5 pr-4 pl-5 transition hover:bg-slate-50 ${
+                                                    event.requires_attention ? 'bg-amber-50/30' : ''
+                                                }`}
+                                            >
                                                 <span
-                                                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass(event.severity)}`}
-                                                >
-                                                    {event.severity_label}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-4 text-slate-600">{event.status_label}</td>
-                                            <td className="px-5 py-4 text-slate-600">{event.device ?? '-'}</td>
-                                            <td className="px-5 py-4 text-slate-500">
-                                                {event.detected_at ? formatDistanceToNow(new Date(event.detected_at), { addSuffix: true }) : '-'}
-                                            </td>
-                                        </tr>
+                                                    aria-hidden="true"
+                                                    className={`absolute inset-y-0 left-0 w-1 ${severityRail(event.severity)} ${
+                                                        event.requires_attention ? '' : 'opacity-40'
+                                                    }`}
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <p
+                                                        className={`truncate text-sm ${
+                                                            event.requires_attention ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'
+                                                        }`}
+                                                    >
+                                                        {event.type_label}
+                                                    </p>
+                                                    <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                        {[event.person_name, event.device].filter(Boolean).join(' · ') || 'Unknown'}
+                                                    </p>
+                                                </div>
+                                                <div className="flex shrink-0 flex-col items-end gap-1">
+                                                    <span
+                                                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass(event.severity)}`}
+                                                    >
+                                                        {event.severity_label}
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-500">
+                                                        {event.status_label}
+                                                        {event.detected_at ? ` · ${format(new Date(event.detected_at), 'h:mm a')}` : ''}
+                                                    </span>
+                                                </div>
+                                                <ChevronRight className="hidden h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500 sm:block" />
+                                            </Link>
+                                        </li>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </ul>
+                            </section>
+                        ))}
 
-                        <ul className="space-y-3 md:hidden">
-                            {rows.map((event) => (
-                                <li key={event.id}>
-                                    <Link
-                                        href={SuspiciousActivityController.index.url({
-                                            query: { ...filters, event: event.id },
-                                        })}
-                                        className="block rounded-3xl border border-slate-200 bg-white p-4"
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-900">{event.type_label}</p>
-                                                <p className="mt-1 text-xs text-slate-500">{event.person_name}</p>
-                                            </div>
-                                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass(event.severity)}`}>
-                                                {event.severity_label}
-                                            </span>
-                                        </div>
-                                        <p className="mt-3 text-xs text-slate-500">
-                                            {event.status_label}
-                                            {event.device ? ` · ${event.device}` : ''}
-                                            {event.detected_at ? ` · ${formatDistanceToNow(new Date(event.detected_at), { addSuffix: true })}` : ''}
-                                        </p>
+                        {(prevUrl || nextUrl) && (
+                            <nav className="flex items-center justify-between" aria-label="Pagination">
+                                {prevUrl ? (
+                                    <Link href={prevUrl} preserveScroll className="text-sm font-bold text-slate-700 hover:text-slate-900">
+                                        ← Newer
                                     </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </>
+                                ) : (
+                                    <span />
+                                )}
+                                <span className="text-xs text-slate-500">
+                                    Page {events.current_page} of {events.last_page}
+                                </span>
+                                {nextUrl ? (
+                                    <Link href={nextUrl} preserveScroll className="text-sm font-bold text-slate-700 hover:text-slate-900">
+                                        Older →
+                                    </Link>
+                                ) : (
+                                    <span />
+                                )}
+                            </nav>
+                        )}
+                    </div>
                 )}
             </div>
 
