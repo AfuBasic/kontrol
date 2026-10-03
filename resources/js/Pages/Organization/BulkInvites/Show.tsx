@@ -18,6 +18,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import EmailPillInput from '@/Components/Organization/EmailPillInput';
+import ProgressRing from '@/Components/UI/ProgressRing';
+import { useDeliveryProgress } from '@/Hooks/useDeliveryProgress';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 import { shareAccessCode } from '@/Utils/share';
@@ -120,7 +122,8 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
         }
     }, [confirming]);
 
-    const recipients = bulkInvite.recipients;
+    // Watches the emails go out and keeps these numbers live, only while something is actually sending.
+    const { recipients, stalled } = useDeliveryProgress(bulkInvite.id, bulkInvite.recipients);
     const total = recipients.length;
     const sent = recipients.filter((r) => r.delivery_status === 'sent').length;
     const failed = recipients.filter((r) => r.delivery_status === 'failed').length;
@@ -400,31 +403,37 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 {/* Delivery summary */}
                 {total > 0 && (
                     <div className="soft-card mt-3 flex min-h-[56px] items-center gap-3 px-3.5 py-3">
-                        <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${
-                                failed > 0 ? 'icon-tile-rose' : waiting > 0 || sending > 0 ? 'icon-tile-amber' : 'icon-tile-mint'
-                            }`}
-                        >
-                            {failed > 0 ? (
-                                <AlertTriangle className="h-4 w-4" strokeWidth={2.2} />
-                            ) : waiting > 0 ? (
-                                <Send className="h-4 w-4" strokeWidth={2.2} />
-                            ) : sending > 0 ? (
-                                <Clock className="h-4 w-4" strokeWidth={2.2} />
-                            ) : (
-                                <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
-                            )}
-                        </div>
+                        {failed === 0 && sending > 0 && !stalled ? (
+                            <ProgressRing value={sent} total={total} label={`${sent} of ${total} passes sent`} />
+                        ) : (
+                            <div
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${
+                                    failed > 0 ? 'icon-tile-rose' : waiting > 0 || sending > 0 ? 'icon-tile-amber' : 'icon-tile-mint'
+                                }`}
+                            >
+                                {failed > 0 ? (
+                                    <AlertTriangle className="h-4 w-4" strokeWidth={2.2} />
+                                ) : sending > 0 ? (
+                                    <Clock className="h-4 w-4" strokeWidth={2.2} />
+                                ) : waiting > 0 ? (
+                                    <Send className="h-4 w-4" strokeWidth={2.2} />
+                                ) : (
+                                    <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
+                                )}
+                            </div>
+                        )}
                         <div className="min-w-0 flex-1">
                             <p className="text-[14px] text-[#071f4b]">
                                 {failed > 0
                                     ? `${failed} of ${total} not delivered`
-                                    : waiting > 0
-                                      ? waiting === total
-                                          ? 'Passes not sent yet'
-                                          : `${waiting} ${waiting === 1 ? 'pass' : 'passes'} not sent yet`
-                                      : sending > 0
-                                        ? 'Sending passes…'
+                                    : sending > 0
+                                      ? stalled
+                                          ? 'Taking longer than usual'
+                                          : 'Sending passes…'
+                                      : waiting > 0
+                                        ? waiting === total
+                                            ? 'Passes not sent yet'
+                                            : `${waiting} ${waiting === 1 ? 'pass' : 'passes'} not sent yet`
                                         : total === 1
                                           ? 'Pass delivered'
                                           : `All ${total} passes delivered`}
@@ -432,9 +441,11 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             <p className="mt-0.5 text-[12px] text-slate-500">
                                 {failed > 0
                                     ? 'Check the addresses, then retry.'
-                                    : waiting > 0
-                                      ? 'Ready to go. Nothing is emailed until you send.'
-                                      : `${sent} of ${total} emails sent with PDF pass`}
+                                    : sending > 0 && stalled
+                                      ? 'Some passes are still on their way. Refresh in a moment.'
+                                      : sending === 0 && waiting > 0
+                                        ? 'Ready to go. Nothing is emailed until you send.'
+                                        : `${sent} of ${total} emails sent with PDF pass`}
                             </p>
                         </div>
                         {failed > 0 && membership.is_admin && (
@@ -448,7 +459,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 Retry
                             </button>
                         )}
-                        {failed === 0 && waiting > 0 && canManage && (
+                        {failed === 0 && sending === 0 && waiting > 0 && canManage && (
                             <button
                                 type="button"
                                 onClick={sendWaiting}
