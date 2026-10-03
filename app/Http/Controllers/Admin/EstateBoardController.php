@@ -7,6 +7,7 @@ use App\Actions\EstateBoard\DeletePostAction;
 use App\Actions\EstateBoard\UpdatePostAction;
 use App\Auth\ContextManager;
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EstateBoard\StorePostRequest;
 use App\Http\Requests\EstateBoard\UpdatePostRequest;
@@ -212,6 +213,28 @@ class EstateBoardController extends Controller
         return redirect()
             ->route('admin.estate-board.manage')
             ->with('success', 'Post updated successfully.');
+    }
+
+    /**
+     * Publish a draft as-is, without opening the editor.
+     */
+    public function publish(EstateBoardPost $post, UpdatePostAction $action): RedirectResponse
+    {
+        $this->authorize('update', $post);
+
+        if ($post->status !== EstateBoardPostStatus::Published) {
+            $action->execute($post, [
+                'title' => $post->title,
+                'body' => $post->body,
+                'category' => $post->category->value,
+                'priority' => $post->priority->value,
+                'audience' => $post->audience->value,
+                'status' => EstateBoardPostStatus::Published->value,
+                'zone_ids' => $post->targets()->where('target_type', 'zone')->pluck('target_id')->all(),
+            ], $this->estateContext->getEstate());
+        }
+
+        return back()->with('success', 'Announcement published.');
     }
 
     /**
