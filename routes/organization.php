@@ -66,6 +66,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/{bulkInvite}', [OrganizationBulkInviteController::class, 'show'])->name('show');
         Route::get('/{bulkInvite}/delivery-status', [OrganizationBulkInviteController::class, 'deliveryStatus'])->name('delivery-status');
         Route::post('/{bulkInvite}/retry-failed', [OrganizationBulkInviteController::class, 'retryFailed'])->name('retry-failed');
+        Route::post('/{bulkInvite}/send', [OrganizationBulkInviteController::class, 'sendPending'])->name('send');
         Route::delete('/{bulkInvite}', [OrganizationBulkInviteController::class, 'destroy'])->name('destroy');
         Route::delete('/{bulkInvite}/recipients/{recipient}', [OrganizationBulkInviteController::class, 'removeRecipient'])->name('recipients.destroy');
         Route::post('/{bulkInvite}/recipients/{recipient}/resend', [OrganizationBulkInviteController::class, 'resendRecipient'])->name('recipients.resend');
