@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { FileText } from 'lucide-react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 
-import { edit, index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { edit, index as boardIndex, publish } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, PostCategory } from '@/types';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -41,6 +42,7 @@ const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
 
 export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }: Props) {
     const composerRef = useRef<HTMLDivElement>(null);
+    const { confirm } = useAdminConfirmation();
 
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -191,10 +193,24 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                                 </div>
                                 <Link
                                     href={edit.url({ post: post.hashid })}
+                                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        confirm({
+                                            title: 'Publish announcement',
+                                            message: 'This will send it to its audience right away. Publish now?',
+                                            confirmLabel: 'Publish',
+                                            onConfirm: () => router.post(publish.url({ post: post.hashid }), {}, { preserveScroll: true }),
+                                        })
+                                    }
                                     className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-700"
                                 >
-                                    Continue editing
-                                </Link>
+                                    Publish
+                                </button>
                             </li>
                         ))}
                     </ul>
