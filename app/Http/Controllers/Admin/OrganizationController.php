@@ -86,7 +86,31 @@ class OrganizationController extends Controller
                 'type' => $type ?? 'all',
                 'status' => $status ?? 'all',
             ],
+            'summary' => $this->summary($estate->id),
         ]);
+    }
+
+    /**
+     * Estate-wide counts for the header strip (independent of the active filters).
+     *
+     * @return array{total: int, pending_invitations: int, inactive: int}
+     */
+    private function summary(int $estateId): array
+    {
+        $base = fn () => EstateOrganization::where('estate_id', $estateId);
+
+        return [
+            'total' => $base()->count(),
+            'pending_invitations' => $base()->whereHas('memberships', function ($mQuery) {
+                $mQuery->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->whereHas('user', function ($uQuery) {
+                        $uQuery->whereNull('email_verified_at')
+                            ->whereNull('google_id');
+                    });
+            })->count(),
+            'inactive' => $base()->where('is_active', false)->count(),
+        ];
     }
 
     /**
