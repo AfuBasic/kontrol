@@ -92,7 +92,7 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
                 Log::error("DeliverBulkVisitorPassJob: PDF generation failed for {$recipient->email} on final attempt, sending without attachment: {$e->getMessage()}");
             }
 
-            Mail::to($recipient->email)->send(new BulkVisitorPassMail($accessCode, $pdfContents));
+            Mail::to($recipient->email)->send(new BulkVisitorPassMail($accessCode, $pdfContents, $recipient));
 
             $recipient->update([
                 'delivery_status' => 'sent',
