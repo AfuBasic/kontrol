@@ -388,9 +388,9 @@ describe('GET /resident/visitors (timeline)', function () {
         $response->assertInertia(
             fn ($page) => $page
                 ->component('Resident/Visitors/Index')
-                ->has('upcomingTimeline.0.effective_visit_at')
-                ->has('upcomingTimeline.0.arrival_date')
-                ->has('upcomingTimeline.0.arrival_time'),
+                ->has('upcomingTimeline.data.0.effective_visit_at')
+                ->has('upcomingTimeline.data.0.arrival_date')
+                ->has('upcomingTimeline.data.0.arrival_time'),
         );
     });
 
@@ -410,9 +410,9 @@ describe('GET /resident/visitors (timeline)', function () {
             ->assertInertia(
                 fn ($page) => $page
                     ->component('Resident/Visitors/Index')
-                    ->has('historyTimeline.0.completion_at')
-                    ->has('historyTimeline.0.completion_date')
-                    ->has('historyTimeline.0.completion_time'),
+                    ->has('historyTimeline.data.0.completion_at')
+                    ->has('historyTimeline.data.0.completion_date')
+                    ->has('historyTimeline.data.0.completion_time'),
             );
     });
 });
