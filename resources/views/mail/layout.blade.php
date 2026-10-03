@@ -221,6 +221,10 @@
 </head>
 
 <body>
+    @hasSection('preheader')
+        {{-- Inbox preview text: shown beside the subject in the inbox, hidden in the message itself. --}}
+        <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">@yield('preheader')&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+    @endif
     <div class="wrapper">
         <table class="main" style="margin-top: 40px;">
             <tr>
