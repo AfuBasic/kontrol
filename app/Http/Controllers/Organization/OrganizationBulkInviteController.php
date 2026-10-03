@@ -19,6 +19,7 @@ use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use App\Services\Organization\BulkInviteVisitService;
 use App\Services\OrganizationContextService;
 use App\Services\Visitor\BulkInvitePdfService;
+use App\Support\BulkInviteDeliveryFailure;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -296,7 +297,7 @@ class OrganizationBulkInviteController extends Controller
                     'id' => $recipient->id,
                     'email' => $recipient->email,
                     'delivery_status' => $recipient->delivery_status,
-                    'delivery_error' => $recipient->delivery_error,
+                    'delivery_error' => BulkInviteDeliveryFailure::friendly($recipient->delivery_error),
                     'delivered_label' => $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
                     ...$this->currentPassPayload($bulkInvite, $recipient),
                     'can_resend' => $this->isResendable($recipient),
@@ -678,10 +679,11 @@ class OrganizationBulkInviteController extends Controller
             ->where('status', 'active')
             ->select(['id', 'bulk_invite_id', 'email', 'status', 'delivery_status', 'delivery_error', 'last_delivered_at'])
             ->get()
-            ->each(fn (OrganizationBulkInviteRecipient $recipient) => $recipient->setAttribute(
-                'delivered_label',
-                $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null),
-            ));
+            ->each(function (OrganizationBulkInviteRecipient $recipient): void {
+                $recipient->setAttribute('delivered_label', $this->shortDate($recipient->last_delivered_at ? Carbon::parse($recipient->last_delivered_at) : null));
+                // Shown to the group creator, so it is always a plain-language reason (the raw error stays stored).
+                $recipient->setAttribute('delivery_error', BulkInviteDeliveryFailure::friendly($recipient->delivery_error));
+            });
 
         $summary = [
             'total' => $recipients->count(),
