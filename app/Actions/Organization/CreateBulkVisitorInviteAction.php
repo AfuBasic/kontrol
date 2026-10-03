@@ -33,6 +33,7 @@ class CreateBulkVisitorInviteAction
         ?CarbonInterface $validUntil = null,
         bool $autoRenew = false,
         bool $sendImmediately = true,
+        bool $singleEntry = false,
     ): OrganizationBulkInvite {
         if (! $organization->is_active) {
             throw ValidationException::withMessages([
@@ -59,7 +60,7 @@ class CreateBulkVisitorInviteAction
 
         $nextRenewalAt = $autoRenew ? $endDate->subDay()->toDateString() : null;
 
-        return DB::transaction(function () use ($organization, $estate, $user, $uniqueEmails, $name, $purpose, $role, $startDate, $endDate, $autoRenew, $sendImmediately, $nextRenewalAt) {
+        return DB::transaction(function () use ($organization, $estate, $user, $uniqueEmails, $name, $purpose, $role, $startDate, $endDate, $autoRenew, $sendImmediately, $singleEntry, $nextRenewalAt) {
             $bulkInvite = OrganizationBulkInvite::create([
                 'organization_id' => $organization->id,
                 'estate_id' => $estate->id,
@@ -71,6 +72,7 @@ class CreateBulkVisitorInviteAction
                 'valid_until' => $endDate->toDateString(),
                 'auto_renew' => $autoRenew,
                 'send_immediately' => $sendImmediately,
+                'single_entry' => $singleEntry,
                 'status' => 'active',
                 'next_renewal_at' => $nextRenewalAt,
             ]);
