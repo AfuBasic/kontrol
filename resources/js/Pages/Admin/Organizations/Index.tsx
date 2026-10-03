@@ -2,10 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     Building2,
     Plus,
-    Search,
     Pencil,
     Trash2,
-    X,
     AlertCircle,
     School,
     Church,
@@ -22,6 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
+import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import TextInput from '@/Components/UI/TextInput';
 import { destroy, index, resendInvitation, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import { useDebounce } from '@/Hooks/useDebounce';
@@ -427,64 +426,42 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     </div>
                 ) : (
                     <>
-                        {/* Operational Utility Bar (Search & Filters) */}
                         <div className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                                <div className="relative flex-1">
-                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search organizations..."
-                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-9 text-xs font-semibold text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSearchQuery('')}
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                        >
-                                            <X className="h-3.5 w-3.5" />
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-                                    <div className="min-w-[140px] flex-1 sm:flex-initial">
-                                        <CustomSelect
-                                            value={selectedType}
-                                            onChange={(val) => handleTypeFilterChange(String(val))}
-                                            options={[
-                                                { value: 'all', label: 'All Types' },
-                                                { value: 'school', label: 'School' },
-                                                { value: 'church', label: 'Church' },
-                                                { value: 'hospital', label: 'Hospital' },
-                                                { value: 'business', label: 'Business' },
-                                                { value: 'facility', label: 'Facility' },
-                                                { value: 'other', label: 'Other' },
-                                            ]}
-                                            size="sm"
-                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
-                                        />
-                                    </div>
-
-                                    <div className="min-w-[130px] flex-1 sm:flex-initial">
-                                        <CustomSelect
-                                            value={selectedStatus}
-                                            onChange={(val) => handleStatusFilterChange(String(val))}
-                                            options={[
-                                                { value: 'all', label: 'All Statuses' },
-                                                { value: 'active', label: 'Active' },
-                                                { value: 'pending', label: 'Pending' },
-                                                { value: 'inactive', label: 'Inactive' },
-                                            ]}
-                                            size="sm"
-                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <FilterBar
+                                search={searchQuery}
+                                onSearch={setSearchQuery}
+                                placeholder="Search organizations"
+                                searchLabel="Search organizations by name"
+                                activeCount={[selectedType, selectedStatus].filter((v) => v !== 'all').length}
+                                hasActive={isFiltered}
+                                onReset={handleClearFilters}
+                            >
+                                <FilterChips
+                                    label="Type"
+                                    value={selectedType}
+                                    onChange={handleTypeFilterChange}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'school', label: 'Schools' },
+                                        { value: 'church', label: 'Churches' },
+                                        { value: 'hospital', label: 'Hospitals' },
+                                        { value: 'business', label: 'Business' },
+                                        { value: 'facility', label: 'Facilities' },
+                                        { value: 'other', label: 'Other' },
+                                    ]}
+                                />
+                                <FilterChips
+                                    label="Status"
+                                    value={selectedStatus}
+                                    onChange={handleStatusFilterChange}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'pending', label: 'Pending' },
+                                        { value: 'inactive', label: 'Inactive' },
+                                    ]}
+                                />
+                            </FilterBar>
 
                             {/* Result Counter when filtering */}
                             {isFiltered && !isSearchEmpty && (
@@ -543,8 +520,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         </div>
                                                     </div>
 
-                                                    {/* Three-State Status indicator */}
-                                                    <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                                                    {/* Status shown only when it needs attention; "Active" is the default and adds no signal */}
+                                                    <div
+                                                        className={`shrink-0 items-center gap-1.5 pt-0.5 ${hasPendingInvitation || !org.is_active ? 'flex' : 'hidden'}`}
+                                                    >
                                                         <span
                                                             className={`h-2 w-2 rounded-full ${
                                                                 hasPendingInvitation
