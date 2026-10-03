@@ -23,6 +23,7 @@ import {
     Ticket,
     HelpCircle,
     ShieldAlert,
+    Lock,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -63,10 +64,12 @@ interface Props {
     children: ReactNode;
     hideHeader?: boolean;
     hideNav?: boolean;
+    /** Keep the page full-bleed (as with hideNav) but still show the floating bottom menu, e.g. on billing pages. */
+    floatingNav?: boolean;
     className?: string;
 }
 
-export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
+export default function ResidentLayout({ children, hideHeader = false, hideNav = false, floatingNav = false, className }: Props) {
     const { confirm } = useResidentConfirmation();
     const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
     const { auth, webpush_public_key } = props;
@@ -397,6 +400,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const hasAccessCodes = useFeature('access-code-generation');
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
+
+    // A lapsed subscription locks everything except these destinations. Menus stay visible, marked as locked.
+    const accessRestricted = !isPropertyOwner && Boolean(auth?.user?.resident_subscription?.access_restricted);
+    const UNLOCKED_PATHS = ['/resident/home', '/resident/dues', '/resident/profile', '/resident/coupons', '/account/support', '#sos', '#more'];
+    const isLocked = (href: string) => accessRestricted && !UNLOCKED_PATHS.some((path) => href === path || href.startsWith(path + '/'));
+    const notifyLocked = (name: string) => {
+        setToastType('error');
+        setToastMessage(`${name === 'CREATE_CODE' ? 'Creating passes' : name} is locked until your subscription is settled.`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+    };
+    // Organization accounts can reach billing too, but the resident menu does not apply to them.
+    const hasResidentRole = Boolean(auth?.user?.roles?.some((role: string) => ['resident', 'household_member', 'property_owner'].includes(role)));
+    const showFloatingMenu = !hideNav || (floatingNav && hasResidentRole);
     const canTriggerSos = Boolean(auth?.user?.roles?.some((role: string) => ['resident', 'household_member', 'property_owner'].includes(role)));
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -659,7 +676,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 <main
                     className={`relative mx-auto w-full flex-1 ${
                         hideHeader && hideNav
-                            ? 'max-w-none p-0'
+                            ? `max-w-none p-0 ${floatingNav && hasResidentRole ? 'pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]' : ''}`
                             : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'} ${
                                   isPropertyOwner ? 'max-w-4xl px-3 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
                               } ${
@@ -678,7 +695,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}
-                {!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
+                {!isPropertyOwner && showFloatingMenu && (
                     <div
                         data-mobile-bottom-nav
                         className="pointer-events-none fixed inset-x-0 bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] z-40 px-6 transition-opacity duration-150"
@@ -696,10 +713,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => router.visit('/resident/visitors/create')}
-                                                    className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
+                                                    onClick={() =>
+                                                        accessRestricted ? notifyLocked('CREATE_CODE') : router.visit('/resident/visitors/create')
+                                                    }
+                                                    aria-label={accessRestricted ? 'Create pass (locked)' : 'Create pass'}
+                                                    className={`absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-xl ring-4 ring-white ${
+                                                        accessRestricted ? 'bg-slate-300 shadow-none' : 'bg-slate-900 shadow-slate-900/20'
+                                                    }`}
                                                 >
-                                                    <Plus className="h-7 w-7" strokeWidth={3} />
+                                                    {accessRestricted ? <Lock className="h-6 w-6" /> : <Plus className="h-7 w-7" strokeWidth={3} />}
                                                 </motion.button>
                                             </div>
                                         );
@@ -729,6 +751,23 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     const itemPathname = getPathFromUrl(item.href).split('?')[0];
                                     const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
 
+                                    if (isLocked(item.href)) {
+                                        return (
+                                            <button
+                                                key={item.name}
+                                                type="button"
+                                                onClick={() => notifyLocked(item.name)}
+                                                aria-label={`${item.name} (locked)`}
+                                                className="relative flex flex-1 flex-col items-center gap-1"
+                                            >
+                                                <div className="relative rounded-xl p-2.5 text-slate-300">
+                                                    {(item.icon as any)(false)}
+                                                    <Lock className="absolute top-1.5 right-1.5 h-3 w-3 text-slate-500" />
+                                                </div>
+                                            </button>
+                                        );
+                                    }
+
                                     return (
                                         <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
                                             <div
@@ -751,7 +790,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 )}
 
                 {/* Bottom Navigation for Property Owners on Mobile */}
-                {isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
+                {isPropertyOwner && showFloatingMenu && (
                     <div
                         data-mobile-bottom-nav
                         className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 transition-opacity duration-150 md:hidden"
@@ -863,6 +902,26 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     const currentPathname = currentPath.split('?')[0];
                                     const itemPathname = getPathFromUrl(item.href).split('?')[0];
                                     const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
+
+                                    if (!isPropertyOwner && isLocked(item.href)) {
+                                        return (
+                                            <button
+                                                key={item.name}
+                                                type="button"
+                                                onClick={() => notifyLocked(item.name)}
+                                                aria-label={`${item.name} (locked)`}
+                                                className="relative flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center opacity-60"
+                                            >
+                                                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                                                    <item.icon className="h-6 w-6" />
+                                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs ring-1 ring-slate-200">
+                                                        <Lock className="h-3 w-3 text-slate-500" />
+                                                    </span>
+                                                </div>
+                                                <span className="text-[10px] leading-tight font-bold text-slate-500">{item.name}</span>
+                                            </button>
+                                        );
+                                    }
 
                                     return (
                                         <Link
