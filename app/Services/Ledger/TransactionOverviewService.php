@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 
 class TransactionOverviewService
 {
@@ -27,14 +28,6 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Success)
             ->sum('amount');
 
-        $moneyOutToday = $this->baseQuery($estate)
-            ->where(function ($query) use ($today) {
-                $query->whereDate('reversed_at', $today)
-                    ->orWhere(fn ($q) => $q->whereDate('failed_at', $today)->where('direction', TransactionDirection::Debit));
-            })
-            ->where('status', TransactionStatus::Success)
-            ->sum('amount');
-
         $pendingToday = $this->baseQuery($estate)
             ->whereDate('created_at', $today)
             ->where('status', TransactionStatus::Pending)
@@ -45,9 +38,15 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Failed)
             ->count();
 
+        $paymentsToday = $this->baseQuery($estate)
+            ->whereDate('paid_at', $today)
+            ->where('direction', TransactionDirection::Credit)
+            ->where('status', TransactionStatus::Success)
+            ->count();
+
         return [
+            'payments_today' => $paymentsToday,
             'money_in_today' => (int) $moneyInToday,
-            'money_out_today' => (int) $moneyOutToday,
             'pending_today' => $pendingToday,
             'failed_today' => $failedToday,
         ];
@@ -58,93 +57,266 @@ class TransactionOverviewService
      */
     public function timeline(Estate $estate, array $filters = [], int $limit = 12): SupportCollection
     {
-        return $this->query($estate, $filters)
-            ->reorder()
-            ->whereNot('status', TransactionStatus::Pending)
-            ->orderByRaw('COALESCE(paid_at, failed_at, reversed_at, created_at) DESC')
-            ->limit($limit)
-            ->get()
-            ->map(fn (EstateTransaction $transaction) => $this->formatTimelineEntry($transaction));
+        return $this->timelinePage($estate, $filters, null, $limit)['entries'];
     }
 
     /**
-     * @return array<string, mixed>
+     * One page of the activity feed, newest first.
+     *
+     * Keyset (cursor) pagination on (effective time, id): new payments arriving while someone is
+     * scrolling never shift rows, so nothing is repeated or skipped the way offset pages would.
+     *
+     * @return array{entries: SupportCollection<int, array<string, mixed>>, next_cursor: string|null}
      */
-    public function charts(Estate $estate, int $days = 30): array
+    public function timelinePage(Estate $estate, array $filters = [], ?string $cursor = null, int $limit = 25): array
     {
-        $start = now()->subDays($days - 1)->startOfDay();
+        $effective = 'COALESCE(paid_at, failed_at, reversed_at, created_at)';
 
-        $transactions = $this->baseQuery($estate)
-            ->where('created_at', '>=', $start)
+        $query = $this->query($estate, $filters)
+            ->reorder()
+            ->select('estate_transactions.*')
+            ->selectRaw("{$effective} as occurred_sort")
+            ->whereNot('status', TransactionStatus::Pending);
+
+        if ($decoded = $this->decodeCursor($cursor)) {
+            [$time, $id] = $decoded;
+
+            $query->where(function (Builder $q) use ($effective, $time, $id) {
+                $q->whereRaw("{$effective} < ?", [$time])
+                    ->orWhere(fn (Builder $same) => $same->whereRaw("{$effective} = ?", [$time])->where('estate_transactions.id', '<', $id));
+            });
+        }
+
+        $rows = $query
+            ->orderByRaw("{$effective} DESC")
+            ->orderByDesc('estate_transactions.id')
+            ->limit($limit + 1)
             ->get();
 
-        $dailyVolume = [];
-        $moneyInVsOut = [];
-        for ($i = 0; $i < $days; $i++) {
-            $date = $start->copy()->addDays($i)->toDateString();
-            $dailyVolume[$date] = ['date' => $date, 'count' => 0, 'volume' => 0];
-            $moneyInVsOut[$date] = ['date' => $date, 'money_in' => 0, 'money_out' => 0];
-        }
-
-        $paymentMethods = [];
-        $transactionTypes = [];
-        $revenueTrend = [];
-        $refundTrend = [];
-
-        foreach ($transactions as $transaction) {
-            $date = $transaction->created_at->toDateString();
-
-            if (isset($dailyVolume[$date])) {
-                $dailyVolume[$date]['count']++;
-                if ($transaction->status === TransactionStatus::Success) {
-                    $dailyVolume[$date]['volume'] += $transaction->amount;
-                }
-            }
-
-            if ($transaction->status === TransactionStatus::Success && isset($moneyInVsOut[$date])) {
-                if ($transaction->direction === TransactionDirection::Credit) {
-                    $moneyInVsOut[$date]['money_in'] += $transaction->amount;
-                } else {
-                    $moneyInVsOut[$date]['money_out'] += $transaction->amount;
-                }
-            }
-
-            if ($transaction->payment_method) {
-                $key = $transaction->payment_method->value;
-                $paymentMethods[$key] = ($paymentMethods[$key] ?? 0) + 1;
-            }
-
-            $typeKey = $transaction->type->value;
-            $transactionTypes[$typeKey] = ($transactionTypes[$typeKey] ?? 0) + 1;
-
-            if ($transaction->direction === TransactionDirection::Credit && $transaction->status === TransactionStatus::Success) {
-                $revenueTrend[$date] = ($revenueTrend[$date] ?? 0) + $transaction->amount;
-            }
-
-            if ($transaction->type === TransactionType::Refund && $transaction->status === TransactionStatus::Success) {
-                $refundTrend[$date] = ($refundTrend[$date] ?? 0) + $transaction->amount;
-            }
-        }
+        $page = $rows->take($limit);
+        $last = $page->last();
 
         return [
-            'money_in_vs_out' => array_values($moneyInVsOut),
-            'daily_volume' => array_values($dailyVolume),
-            'payment_methods' => collect($paymentMethods)->map(fn ($count, $method) => [
-                'method' => $method,
-                'count' => $count,
-            ])->values()->all(),
-            'transaction_types' => collect($transactionTypes)->map(fn ($count, $type) => [
-                'type' => $type,
-                'count' => $count,
-            ])->values()->all(),
-            'revenue_trend' => collect($revenueTrend)->map(fn ($amount, $date) => [
-                'date' => $date,
-                'amount' => $amount,
-            ])->values()->all(),
-            'refund_trend' => collect($refundTrend)->map(fn ($amount, $date) => [
-                'date' => $date,
-                'amount' => $amount,
-            ])->values()->all(),
+            'entries' => $page->map(fn (EstateTransaction $transaction) => $this->formatTimelineEntry($transaction))->values(),
+            'next_cursor' => $rows->count() > $limit && $last ? $this->encodeCursor((string) $last->occurred_sort, (int) $last->id) : null,
+        ];
+    }
+
+    private function encodeCursor(string $time, int $id): string
+    {
+        return rtrim(strtr(base64_encode(json_encode([$time, $id])), '+/', '-_'), '=');
+    }
+
+    /**
+     * @return array{0: string, 1: int}|null
+     */
+    private function decodeCursor(?string $cursor): ?array
+    {
+        if (! $cursor) {
+            return null;
+        }
+
+        $decoded = json_decode((string) base64_decode(strtr($cursor, '-_', '+/'), true), true);
+
+        if (! is_array($decoded) || count($decoded) !== 2 || ! is_string($decoded[0]) || ! is_numeric($decoded[1])) {
+            return null;
+        }
+
+        return [$decoded[0], (int) $decoded[1]];
+    }
+
+    /** Failed and stuck payments are only worth a look for this long. */
+    private const ATTENTION_DAYS = 7;
+
+    /** A payment still "pending" after this long is probably abandoned or missing its webhook. */
+    private const STUCK_AFTER_HOURS = 2;
+
+    /**
+     * What an estate admin should look at: payments that failed or stalled and were never made good.
+     * A later successful payment by the same resident for the same charge counts as resolved.
+     *
+     * @return array{failed: array{count: int, amount: int}, stuck: array{count: int, amount: int}}
+     */
+    public function attention(Estate $estate): array
+    {
+        $summarise = function (string $kind) use ($estate): array {
+            $query = $this->baseQuery($estate);
+            $this->applyAttention($query, $kind);
+
+            return ['count' => (clone $query)->count(), 'amount' => (int) (clone $query)->sum('amount')];
+        };
+
+        return ['failed' => $summarise('failed'), 'stuck' => $summarise('stuck')];
+    }
+
+    private function applyAttention(Builder $query, string $kind): void
+    {
+        $attempted = 'COALESCE(estate_transactions.failed_at, estate_transactions.created_at)';
+
+        match ($kind) {
+            'failed' => $query
+                ->where('estate_transactions.status', TransactionStatus::Failed)
+                ->whereRaw("{$attempted} >= ?", [now()->subDays(self::ATTENTION_DAYS)]),
+            'stuck' => $query
+                ->where('estate_transactions.status', TransactionStatus::Pending)
+                ->where('estate_transactions.created_at', '<=', now()->subHours(self::STUCK_AFTER_HOURS))
+                ->where('estate_transactions.created_at', '>=', now()->subDays(self::ATTENTION_DAYS)),
+            default => $query->whereRaw('1 = 0'),
+        };
+
+        if (in_array($kind, ['failed', 'stuck'], true)) {
+            $query->whereNotExists(fn ($later) => $later->selectRaw('1')
+                ->from('estate_transactions as later')
+                ->whereColumn('later.user_id', 'estate_transactions.user_id')
+                ->whereColumn('later.collection_assignment_id', 'estate_transactions.collection_assignment_id')
+                ->where('later.status', TransactionStatus::Success->value)
+                ->where('later.direction', TransactionDirection::Credit->value)
+                ->whereRaw("later.paid_at >= {$attempted}"));
+        }
+    }
+
+    /**
+     * The numbers behind the page header and the Reports tab: a 30-day pulse against the 30 days
+     * before it, daily money flow, how far each collection has got, when residents pay, and how.
+     *
+     * @return array<string, mixed>
+     */
+    public function insights(Estate $estate): array
+    {
+        $today = Carbon::today();
+        $windowStart = $today->copy()->subDays(59);
+        $effective = 'COALESCE(paid_at, reversed_at, created_at)';
+
+        // Money collected per day for the last 60 days (30 current + 30 previous). A payment either succeeds or fails.
+        $byDay = [];
+        $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->whereRaw("{$effective} >= ?", [$windowStart])
+            ->where('direction', TransactionDirection::Credit)
+            ->selectRaw("DATE({$effective}) as day, SUM(amount) as total")
+            ->groupByRaw("DATE({$effective})")
+            ->get()
+            ->each(function ($row) use (&$byDay) {
+                $byDay[Carbon::parse($row->day)->toDateString()] = (int) $row->total;
+            });
+
+        $flow = [];
+        $previousCollected = 0;
+        $collected = 0;
+
+        for ($i = 59; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i)->toDateString();
+            $in = $byDay[$date] ?? 0;
+
+            if ($i >= 30) {
+                $previousCollected += $in;
+
+                continue;
+            }
+
+            $collected += $in;
+            $flow[] = ['date' => $date, 'money_in' => $in];
+        }
+
+        // Success rate: of the payments that resolved in the last 30 days, how many went through.
+        $since = $today->copy()->subDays(29);
+        $succeeded = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->count();
+        $failed = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Failed)
+            ->whereRaw('COALESCE(failed_at, created_at) >= ?', [$since])
+            ->count();
+
+        $payers = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->selectRaw('COUNT(DISTINCT user_id) as residents, COUNT(*) as payments')
+            ->first();
+        $payments = (int) ($payers->payments ?? 0);
+
+        // What is still owed across every open charge, and how much of it is already late.
+        $owed = DB::table('collection_assignments')
+            ->where('estate_id', $estate->id)
+            ->where('status', '!=', 'paid')
+            ->selectRaw(
+                'COALESCE(SUM(amount_due - amount_paid), 0) as outstanding,
+                 COALESCE(SUM(CASE WHEN status = ? OR (status = ? AND COALESCE(grace_until, due_date) < ?) THEN amount_due - amount_paid ELSE 0 END), 0) as overdue',
+                ['overdue', 'partial', $today->toDateString()],
+            )
+            ->first();
+
+        $collections = DB::table('collection_assignments as a')
+            ->join('collections as c', 'c.id', '=', 'a.collection_id')
+            ->where('a.estate_id', $estate->id)
+            ->groupBy('a.collection_id', 'c.name')
+            ->havingRaw('SUM(a.amount_due) > 0')
+            ->orderByRaw('SUM(a.amount_due) - SUM(a.amount_paid) DESC')
+            ->limit(6)
+            ->selectRaw('a.collection_id as id, c.name, SUM(a.amount_due) as due, SUM(a.amount_paid) as paid')
+            ->get()
+            ->map(fn ($row) => ['id' => (int) $row->id, 'name' => $row->name, 'due' => (int) $row->due, 'paid' => (int) $row->paid])
+            ->all();
+
+        $methods = $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereRaw("{$effective} >= ?", [$since])
+            ->selectRaw('payment_method, SUM(amount) as total, COUNT(*) as n')
+            ->groupBy('payment_method')
+            ->orderByRaw('SUM(amount) DESC')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->payment_method?->label() ?? 'Other',
+                'amount' => (int) $row->total,
+                'count' => (int) $row->n,
+            ])
+            ->all();
+
+        // When residents pay: weekday (Mon-Sun) by four-hour block, over the last 90 days.
+        $rhythm = array_fill(0, 7, array_fill(0, 6, 0));
+        $this->baseQuery($estate)
+            ->where('status', TransactionStatus::Success)
+            ->where('direction', TransactionDirection::Credit)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '>=', $today->copy()->subDays(90))
+            ->latest('paid_at')
+            ->limit(20000)
+            ->pluck('paid_at')
+            ->each(function ($paidAt) use (&$rhythm) {
+                $rhythm[$paidAt->dayOfWeekIso - 1][intdiv($paidAt->hour, 4)]++;
+            });
+
+        return [
+            'pulse' => [
+                'collected' => [
+                    'value' => $collected,
+                    'previous' => $previousCollected,
+                    'delta_pct' => $previousCollected > 0 ? round(($collected - $previousCollected) / $previousCollected * 100, 1) : null,
+                    'spark' => array_column($flow, 'money_in'),
+                ],
+                'residents_paid' => [
+                    'residents' => (int) ($payers->residents ?? 0),
+                    'payments' => $payments,
+                    'average' => $payments > 0 ? intdiv($collected, max(1, $payments)) : null,
+                ],
+                'success_rate' => [
+                    'pct' => ($succeeded + $failed) > 0 ? round($succeeded / ($succeeded + $failed) * 100, 1) : null,
+                    'succeeded' => $succeeded,
+                    'failed' => $failed,
+                ],
+                'outstanding' => [
+                    'value' => (int) ($owed->outstanding ?? 0),
+                    'overdue' => (int) ($owed->overdue ?? 0),
+                ],
+            ],
+            'flow' => $flow,
+            'collections' => $collections,
+            'methods' => $methods,
+            'rhythm' => ['matrix' => $rhythm, 'max' => max(array_map('max', $rhythm))],
         ];
     }
 
@@ -193,6 +365,10 @@ class TransactionOverviewService
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['attention'])) {
+            $this->applyAttention($query, (string) $filters['attention']);
         }
 
         if (! empty($filters['payment_method'])) {

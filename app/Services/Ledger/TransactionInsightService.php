@@ -4,7 +4,6 @@ namespace App\Services\Ledger;
 
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
@@ -77,25 +76,6 @@ class TransactionInsightService
             $insights[] = [
                 'type' => 'info',
                 'message' => 'Weekend payments are increasing.',
-            ];
-        }
-
-        $totalTransactions = EstateTransaction::query()
-            ->where('estate_id', $estate->id)
-            ->where('created_at', '>=', now()->subDays(30))
-            ->count();
-
-        $refundCount = EstateTransaction::query()
-            ->where('estate_id', $estate->id)
-            ->where('type', TransactionType::Refund)
-            ->where('created_at', '>=', now()->subDays(30))
-            ->count();
-
-        if ($totalTransactions > 0) {
-            $refundRate = round(($refundCount / $totalTransactions) * 100, 2);
-            $insights[] = [
-                'type' => $refundRate < 1 ? 'positive' : 'warning',
-                'message' => "Refund rate remains at {$refundRate}%.",
             ];
         }
 

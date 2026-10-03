@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckEstateFeature;
 use App\Http\Middleware\EnsureCanManageResidentBilling;
+use App\Http\Middleware\EnsureIdempotent;
 use App\Http\Middleware\EnsureOrganizationMembership;
 use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -132,6 +133,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'zeus/estates/*/impersonate',
         ]);
         $middleware->alias([
+            'idempotent' => EnsureIdempotent::class,
             'role' => EnsureUserHasRole::class,
             'guest' => RedirectIfAuthenticated::class,
             'permission' => PermissionMiddleware::class,

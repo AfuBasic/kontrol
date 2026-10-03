@@ -13,6 +13,15 @@ class SendSmsAlert implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 3;
+
+    /** @var array<int, int> Seconds to wait between attempts. */
+    public array $backoff = [15, 60];
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 60;
+
     /**
      * Create a new job instance.
      */
@@ -32,5 +41,13 @@ class SendSmsAlert implements ShouldQueue
             Log::error("Failed to send SOS SMS to {$this->phone}: ".$e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }

@@ -8,7 +8,6 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateTransactionAdjustmentRequest;
-use App\Http\Requests\Admin\IssueRefundRequest;
 use App\Http\Requests\Admin\RecordOfflinePaymentRequest;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
@@ -39,6 +38,25 @@ class TransactionController extends Controller
         private CollectionService $collectionService,
     ) {}
 
+    /**
+     * The next page of the activity feed, for infinite scroll.
+     */
+    public function timeline(Request $request): JsonResponse
+    {
+        $this->authorize('transactions.view');
+
+        $estate = $this->estateContext->getEstate();
+        app(ContextManager::class)->setSystemContext($estate->id);
+
+        $filters = $request->only([
+            'search', 'resident_id', 'collection_id', 'type', 'status',
+            'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
+        ]);
+
+        return response()->json($this->overviewService->timelinePage($estate, $filters, $request->string('cursor')->toString() ?: null));
+    }
+
     public function index(Request $request): Response
     {
         $this->authorize('transactions.view');
@@ -52,7 +70,7 @@ class TransactionController extends Controller
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
-            'amount_min', 'amount_max', 'date_from', 'date_to',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
         ]);
 
         $transactions = $this->overviewService
@@ -122,10 +140,11 @@ class TransactionController extends Controller
 
         return Inertia::render('Admin/Transactions/Index', [
             'maxAmountLimit' => $maxAmountNaira,
+            'attention' => Inertia::defer(fn () => $this->overviewService->attention($estate)),
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
-            'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate, $filters)),
-            'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
-                ? $this->overviewService->charts($estate)
+            'activity' => Inertia::defer(fn () => $this->overviewService->timelinePage($estate, $filters)),
+            'insights' => Inertia::defer(fn () => Gate::allows('transactions.reports')
+                ? $this->overviewService->insights($estate)
                 : null),
             'audits' => Inertia::defer(fn () => $audits),
             'hasTransactions' => $this->overviewService->hasTransactions($estate),
@@ -154,7 +173,6 @@ class TransactionController extends Controller
             ],
             'permissions' => [
                 'export' => Gate::allows('transactions.export'),
-                'refund' => Gate::allows('transactions.refund'),
                 'adjust' => Gate::allows('transactions.adjust'),
                 'record_offline' => Gate::allows('transactions.record_offline_payment'),
                 'view_receipts' => Gate::allows('transactions.view_receipts'),
@@ -196,21 +214,6 @@ class TransactionController extends Controller
         return back()->with('success', 'Offline payment recorded successfully.');
     }
 
-    public function issueRefund(IssueRefundRequest $request, EstateTransaction $transaction): RedirectResponse
-    {
-        $this->authorize('transactions.refund');
-        $this->authorizeTransaction($transaction);
-
-        $this->ledgerService->issueRefund(
-            $transaction,
-            (int) $request->validated('amount'),
-            $request->validated('reason'),
-            auth()->user(),
-        );
-
-        return back()->with('success', 'Refund issued successfully.');
-    }
-
     public function createAdjustment(CreateTransactionAdjustmentRequest $request, EstateTransaction $transaction): RedirectResponse
     {
         $this->authorize('transactions.adjust');
@@ -245,7 +248,7 @@ class TransactionController extends Controller
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
-            'amount_min', 'amount_max', 'date_from', 'date_to',
+            'amount_min', 'amount_max', 'date_from', 'date_to', 'attention',
         ]);
 
         return match ($format) {

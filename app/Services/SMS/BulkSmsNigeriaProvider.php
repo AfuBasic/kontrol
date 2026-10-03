@@ -26,7 +26,7 @@ class BulkSmsNigeriaProvider implements SMSProvider
         }
 
         try {
-            $response = Http::post('https://www.bulksmsnigeria.com/api/v1/sms/create', [
+            $response = Http::connectTimeout(5)->timeout(15)->post('https://www.bulksmsnigeria.com/api/v1/sms/create', [
                 'api_token' => $this->apiToken,
                 'from' => $this->senderId,
                 'to' => $to,

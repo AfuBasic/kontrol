@@ -7,8 +7,8 @@ use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use Carbon\Carbon;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class ActiveVisitService
@@ -86,7 +86,7 @@ class ActiveVisitService
     public function getAdminActiveVisits(int $estateId, array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
         if (! $this->isCheckoutMonitoringEnabled($estateId)) {
-            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
+            return new LengthAwarePaginator([], 0, $perPage);
         }
 
         $query = $this->baseActiveQuery($estateId)
@@ -120,14 +120,14 @@ class ActiveVisitService
     }
 
     /**
-     * Get list of active visits for security queue.
+     * Get paginated active visits for security queue.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return LengthAwarePaginator<array<string, mixed>>
      */
-    public function getSecurityActiveVisits(int $estateId, ?User $guard = null, ?string $search = null): Collection
+    public function getSecurityActiveVisits(int $estateId, ?User $guard = null, ?string $search = null, int $perPage = 15): LengthAwarePaginator
     {
         if (! $this->isCheckoutMonitoringEnabled($estateId)) {
-            return collect();
+            return new LengthAwarePaginator([], 0, $perPage);
         }
 
         $settings = EstateSettings::forEstate($estateId);
@@ -155,8 +155,9 @@ class ActiveVisitService
         }
 
         return $query->orderBy('verified_at', 'asc') // Oldest first for security queue
-            ->get()
-            ->map(fn (AccessLog $log) => $this->transformActiveVisit($log, $enforceSameGate, $currentGate, $settings));
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (AccessLog $log) => $this->transformActiveVisit($log, $enforceSameGate, $currentGate, $settings));
     }
 
     /**

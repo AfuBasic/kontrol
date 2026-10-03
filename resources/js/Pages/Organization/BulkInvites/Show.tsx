@@ -1,5 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, Loader2, MoreHorizontal, Search, Send, Share2, Trash2, Users } from 'lucide-react';
+import {
+    AlertTriangle,
+    CheckCircle2,
+    ChevronLeft,
+    Clock,
+    Copy,
+    Loader2,
+    MoreHorizontal,
+    Plus,
+    Search,
+    Send,
+    Share2,
+    Trash2,
+    Users,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
@@ -63,6 +77,7 @@ interface BulkInvite {
     days_left: number;
     elapsed_ratio: number;
     auto_renew: boolean;
+    capacity: { max: number; used: number; remaining: number };
     next_renewal_label: string | null;
     renewal_blocked_reason_label: string | null;
     recipients: Recipient[];
@@ -76,7 +91,7 @@ interface Props {
     bulkInvite: BulkInvite;
 }
 
-type PendingAction = 'renew' | 'cancel' | 'remove' | null;
+type PendingAction = 'renew' | 'delete' | 'remove' | null;
 
 export default function BulkInvitesShow({ organization, membership, bulkInvite }: Props) {
     const [query, setQuery] = useState('');
@@ -88,13 +103,14 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     const [processing, setProcessing] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const [addingPeople, setAddingPeople] = useState(false);
 
     useEffect(() => {
         if (selected) {
             setRetainedSelected(selected);
         }
     }, [selected]);
-    
+
     useEffect(() => {
         if (confirming) {
             setRetainedConfirming(confirming);
@@ -114,12 +130,12 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
 
     const isLive = bulkInvite.state === 'active' || bulkInvite.state === 'upcoming';
     const canManage = membership.is_admin && bulkInvite.status === 'active';
+    const canAddPeople = canManage && isLive && bulkInvite.capacity.remaining > 0;
+    const existingEmails = useMemo(() => new Set(bulkInvite.recipients.map((r) => r.email.toLowerCase())), [bulkInvite.recipients]);
     const title = bulkInvite.name || bulkInvite.purpose_label || 'Untitled group';
-    const meta = [
-        `${total} ${total === 1 ? 'person' : 'people'}`,
-        bulkInvite.name ? bulkInvite.purpose_label : null,
-        bulkInvite.role,
-    ].filter(Boolean);
+    const meta = [`${total} ${total === 1 ? 'person' : 'people'}`, bulkInvite.name ? bulkInvite.purpose_label : null, bulkInvite.role].filter(
+        Boolean,
+    );
 
     const validityHint = (() => {
         switch (bulkInvite.state) {
@@ -228,8 +244,8 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
 
         if (confirming === 'renew') {
             router.post(`/org/bulk-invites/${bulkInvite.id}/renew`, {}, done);
-        } else if (confirming === 'cancel') {
-            router.post(`/org/bulk-invites/${bulkInvite.id}/cancel`, {}, done);
+        } else if (confirming === 'delete') {
+            router.delete(`/org/bulk-invites/${bulkInvite.id}`, { onFinish: done.onFinish });
         } else if (confirming === 'remove' && selected) {
             router.delete(`/org/bulk-invites/${bulkInvite.id}/recipients/${selected.id}`, {
                 ...done,
@@ -245,10 +261,10 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
             confirmLabel: 'Renew now',
             type: 'info' as const,
         },
-        cancel: {
-            title: 'Cancel this group?',
-            message: 'Passes stop renewing. Passes already sent stay valid until they expire.',
-            confirmLabel: 'Cancel group',
+        delete: {
+            title: 'Delete this group?',
+            message: `Everyone's pass stops working right away, renewals stop, and the group is removed. This can't be undone.`,
+            confirmLabel: 'Delete group',
             type: 'danger' as const,
         },
         remove: {
@@ -275,9 +291,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 </Link>
 
                 {/* Group overview */}
-                <section
-                    className={`brand-card brand-card-glow mt-1 !rounded-[22px] px-5 pt-5 pb-5 text-white ${STATUS[bulkInvite.state].card}`}
-                >
+                <section className={`brand-card brand-card-glow mt-1 !rounded-[22px] px-5 pt-5 pb-5 text-white ${STATUS[bulkInvite.state].card}`}>
                     <div className="relative z-10">
                         <div className="flex items-center justify-between gap-3">
                             <div className="brand-card-icon flex h-10 w-10 items-center justify-center rounded-[12px]">
@@ -295,9 +309,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 )}
                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/15">
                                     <span className={`h-1.5 w-1.5 rounded-full ${STATUS[bulkInvite.state].dot}`} />
-                                    {bulkInvite.state === 'upcoming'
-                                        ? `Starts ${bulkInvite.valid_from_label}`
-                                        : STATUS[bulkInvite.state].label}
+                                    {bulkInvite.state === 'upcoming' ? `Starts ${bulkInvite.valid_from_label}` : STATUS[bulkInvite.state].label}
                                 </span>
                             </div>
                         </div>
@@ -307,7 +319,11 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
 
                         {bulkInvite.visits.total > 0 ? (
                             <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10">
-                                <Stat tone="dark" value={String(bulkInvite.visits.total)} label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'} />
+                                <Stat
+                                    tone="dark"
+                                    value={String(bulkInvite.visits.total)}
+                                    label={bulkInvite.visits.total === 1 ? 'Visit' : 'Visits'}
+                                />
                                 <Stat tone="dark" value={`${bulkInvite.visits.visited_count} of ${total}`} label="Came in" />
                                 <Stat tone="dark" value={bulkInvite.visits.last_visit_label ?? '-'} label="Last visit" />
                             </dl>
@@ -356,9 +372,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             <div className="mt-2 flex items-center justify-between gap-3 text-[12px]">
                                 <span className={validityWarn ? 'text-amber-300' : 'text-blue-100/70'}>{validityHint}</span>
                                 {renewalHint && (
-                                    <span
-                                        className={`truncate ${renewalValue === 'Paused' ? 'text-amber-300' : 'text-blue-100/70'}`}
-                                    >
+                                    <span className={`truncate ${renewalValue === 'Paused' ? 'text-amber-300' : 'text-blue-100/70'}`}>
                                         {renewalHint}
                                     </span>
                                 )}
@@ -413,9 +427,21 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
 
                 {/* People */}
                 <section className="mt-6">
-                    <div className="mb-2 flex items-baseline justify-between px-0.5">
-                        <h2 className="text-[13px] font-medium text-slate-500">People</h2>
-                        <span className="text-[12px] text-slate-400">{total}</span>
+                    <div className="mb-2 flex items-center justify-between px-0.5">
+                        <div className="flex items-baseline gap-2">
+                            <h2 className="text-[13px] font-medium text-slate-500">People</h2>
+                            <span className="text-[12px] text-slate-400">{total}</span>
+                        </div>
+                        {canAddPeople && (
+                            <button
+                                type="button"
+                                onClick={() => setAddingPeople(true)}
+                                className="-mr-1 inline-flex min-h-[36px] items-center gap-1 rounded-full px-3 text-[13px] font-medium text-[#1a5dbf] active:bg-slate-100"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                Add people
+                            </button>
+                        )}
                     </div>
 
                     {total > 1 && (
@@ -429,7 +455,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search people…"
-                                className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 text-xs !text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                                className="w-full rounded-full border border-slate-200/90 bg-white py-2 pr-4 pl-10 !text-xs text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                             />
                         </div>
                     )}
@@ -445,14 +471,12 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                     <button
                                         type="button"
                                         onClick={() => setSelected(r)}
-                                        className="flex w-full min-h-[60px] items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50"
+                                        className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50"
                                     >
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-[14px] text-[#071f4b]">{r.email}</p>
                                             <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-slate-500">
-                                                {r.code && (
-                                                    <span className="font-mono tracking-wide text-slate-600">{r.code}</span>
-                                                )}
+                                                {r.code && <span className="font-mono tracking-wide text-slate-600">{r.code}</span>}
                                                 {r.code && <span className="text-slate-300">·</span>}
                                                 <RecipientStatus recipient={r} />
                                             </p>
@@ -474,9 +498,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 <li key={renewal.id} className="flex items-center justify-between gap-3 px-4 py-3">
                                     <div className="min-w-0">
                                         <p className="text-[14px] text-[#071f4b]">{renewal.period_label}</p>
-                                        <p className="mt-0.5 text-[12px] text-slate-500">
-                                            Processed {renewal.processed_label}
-                                        </p>
+                                        <p className="mt-0.5 text-[12px] text-slate-500">Processed {renewal.processed_label}</p>
                                     </div>
                                     <span className="shrink-0 text-[12px] text-slate-500">
                                         {renewal.status === 'completed'
@@ -494,17 +516,21 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                     <div className="mt-8 flex flex-col divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
                         <button
                             type="button"
-                            onClick={() => setConfirming('cancel')}
+                            onClick={() => setConfirming('delete')}
                             className="min-h-[48px] px-4 text-left text-[14px] text-rose-600 active:bg-slate-50"
                         >
-                            Cancel group
+                            Delete group
                         </button>
                     </div>
                 )}
             </div>
 
             {/* Person details */}
-            <MobileSheet isOpen={selected !== null && confirming !== 'remove'} onClose={() => setSelected(null)} title={selected?.email ?? retainedSelected?.email}>
+            <MobileSheet
+                isOpen={selected !== null && confirming !== 'remove'}
+                onClose={() => setSelected(null)}
+                title={selected?.email ?? retainedSelected?.email}
+            >
                 {retainedSelected && (
                     <div className="flex flex-col gap-5 pb-2">
                         <div ref={ticketRef}>
@@ -515,12 +541,15 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 groupName={title}
                             />
                         </div>
-                        {retainedSelected.delivery_error && (
-                            <p className="-mt-3 text-[12px] text-rose-600">{retainedSelected.delivery_error}</p>
-                        )}
+                        {retainedSelected.delivery_error && <p className="-mt-3 text-[12px] text-rose-600">{retainedSelected.delivery_error}</p>}
 
                         <dl className="icon-tile-blue grid grid-cols-2 divide-x divide-[#c9dcfb] rounded-2xl py-3">
-                            <Stat tone="tint" value={String(retainedSelected.visits_count)} label={retainedSelected.visits_count === 1 ? 'Visit' : 'Visits'} inset />
+                            <Stat
+                                tone="tint"
+                                value={String(retainedSelected.visits_count)}
+                                label={retainedSelected.visits_count === 1 ? 'Visit' : 'Visits'}
+                                inset
+                            />
                             <Stat tone="tint" value={retainedSelected.last_visit_label ?? '-'} label="Last visit" inset />
                         </dl>
 
@@ -554,11 +583,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                     onClick={() => copyPassLink(retainedSelected)}
                                     className="flex min-h-[48px] items-center gap-3 px-4 text-left text-[14px] text-[#071f4b] active:bg-slate-50"
                                 >
-                                    {copied ? (
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                    ) : (
-                                        <Copy className="h-4 w-4 text-slate-500" />
-                                    )}
+                                    {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-slate-500" />}
                                     {copied ? 'Link copied' : 'Copy pass link'}
                                 </button>
                             )}
@@ -592,6 +617,14 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 )}
             </MobileSheet>
 
+            <AddPeopleSheet
+                isOpen={addingPeople}
+                onClose={() => setAddingPeople(false)}
+                groupId={bulkInvite.id}
+                existing={existingEmails}
+                remaining={bulkInvite.capacity.remaining}
+            />
+
             <ConfirmationSheet
                 isOpen={!!confirming}
                 onClose={() => !processing && setConfirming(null)}
@@ -603,6 +636,136 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 isLoading={processing}
             />
         </OrganizationLayout>
+    );
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Paste or type email addresses, see at once how many are new, then add them. Each new person gets a
+ * pass for the group's current period, emailed the same way as when the group was created.
+ */
+function AddPeopleSheet({
+    isOpen,
+    onClose,
+    groupId,
+    existing,
+    remaining,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    groupId: number;
+    existing: Set<string>;
+    remaining: number;
+}) {
+    const [text, setText] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const parsed = useMemo(() => {
+        const seen = new Set<string>();
+        const fresh: string[] = [];
+        const already: string[] = [];
+        const invalid: string[] = [];
+
+        for (const raw of text.split(/[\s,;]+/)) {
+            const email = raw.trim().toLowerCase();
+            if (!email || seen.has(email)) continue;
+            seen.add(email);
+
+            if (!EMAIL_PATTERN.test(email)) invalid.push(raw.trim());
+            else if (existing.has(email)) already.push(email);
+            else fresh.push(email);
+        }
+
+        return { fresh, already, invalid };
+    }, [text, existing]);
+
+    const overBy = parsed.fresh.length - remaining;
+    const canSubmit = parsed.fresh.length > 0 && overBy <= 0 && parsed.invalid.length === 0 && !processing;
+
+    const close = () => {
+        if (processing) return;
+        setError(null);
+        onClose();
+    };
+
+    const submit = () => {
+        if (!canSubmit) return;
+        setError(null);
+        router.post(
+            `/org/bulk-invites/${groupId}/recipients`,
+            { emails: parsed.fresh },
+            {
+                preserveScroll: true,
+                onStart: () => setProcessing(true),
+                onSuccess: () => {
+                    setText('');
+                    onClose();
+                },
+                onError: (errors) => setError(errors.emails ?? Object.values(errors)[0] ?? 'Something went wrong. Please try again.'),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
+    return (
+        <MobileSheet isOpen={isOpen} onClose={close} title="Add people">
+            <div className="flex flex-col gap-4 pb-2">
+                <p className="text-[13px] leading-relaxed text-slate-500">
+                    Each person gets a pass for this group's current period, emailed with their PDF pass.
+                </p>
+
+                <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    rows={5}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="Paste or type emails, separated by commas, spaces or new lines"
+                    className="w-full resize-none rounded-2xl border border-slate-200/90 bg-white p-3.5 text-[16px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                />
+
+                <div className="flex flex-col gap-1 text-[13px]">
+                    <p className="text-slate-600">
+                        {parsed.fresh.length === 0
+                            ? `${remaining} ${remaining === 1 ? 'spot' : 'spots'} left in this group`
+                            : `${parsed.fresh.length} to add · ${Math.max(0, remaining - parsed.fresh.length)} ${Math.max(0, remaining - parsed.fresh.length) === 1 ? 'spot' : 'spots'} left`}
+                    </p>
+                    {parsed.already.length > 0 && <p className="text-slate-500">{parsed.already.length} already in the group, skipped</p>}
+                    {parsed.invalid.length > 0 && (
+                        <p className="text-rose-600">
+                            {parsed.invalid.length === 1 ? "This doesn't look like an email" : `${parsed.invalid.length} don't look like emails`}:{' '}
+                            {parsed.invalid.slice(0, 3).join(', ')}
+                            {parsed.invalid.length > 3 ? '…' : ''}
+                        </p>
+                    )}
+                    {overBy > 0 && (
+                        <p className="text-rose-600">
+                            A group holds up to 30 people. You can add {remaining} more, so take off {overBy}.
+                        </p>
+                    )}
+                    {error && <p className="text-rose-600">{error}</p>}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={submit}
+                    disabled={!canSubmit}
+                    className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#0b4aa2] px-4 text-[15px] font-semibold text-white transition active:scale-[0.99] disabled:opacity-40"
+                >
+                    {processing && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {processing
+                        ? 'Adding…'
+                        : parsed.fresh.length > 1
+                          ? `Add ${parsed.fresh.length} people`
+                          : parsed.fresh.length === 1
+                            ? 'Add 1 person'
+                            : 'Add people'}
+                </button>
+            </div>
+        </MobileSheet>
     );
 }
 
@@ -630,23 +793,11 @@ const STAT_TONE = {
     tint: { value: 'text-[#0b3b8c]', label: 'text-[#1a5dbf]/70' },
 } as const;
 
-function Stat({
-    value,
-    label,
-    inset = false,
-    tone = 'light',
-}: {
-    value: string;
-    label: string;
-    inset?: boolean;
-    tone?: keyof typeof STAT_TONE;
-}) {
+function Stat({ value, label, inset = false, tone = 'light' }: { value: string; label: string; inset?: boolean; tone?: keyof typeof STAT_TONE }) {
     return (
         <div className={`flex min-w-0 flex-col-reverse ${inset ? 'px-4' : 'px-3 first:pl-0 last:pr-0'}`}>
             <dt className={`mt-0.5 text-[11px] ${STAT_TONE[tone].label}`}>{label}</dt>
-            <dd className={`truncate text-[20px] leading-tight font-semibold tracking-[-0.01em] tabular-nums ${STAT_TONE[tone].value}`}>
-                {value}
-            </dd>
+            <dd className={`truncate text-[20px] leading-tight font-semibold tracking-[-0.01em] tabular-nums ${STAT_TONE[tone].value}`}>{value}</dd>
         </div>
     );
 }
@@ -758,15 +909,7 @@ function VisitHistory({ url, hasVisits }: { url: string; hasVisits: boolean }) {
  * The person's gate pass, styled like the visitor PassCard: QR on a blue field,
  * a perforated divider, and the typed fallback code underneath.
  */
-function PassTicket({
-    recipient,
-    organizationName,
-    groupName,
-}: {
-    recipient: Recipient;
-    organizationName: string;
-    groupName: string;
-}) {
+function PassTicket({ recipient, organizationName, groupName }: { recipient: Recipient; organizationName: string; groupName: string }) {
     const [loaded, setLoaded] = useState(false);
 
     return (
@@ -797,9 +940,7 @@ function PassTicket({
                             )}
                         </>
                     ) : (
-                        <div className="flex h-40 w-40 items-center justify-center text-center text-[12px] text-slate-500">
-                            No valid pass
-                        </div>
+                        <div className="flex h-40 w-40 items-center justify-center text-center text-[12px] text-slate-500">No valid pass</div>
                     )}
                 </div>
                 <p className={`mt-2.5 text-[11px] ${recipient.pass_starts_later ? 'text-amber-700' : 'text-slate-500'}`}>
@@ -815,9 +956,7 @@ function PassTicket({
 
                 <div className="min-w-0">
                     <p className="text-[11px] text-slate-500">Pass code</p>
-                    <p className="mt-0.5 font-mono text-[22px] tracking-[0.16em] text-[#1a5dbf] select-text">
-                        {recipient.code ?? '-'}
-                    </p>
+                    <p className="mt-0.5 font-mono text-[22px] tracking-[0.16em] text-[#1a5dbf] select-text">{recipient.code ?? '-'}</p>
                 </div>
                 <div className="shrink-0 pb-1 text-right text-[12px] text-slate-500">
                     {recipient.pass_valid_label && <p className="text-[#071f4b]">{recipient.pass_valid_label}</p>}

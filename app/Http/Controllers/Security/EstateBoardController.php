@@ -39,7 +39,7 @@ class EstateBoardController extends Controller
         $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences);
 
         return Inertia::render('Security/Feed/Index', [
-            'posts' => $posts,
+            'posts' => Inertia::scroll(fn () => $posts),
         ]);
     }
 

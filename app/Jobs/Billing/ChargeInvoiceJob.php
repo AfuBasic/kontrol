@@ -15,6 +15,9 @@ class ChargeInvoiceJob implements ShouldQueue
 {
     use Queueable;
 
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 120;
+
     /**
      * The number of times the job may be attempted.
      */
@@ -191,5 +194,13 @@ class ChargeInvoiceJob implements ShouldQueue
                 3 // max attempts
             ));
         }
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }

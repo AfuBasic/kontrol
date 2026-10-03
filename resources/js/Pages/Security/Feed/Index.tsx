@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
 import { format, isThisWeek, isToday, isYesterday } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ChevronRight, Globe, MessageCircle, Newspaper, Pin, Shield, Users } from 'lucide-react';
@@ -130,9 +130,6 @@ function FeedRow({ post }: { post: EstateBoardPost }) {
 
 export default function FeedIndex({ posts }: Props) {
     const [filter, setFilter] = useState<FilterKey>('all');
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-    const isLoadingMore = useRef(false);
-
     const filtered = useMemo(() => {
         const list = posts?.data ?? [];
         const match = FILTERS.find((f) => f.key === filter)?.match;
@@ -151,34 +148,6 @@ export default function FeedIndex({ posts }: Props) {
     }, [filtered]);
 
     const securityCount = useMemo(() => (posts?.data ?? []).filter((p) => p.audience === 'security').length, [posts?.data]);
-
-    const loadMore = useCallback(() => {
-        if (!posts?.next_page_url || isLoadingMore.current) return;
-        isLoadingMore.current = true;
-        router.get(
-            posts.next_page_url,
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['posts'],
-                onFinish: () => {
-                    isLoadingMore.current = false;
-                },
-            },
-        );
-    }, [posts?.next_page_url]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) loadMore();
-            },
-            { threshold: 0.1 },
-        );
-        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
-        return () => observer.disconnect();
-    }, [loadMore]);
 
     const sections: ReturnType<typeof bucketFor>[] = ['today', 'yesterday', 'thisWeek', 'earlier'];
 
@@ -223,7 +192,15 @@ export default function FeedIndex({ posts }: Props) {
 
             {/* Date-grouped feed */}
             {filtered.length > 0 ? (
-                <div className="space-y-4">
+                <InfiniteScroll
+                    data="posts"
+                    className="space-y-4"
+                    loading={
+                        <div className="flex justify-center py-3">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500" />
+                        </div>
+                    }
+                >
                     {sections.map((bucket) => {
                         const list = grouped[bucket];
                         if (!list || list.length === 0) return null;
@@ -242,13 +219,7 @@ export default function FeedIndex({ posts }: Props) {
                             </section>
                         );
                     })}
-
-                    {posts?.next_page_url && filter === 'all' && (
-                        <div ref={loadMoreRef} className="flex justify-center py-3">
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500" />
-                        </div>
-                    )}
-                </div>
+                </InfiniteScroll>
             ) : (
                 <EmptyState filter={filter} />
             )}

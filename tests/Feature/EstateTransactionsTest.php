@@ -21,6 +21,7 @@ use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -130,26 +131,13 @@ it('creates audit entries when ledger records are created', function () {
     expect(EstateTransactionAudit::query()->where('estate_transaction_id', $transaction->id)->count())->toBe(1);
 });
 
-it('issues refunds and records related ledger entries', function () {
-    $ledger = app(LedgerService::class);
+it('has no refund capability: no route, no permission offered, nothing to call', function () {
+    expect(Route::has('admin.transactions.refund'))->toBeFalse()
+        ->and(method_exists(LedgerService::class, 'issueRefund'))->toBeFalse();
 
-    $parent = $ledger->record([
-        'idempotency_key' => 'parent_refund_test',
-        'estate_id' => $this->estate->id,
-        'user_id' => $this->admin->id,
-        'type' => TransactionType::CollectionPayment,
-        'direction' => TransactionDirection::Credit,
-        'amount' => 250000,
-        'status' => TransactionStatus::Success,
-    ]);
-
-    $this->actingAs($this->admin);
-
-    $refund = $ledger->issueRefund($parent, 250000, 'Approved by Estate Manager', $this->admin);
-
-    expect($refund->type)->toBe(TransactionType::Refund)
-        ->and($refund->parent_id)->toBe($parent->id)
-        ->and($parent->fresh()->status)->toBe(TransactionStatus::Reversed);
+    $this->actingAs($this->admin)
+        ->get(route('admin.transactions.index'))
+        ->assertInertia(fn ($page) => $page->missing('permissions.refund'));
 });
 
 it('rejects export when no transactions exist', function () {

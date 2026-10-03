@@ -54,6 +54,12 @@ type Listener = (state: SyncState) => void;
 
 const QUEUE_STORE = 'operations';
 
+/**
+ * A queued write that gets no answer in this long counts as a network failure and goes back to the
+ * retry schedule. Without a limit one hung request on a half-dead connection blocks the whole queue.
+ */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 const queueConfig: StoreConfig = {
     dbName: 'kontrol-sync',
     version: 1,
@@ -105,6 +111,8 @@ function policyFor(op: QueuedOperation): RetryPolicy {
 class SyncEngineImpl {
     private listeners = new Set<Listener>();
     private isSyncing = false;
+    /** A sync was asked for while one was already running: go round again when it ends. */
+    private pendingReplay: { respectBackoff: boolean } | null = null;
     private lastSyncAt: string | null = null;
     private networkQuality: NetworkQuality = NetworkMonitor.getSnapshot().quality;
     private started = false;
@@ -199,14 +207,19 @@ class SyncEngineImpl {
         await this.emit();
 
         if (this.networkQuality !== 'offline' && policy.autoRetry) {
-            void this.replayQueue();
+            // A new action should not drag actions that are mid-backoff back in ahead of their time.
+            void this.replayQueue({ respectBackoff: true });
         }
 
         return id;
     }
 
-    async replayQueue(): Promise<SyncResult[]> {
+    async replayQueue(options: { respectBackoff?: boolean } = {}): Promise<SyncResult[]> {
         if (this.isSyncing) {
+            // Queued (or reconnected) while another send is in progress. That pass already read its list, so
+            // it would never see this: remember to look again once it is done. A full pass beats a gentle one.
+            this.pendingReplay = { respectBackoff: (this.pendingReplay?.respectBackoff ?? true) && Boolean(options.respectBackoff) };
+
             return [];
         }
 
@@ -244,6 +257,10 @@ class SyncEngineImpl {
                     continue;
                 }
 
+                if (options.respectBackoff && this.isBackingOff(op, policy)) {
+                    continue;
+                }
+
                 const result = await this.execute(op);
                 results.push(result);
             }
@@ -252,9 +269,30 @@ class SyncEngineImpl {
         } finally {
             this.isSyncing = false;
             await this.emit();
+
+            const again = this.pendingReplay;
+            this.pendingReplay = null;
+
+            if (again && !this.isOffline()) {
+                void this.replayQueue(again);
+            }
         }
 
         return results;
+    }
+
+    /** Read fresh each time: the network can change while a send is in flight. */
+    private isOffline(): boolean {
+        return this.networkQuality === 'offline';
+    }
+
+    /** Failed recently enough that its retry wait has not run out yet. */
+    private isBackingOff(op: QueuedOperation, policy: RetryPolicy): boolean {
+        if (op.retryCount <= 0 || !op.lastAttemptAt) {
+            return false;
+        }
+
+        return Date.now() - Date.parse(op.lastAttemptAt) < computeBackoffMs(policy, op.retryCount - 1);
     }
 
     async retryOperation(operationId: string): Promise<SyncResult> {
@@ -303,12 +341,17 @@ class SyncEngineImpl {
         await put(queueConfig, QUEUE_STORE, op);
         await this.emit();
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
         try {
             const response = await fetch(op.endpoint, {
                 method: op.method,
-                headers: getCsrfHeaders(),
+                // The same stamp on every retry lets the server recognise a replay of something it already did.
+                headers: { ...getCsrfHeaders(), 'X-Idempotency-Key': op.id },
                 credentials: 'same-origin',
                 body: JSON.stringify(op.payload),
+                signal: controller.signal,
             });
 
             let body: unknown = null;
@@ -440,10 +483,11 @@ class SyncEngineImpl {
                 response: body,
             };
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Network error';
+            const timedOut = controller.signal.aborted;
+            const message = timedOut ? 'The server took too long to answer' : error instanceof Error ? error.message : 'Network error';
             op.retryCount += 1;
             op.lastError = message;
-            op.lastErrorCode = 'NETWORK_ERROR';
+            op.lastErrorCode = timedOut ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR';
 
             if (hasExhaustedRetries(policy, op.retryCount) || !policy.autoRetry) {
                 op.status = SyncStatus.Failed;
@@ -459,6 +503,8 @@ class SyncEngineImpl {
             await this.emit();
 
             return { operationId: op.id, status: SyncStatus.Pending, error: message };
+        } finally {
+            clearTimeout(timeout);
         }
     }
 

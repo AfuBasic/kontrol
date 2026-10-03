@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Organization;
 
+use App\Actions\Organization\AddBulkInviteRecipientsAction;
 use App\Actions\Organization\CreateBulkVisitorInviteAction;
+use App\Actions\Organization\DeleteBulkInviteAction;
 use App\Actions\Organization\RemoveBulkInviteRecipientAction;
 use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
@@ -12,6 +14,7 @@ use App\Models\AccessLog;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationBulkInvite;
 use App\Models\OrganizationBulkInviteRecipient;
+use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
 use App\Services\Organization\BulkInviteVisitService;
 use App\Services\OrganizationContextService;
 use App\Services\Visitor\BulkInvitePdfService;
@@ -266,6 +269,11 @@ class OrganizationBulkInviteController extends Controller
                     ? round(min(1, max(0, $validFrom->diffInSeconds($now, false) / $validFrom->diffInSeconds($validUntil))), 4)
                     : 0,
                 'auto_renew' => (bool) $bulkInvite->auto_renew,
+                'capacity' => [
+                    'max' => OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS,
+                    'used' => $bulkInvite->recipients->count(),
+                    'remaining' => max(0, OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS - $bulkInvite->recipients->count()),
+                ],
                 'next_renewal_label' => $bulkInvite->auto_renew && $bulkInvite->next_renewal_at
                     ? $this->shortDate(Carbon::parse($bulkInvite->next_renewal_at))
                     : null,
@@ -513,7 +521,7 @@ class OrganizationBulkInviteController extends Controller
         return back()->with('success', 'Bulk visitor invite renewed successfully.');
     }
 
-    public function cancel(Request $request, OrganizationBulkInvite $bulkInvite): RedirectResponse
+    public function destroy(Request $request, OrganizationBulkInvite $bulkInvite, DeleteBulkInviteAction $action): RedirectResponse
     {
         /** @var EstateOrganization $organization */
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
@@ -523,12 +531,47 @@ class OrganizationBulkInviteController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        $bulkInvite->update([
-            'status' => 'cancelled',
-            'auto_renew' => false,
+        $revoked = $action->execute($bulkInvite);
+
+        return redirect()
+            ->route('org.bulk-invites.index')
+            ->with('success', $revoked > 0
+                ? 'Group deleted. '.($revoked === 1 ? 'Their pass has' : "All {$revoked} passes have").' stopped working.'
+                : 'Group deleted.');
+    }
+
+    public function addRecipients(Request $request, OrganizationBulkInvite $bulkInvite, AddBulkInviteRecipientsAction $action): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $bulkInvite->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'emails' => 'required|array|min:1|max:'.OrganizationBulkInviteValidityPolicy::MAX_RECIPIENTS,
+            'emails.*' => 'required|email|max:255',
         ]);
 
-        return back()->with('success', 'Bulk visitor invite cancelled successfully.');
+        $result = $action->execute($bulkInvite, $request->user(), $validated['emails']);
+
+        $message = $result['added'] === 0
+            ? 'No one new to add.'
+            : ($result['added'] === 1 ? 'Added 1 person. Their pass is on its way.' : "Added {$result['added']} people. Their passes are on their way.");
+
+        $already = count($result['skipped_existing']);
+        if ($already > 0) {
+            $message .= ' '.($already === 1 ? '1 was' : "{$already} were").' already in the group.';
+        }
+
+        $optedOut = count($result['skipped_opted_out']);
+        if ($optedOut > 0) {
+            $message .= ' '.($optedOut === 1 ? '1 has' : "{$optedOut} have").' opted out and was skipped.';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function retryFailed(Request $request, OrganizationBulkInvite $bulkInvite): JsonResponse

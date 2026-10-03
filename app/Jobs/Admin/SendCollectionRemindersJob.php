@@ -15,6 +15,12 @@ class SendCollectionRemindersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 1;
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 600;
+
     public function handle(?ComplianceEngine $engine = null): void
     {
         $engine = $engine ?? app(ComplianceEngine::class);
@@ -47,5 +53,13 @@ class SendCollectionRemindersJob implements ShouldQueue
         $evaluatedCount = $engine->evaluateAllOpenViolations();
 
         Log::info("SendCollectionRemindersJob (ComplianceEngine): synced {$count} assignments, evaluated {$evaluatedCount} violations.");
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }

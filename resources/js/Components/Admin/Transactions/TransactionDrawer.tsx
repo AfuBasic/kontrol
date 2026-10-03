@@ -41,7 +41,6 @@ interface TransactionDetail {
 }
 
 interface Permissions {
-    refund: boolean;
     adjust: boolean;
     audit: boolean;
     download_receipts: boolean;

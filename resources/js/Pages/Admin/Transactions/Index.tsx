@@ -1,4 +1,4 @@
-import { Deferred, Head } from '@inertiajs/react';
+import { Deferred, Head, router } from '@inertiajs/react';
 import { Download, FileText, Plus, Activity, Table, Shield, Landmark } from 'lucide-react';
 import { type ReactNode, useState, useMemo } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -6,8 +6,10 @@ import { twMerge } from 'tailwind-merge';
 import { format, parseISO } from 'date-fns';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
-import ActivityFeed from '@/Components/Admin/Transactions/ActivityFeed';
-import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
+import AttentionStrip, { type AttentionData, type AttentionKind } from '@/Components/Admin/Transactions/AttentionStrip';
+import ActivityFeed, { type ActivityPage } from '@/Components/Admin/Transactions/ActivityFeed';
+import LedgerInsights, { type Insights } from '@/Components/Admin/Transactions/LedgerInsights';
+import PulseTiles, { type Pulse } from '@/Components/Admin/Transactions/PulseTiles';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
 import LedgerFilters from '@/Components/Admin/Transactions/LedgerFilters';
 import RecordOfflinePaymentModal from '@/Components/Admin/Transactions/RecordOfflinePaymentModal';
@@ -58,30 +60,14 @@ interface AuditLogEntry {
 
 interface Props {
     todaySummary?: {
+        payments_today: number;
         money_in_today: number;
-        money_out_today: number;
         pending_today: number;
         failed_today: number;
     };
-    activity?: Array<{
-        id: string;
-        headline: string;
-        type: string;
-        direction: string;
-        status: string;
-        amount: number;
-        description: string | null;
-        reason: string | null;
-        failure_reason: string | null;
-        reference_number: string;
-        payment_method_label: string | null;
-        resident_name: string | null;
-        collection_name: string | null;
-        coupon_code: string | null;
-        occurred_at: string | null;
-        time_ago: string | null;
-    }>;
-    charts?: Record<string, unknown> | null;
+    activity?: ActivityPage;
+    attention?: AttentionData;
+    insights?: (Insights & { pulse: Pulse }) | null;
     audits?: {
         data: AuditLogEntry[];
         links: Array<{ url: string | null; label: string; active: boolean }>;
@@ -103,7 +89,6 @@ interface Props {
     filterOptions: Record<string, unknown>;
     permissions: {
         export: boolean;
-        refund: boolean;
         adjust: boolean;
         record_offline: boolean;
         view_receipts: boolean;
@@ -123,7 +108,8 @@ const fmtCompact = (n: number) => {
 export default function TransactionsIndex({
     todaySummary,
     activity,
-    charts,
+    attention,
+    insights,
     audits,
     hasTransactions,
     recordableAssignments,
@@ -136,7 +122,23 @@ export default function TransactionsIndex({
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [offlineModalOpen, setOfflineModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'activity' | 'ledger' | 'reports' | 'audit'>('activity');
+    const [activeTab, setActiveTab] = useState<'transactions' | 'reports' | 'audit'>('transactions');
+    // A review link can open straight onto the table (pending payments are not in the timeline).
+    const [view, setView] = useState<'timeline' | 'table'>(() =>
+        typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'table' ? 'table' : 'timeline',
+    );
+
+    const reviewAttention = (kind: AttentionKind) =>
+        router.get(TransactionController.index.url(), { attention: kind, ...(kind === 'stuck' ? { view: 'table' } : {}) }, { preserveScroll: true });
+
+    const clearAttention = () => router.get(TransactionController.index.url(), {}, { preserveScroll: true });
+
+    const attentionLabel =
+        filters.attention === 'failed'
+            ? "Failed payments from the last 7 days that haven't been paid since"
+            : filters.attention === 'stuck'
+              ? 'Payments still pending after 2 hours'
+              : null;
 
     const canExport = hasTransactions && transactions.total > 0;
 
@@ -155,12 +157,7 @@ export default function TransactionsIndex({
 
     // Derived Summary Phrases
     const moneyInToday = todaySummary?.money_in_today ?? 0;
-    const refundsTodayCount = todaySummary?.money_out_today ? 1 : 0; // Simple approximation for phrase
-    const successPaymentsCount =
-        activity?.filter((a) => {
-            const occurredToday = a.occurred_at && new Date(a.occurred_at).toDateString() === new Date().toDateString();
-            return occurredToday && a.status === 'success';
-        }).length ?? 0;
+    const successPaymentsCount = todaySummary?.payments_today ?? 0;
     const failedTodayCount = todaySummary?.failed_today ?? 0;
 
     const summaryPhrase = useMemo(() => {
@@ -174,14 +171,11 @@ export default function TransactionsIndex({
         if (moneyInToday > 0) {
             parts.push(`${fmtCompact(moneyInToday)} entered the estate.`);
         }
-        if (refundsTodayCount > 0) {
-            parts.push(`${refundsTodayCount} refund${refundsTodayCount === 1 ? ' was' : 's were'} processed.`);
-        }
         if (failedTodayCount > 0) {
             parts.push(`${failedTodayCount} failed payment${failedTodayCount === 1 ? ' requires' : 's require'} attention.`);
         }
         return parts.join(' ');
-    }, [todaySummary, moneyInToday, successPaymentsCount, refundsTodayCount, failedTodayCount]);
+    }, [todaySummary, moneyInToday, successPaymentsCount, failedTodayCount]);
 
     return (
         <>
@@ -233,6 +227,13 @@ export default function TransactionsIndex({
                                 )}
                             </div>
                         </div>
+
+                        {/* How money is doing, against the 30 days before. */}
+                        {!showEmpty && permissions.reports && (
+                            <Deferred data="insights" fallback={<PulseTiles loading />}>
+                                <PulseTiles pulse={insights?.pulse} />
+                            </Deferred>
+                        )}
                     </div>
                 </div>
 
@@ -241,6 +242,26 @@ export default function TransactionsIndex({
                     <LedgerEmptyState canRecordOffline={permissions.record_offline} onRecordOffline={() => setOfflineModalOpen(true)} />
                 ) : (
                     <div className="space-y-6">
+                        {/* What needs a human, if anything. Hidden while a review filter is already open. */}
+                        {!filters.attention && (
+                            <Deferred data="attention" fallback={null}>
+                                <AttentionStrip data={attention} onReview={reviewAttention} />
+                            </Deferred>
+                        )}
+
+                        {attentionLabel && (
+                            <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-2.5">
+                                <p className="text-xs font-semibold text-amber-900">Showing: {attentionLabel}</p>
+                                <button
+                                    type="button"
+                                    onClick={clearAttention}
+                                    className="shrink-0 text-xs font-bold text-amber-800 hover:text-amber-950"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        )}
+
                         {/* Search & Collapse Filter Box */}
                         <div className="rounded-3xl border border-slate-100 bg-white p-5 ring-1 ring-slate-100/50">
                             <LedgerFilters filters={filters} filterOptions={filterOptions as never} maxAmountLimit={maxAmountLimit} />
@@ -250,22 +271,13 @@ export default function TransactionsIndex({
                         <div className="flex flex-col gap-4 border-b border-slate-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="scrollbar-none flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-slate-100/75 p-1 whitespace-nowrap sm:w-fit">
                                 <button
-                                    onClick={() => setActiveTab('activity')}
+                                    onClick={() => setActiveTab('transactions')}
                                     className={cn(
                                         'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                                        activeTab === 'activity' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
+                                        activeTab === 'transactions' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                     )}
                                 >
-                                    <Activity className="h-3.5 w-3.5" /> Activity
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('ledger')}
-                                    className={cn(
-                                        'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                                        activeTab === 'ledger' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
-                                    )}
-                                >
-                                    <Table className="h-3.5 w-3.5" /> Ledger
+                                    <Activity className="h-3.5 w-3.5" /> Transactions
                                 </button>
                                 {permissions.reports && (
                                     <button
@@ -293,34 +305,56 @@ export default function TransactionsIndex({
                         </div>
 
                         {/* Content Switching Area */}
-                        {activeTab === 'activity' && (
+                        {activeTab === 'transactions' && (
                             <div className="space-y-4">
-                                <div className="mb-2 flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2">
-                                        <Activity className="h-4 w-4 text-slate-400" />
-                                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Live Activity Feed</h3>
+                                {/* One list, two ways to read it. Filters above apply to both. */}
+                                <div className="flex items-center justify-between px-1">
+                                    <p className="text-xs font-semibold text-slate-400">
+                                        {transactions.total.toLocaleString()} {transactions.total === 1 ? 'transaction' : 'transactions'}
+                                    </p>
+                                    <div className="flex items-center gap-0.5 rounded-lg bg-slate-100/75 p-0.5" role="tablist" aria-label="Layout">
+                                        {(
+                                            [
+                                                { id: 'timeline', label: 'Timeline', Icon: Activity },
+                                                { id: 'table', label: 'Table', Icon: Table },
+                                            ] as const
+                                        ).map(({ id, label, Icon }) => (
+                                            <button
+                                                key={id}
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={view === id}
+                                                onClick={() => setView(id)}
+                                                className={cn(
+                                                    'flex items-center gap-1.5 rounded-md px-3 py-1 text-[10px] font-black tracking-widest uppercase transition-all',
+                                                    view === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
+                                                )}
+                                            >
+                                                <Icon className="h-3.5 w-3.5" /> {label}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <span className="text-slate-350 text-[10px] font-bold uppercase">Timeline Events</span>
                                 </div>
-                                <Deferred data="activity" fallback={<ActivityFeed loading />}>
-                                    <ActivityFeed entries={activity as never} onSelect={openTransaction} />
-                                </Deferred>
-                            </div>
-                        )}
 
-                        {activeTab === 'ledger' && (
-                            <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
-                                <TransactionsTable
-                                    transactions={transactions}
-                                    onSelect={(tx) => openTransaction(tx.ulid)}
-                                    permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
-                                />
+                                {view === 'timeline' ? (
+                                    <Deferred data="activity" fallback={<ActivityFeed loading />}>
+                                        <ActivityFeed initial={activity} filters={filters} onSelect={openTransaction} />
+                                    </Deferred>
+                                ) : (
+                                    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
+                                        <TransactionsTable
+                                            transactions={transactions}
+                                            onSelect={(tx) => openTransaction(tx.ulid)}
+                                            permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'reports' && permissions.reports && (
-                            <Deferred data="charts" fallback={<LedgerCharts loading />}>
-                                <LedgerCharts data={charts as never} />
+                            <Deferred data="insights" fallback={<LedgerInsights loading />}>
+                                <LedgerInsights data={insights} />
                             </Deferred>
                         )}
 
@@ -389,7 +423,6 @@ export default function TransactionsIndex({
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 permissions={{
-                    refund: permissions.refund,
                     adjust: permissions.adjust,
                     audit: permissions.audit,
                     download_receipts: permissions.download_receipts,

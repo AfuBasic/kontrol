@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
-use App\Models\AccessLog;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
-use App\Models\Scopes\ZoneScope;
 use App\Services\Organization\AccessMemberService;
 use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
@@ -35,39 +33,6 @@ class AccessMemberController extends Controller
         $metrics = $this->arrivalService->getMetrics($organization);
         $activeArrivals = $this->arrivalService->getActiveArrivals($organization);
 
-        $recentLogs = AccessLog::withoutGlobalScope(ZoneScope::class)
-            ->where('organization_id', $organization->id)
-            ->with(['accessCode.organizationMember'])
-            ->latest('verified_at')
-            ->take(8)
-            ->get();
-
-        $recentActivity = $recentLogs->map(function (AccessLog $log) {
-            $visitorName = $log->meta['visitor_name'] ?? 'Visitor';
-            $memberName = $log->accessCode?->organizationMember?->name;
-            $displayName = $memberName ?: $visitorName;
-            $gate = $log->entry_point ?: 'Main Gate';
-            $category = $log->accessCode?->organizationMember?->category ?? 'visitor';
-
-            if ($log->checked_out_at) {
-                $type = 'checkout';
-                $timestamp = $log->checked_out_at->format('g:i A');
-            } else {
-                $type = 'arrival';
-                $timestamp = $log->verified_at ? $log->verified_at->format('g:i A') : 'Just now';
-            }
-
-            return [
-                'id' => $log->id,
-                'name' => $displayName,
-                'category' => $category,
-                'gate' => $gate,
-                'time_human' => $timestamp,
-                'type' => $type,
-                'is_active' => is_null($log->checked_out_at),
-            ];
-        });
-
         return Inertia::render('Organization/AccessList', [
             'organization' => [
                 'id' => $organization->id,
@@ -87,7 +52,6 @@ class AccessMemberController extends Controller
             'initialTab' => $request->query('tab', 'people'),
             'total_access_members' => OrganizationAccessMember::where('organization_id', $organization->id)->count(),
             'metrics' => $metrics,
-            'recent_activity' => $recentActivity,
         ]);
     }
 

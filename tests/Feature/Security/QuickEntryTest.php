@@ -246,6 +246,19 @@ it('syncs offline entries with their device tags and photos, judged at admission
     expect($tags)->toBe(['M4PZ', 'QX7K']);
 });
 
+it('does not admit the same offline walk-in twice when the queue replays it', function () {
+    $photo = 'data:image/jpeg;base64,'.base64_encode(($this->idPhotoBytes)());
+    $payload = ['logs' => [['tag' => 'RP7A', 'organization_id' => $this->hospital->id, 'verified_at' => now()->toISOString(), 'id_photo' => $photo]]];
+    $stamp = ['X-Idempotency-Key' => 'op_22222222-aaaa-bbbb-cccc-000000000001'];
+
+    ($this->asGuard)()->postJson(route('security.quick-entry.sync'), $payload, $stamp)->assertOk()->assertJsonPath('synced_count', 1);
+
+    // The reply was lost, so the queue sends it again: it is acknowledged, not admitted a second time.
+    ($this->asGuard)()->postJson(route('security.quick-entry.sync'), $payload, $stamp)->assertOk()->assertJsonPath('duplicate', true);
+
+    expect(AccessLog::withoutGlobalScopes()->where('meta->tag', 'RP7A')->count())->toBe(1);
+});
+
 it('reports offline entries that were made to a closed destination', function () {
     $photo = 'data:image/jpeg;base64,'.base64_encode(($this->idPhotoBytes)());
 

@@ -33,7 +33,7 @@ class TermiiProvider implements SMSProvider
         }
 
         try {
-            $response = Http::post($this->baseUrl, [
+            $response = Http::connectTimeout(5)->timeout(15)->post($this->baseUrl, [
                 'to' => $to,
                 'from' => $this->senderId,
                 'sms' => $message,

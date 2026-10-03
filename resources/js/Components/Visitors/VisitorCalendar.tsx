@@ -13,7 +13,7 @@ import {
     isToday,
     parseISO,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Clock, Plus, Search, User, Copy, Check, X, Info, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Plus, Search, User, Copy, Check, X, Info, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import { getPurposeColorStyle } from '@/Utils/calendarTheme';
@@ -67,7 +67,6 @@ function getCategoryChipStyle(purpose: string, isActive: boolean) {
         return 'bg-gray-800 text-white shadow-xs';
     }
     const style = getPurposeColorStyle(purpose);
-    // Active chip uses the category's own bg/text at medium weight
     return `${style.bg} ${style.text} ${style.border} border shadow-xs font-extrabold`;
 }
 
@@ -96,13 +95,17 @@ export default function VisitorCalendar({
     const [events, setEvents] = useState<VisitorCalendarEvent[]>([]);
     const [_loading, setLoading] = useState<boolean>(false);
 
-    // Filters
+    // Month Filters
     const [selectedPurpose, setSelectedPurpose] = useState<string>(initialFilters?.purpose || 'All');
     const [selectedHostId, setSelectedHostId] = useState<string>(initialFilters?.user_id || 'All');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [showSearch, setShowSearch] = useState<boolean>(false);
     const [showLegend, setShowLegend] = useState<boolean>(false);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    // Day Status & Search Filter for the selected day list
+    const [dayStatusFilter, setDayStatusFilter] = useState<'all' | 'active' | 'checked_in' | 'expired'>('all');
+    const [daySearchQuery, setDaySearchQuery] = useState<string>('');
 
     // Calculate grid dates for current month
     const monthStart = startOfMonth(currentMonth);
@@ -189,6 +192,64 @@ export default function VisitorCalendar({
     const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
     const selectedDateEvents = eventsByDate[selectedDateStr] || [];
 
+    // Compute stats for selected date
+    const dayStats = useMemo(() => {
+        let checkedIn = 0;
+        let active = 0;
+        let expired = 0;
+        const purposeCounts: Record<string, number> = {};
+
+        selectedDateEvents.forEach((ev) => {
+            const isUsed = Boolean(ev.extendedProps.used_at || ev.extendedProps.status === 'used' || ev.extendedProps.status === 'checked_in');
+            const isExp = Boolean(ev.extendedProps.is_valid === false || ev.extendedProps.status === 'expired');
+
+            if (isUsed) {
+                checkedIn++;
+            } else if (isExp) {
+                expired++;
+            } else {
+                active++;
+            }
+
+            const p = ev.extendedProps.purpose || 'Other';
+            purposeCounts[p] = (purposeCounts[p] || 0) + 1;
+        });
+
+        return {
+            total: selectedDateEvents.length,
+            checkedIn,
+            active,
+            expired,
+            purposeCounts,
+        };
+    }, [selectedDateEvents]);
+
+    // Filter events for the right column based on dayStatusFilter and daySearchQuery
+    const filteredDayEvents = useMemo(() => {
+        return selectedDateEvents.filter((ev) => {
+            const isUsed = Boolean(ev.extendedProps.used_at || ev.extendedProps.status === 'used' || ev.extendedProps.status === 'checked_in');
+            const isExp = Boolean(ev.extendedProps.is_valid === false || ev.extendedProps.status === 'expired');
+            const isActive = !isUsed && !isExp;
+
+            if (dayStatusFilter === 'checked_in' && !isUsed) return false;
+            if (dayStatusFilter === 'active' && !isActive) return false;
+            if (dayStatusFilter === 'expired' && !isExp) return false;
+
+            if (daySearchQuery.trim()) {
+                const q = daySearchQuery.toLowerCase().trim();
+                const name = (ev.extendedProps.visitor_name || '').toLowerCase();
+                const code = (ev.extendedProps.code || '').toLowerCase();
+                const host = (ev.extendedProps.host_name || '').toLowerCase();
+                const purpose = (ev.extendedProps.purpose || '').toLowerCase();
+                if (!name.includes(q) && !code.includes(q) && !host.includes(q) && !purpose.includes(q)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [selectedDateEvents, dayStatusFilter, daySearchQuery]);
+
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     const handleCopyCode = (code: string) => {
@@ -253,6 +314,7 @@ export default function VisitorCalendar({
                         className={`rounded-full p-2 transition active:scale-95 ${
                             showSearch ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
                         }`}
+                        title="Search calendar"
                     >
                         <Search className="h-4 w-4" />
                     </button>
@@ -279,7 +341,7 @@ export default function VisitorCalendar({
                 <div className="flex items-center gap-1">
                     <button
                         onClick={goToday}
-                        className="rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
                     >
                         Today
                     </button>
@@ -304,7 +366,7 @@ export default function VisitorCalendar({
                     <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search visitor name, code..."
+                        placeholder="Search visitor name, code across month..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         autoFocus
@@ -347,7 +409,7 @@ export default function VisitorCalendar({
                 />
             )}
 
-            {/* ─── View Toggle (Month / Agenda) - plain text, not pills ─── */}
+            {/* ─── View Toggle (Month / Agenda) ─── */}
             <div className="flex items-center gap-4 border-b border-gray-100 pb-1.5">
                 <button
                     onClick={() => setViewMode('grid')}
@@ -368,14 +430,15 @@ export default function VisitorCalendar({
             </div>
 
             {/* ═══════════════════════════════════════════════════
-                MONTH GRID VIEW (2-column layout on desktop)
+                MONTH GRID VIEW (Sticky Master-Detail Workspace)
                ═══════════════════════════════════════════════════ */}
             {viewMode === 'grid' && (
                 <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-                    {/* Left Column: Month Grid (lg:col-span-7) */}
-                    <div className="space-y-3 lg:col-span-7">
-                        <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-2xs">
-                            {/* Weekday Header - small, uppercase, muted */}
+                    {/* Left Column: Calendar Grid + Day Insights Card (Sticky on Desktop) */}
+                    <div className="space-y-4 lg:col-span-5 xl:col-span-5 lg:sticky lg:top-6">
+                        {/* Month Grid Card */}
+                        <div className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-2xs">
+                            {/* Weekday Header */}
                             <div className="mb-1 grid grid-cols-7 text-center">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
                                     <div key={idx} className="py-1 text-[9px] font-bold tracking-[0.12em] text-gray-400 uppercase">
@@ -396,14 +459,18 @@ export default function VisitorCalendar({
                                     return (
                                         <button
                                             key={dateStr}
-                                            onClick={() => setSelectedDate(day)}
-                                            className="group flex flex-col items-center rounded-xl py-2.5 transition-colors hover:bg-gray-50"
+                                            onClick={() => {
+                                                setSelectedDate(day);
+                                                setDayStatusFilter('all');
+                                                setDaySearchQuery('');
+                                            }}
+                                            className="group flex flex-col items-center rounded-xl py-2 transition-colors hover:bg-gray-50"
                                         >
                                             {/* Day Number */}
                                             <div
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition-all ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs transition-all ${
                                                     isSelected && !isTodayDate
-                                                        ? 'bg-gray-900 font-bold text-white'
+                                                        ? 'bg-gray-900 font-bold text-white shadow-xs'
                                                         : isTodayDate && isSelected
                                                           ? 'bg-primary-50 font-black text-primary-700 ring-2 ring-primary-500'
                                                           : isTodayDate
@@ -432,63 +499,229 @@ export default function VisitorCalendar({
                                     );
                                 })}
                             </div>
-                        </div>
 
-                        {/* Legend toggle */}
-                        <div className="flex items-center justify-end px-1">
-                            <button
-                                onClick={() => setShowLegend(!showLegend)}
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 transition hover:text-gray-600"
-                            >
-                                <Info className="h-3 w-3" />
-                                {showLegend ? 'Hide legend' : 'Color legend'}
-                            </button>
-                        </div>
-
-                        {showLegend && (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1 pb-1">
-                                {LEGEND_ITEMS.map((item) => {
-                                    const style = getPurposeColorStyle(item.purpose);
-                                    return (
-                                        <div key={item.label} className="flex items-center gap-1.5">
-                                            <span className={`h-2 w-2 rounded-full ${style.dot}`} />
-                                            <span className="text-[10px] font-medium text-gray-500">{item.label}</span>
-                                        </div>
-                                    );
-                                })}
+                            {/* Legend toggle */}
+                            <div className="mt-2 flex items-center justify-between border-t border-gray-50 pt-2 px-1">
+                                <span className="text-[10px] text-gray-400 font-medium">Click day to inspect</span>
+                                <button
+                                    onClick={() => setShowLegend(!showLegend)}
+                                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 transition hover:text-gray-600"
+                                >
+                                    <Info className="h-3 w-3" />
+                                    {showLegend ? 'Hide legend' : 'Color legend'}
+                                </button>
                             </div>
-                        )}
+
+                            {showLegend && (
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-50 pt-2 px-1">
+                                    {LEGEND_ITEMS.map((item) => {
+                                        const style = getPurposeColorStyle(item.purpose);
+                                        return (
+                                            <div key={item.label} className="flex items-center gap-1.5">
+                                                <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                                                <span className="text-[10px] font-medium text-gray-500">{item.label}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Selected Day Insights / Overview Card */}
+                        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs space-y-3.5">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                                        <CalendarIcon className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-bold text-gray-900">Day Overview</h3>
+                                        <p className="text-[10px] font-medium text-gray-400">{format(selectedDate, 'EEEE, MMM d')}</p>
+                                    </div>
+                                </div>
+                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-extrabold text-gray-700">
+                                    {dayStats.total} {dayStats.total === 1 ? 'Visitor' : 'Visitors'}
+                                </span>
+                            </div>
+
+                            {/* Metric pills / mini cards */}
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="rounded-xl bg-gray-50/80 p-2 border border-gray-100/60">
+                                    <span className="text-[10px] font-medium text-gray-500 block">Total</span>
+                                    <span className="text-base font-black text-gray-900">{dayStats.total}</span>
+                                </div>
+                                <div className="rounded-xl bg-emerald-50/50 p-2 border border-emerald-100/60">
+                                    <span className="text-[10px] font-semibold text-emerald-700 block">Checked In</span>
+                                    <span className="text-base font-black text-emerald-700">{dayStats.checkedIn}</span>
+                                </div>
+                                <div className="rounded-xl bg-blue-50/50 p-2 border border-blue-100/60">
+                                    <span className="text-[10px] font-semibold text-blue-700 block">Active</span>
+                                    <span className="text-base font-black text-blue-700">{dayStats.active}</span>
+                                </div>
+                            </div>
+
+                            {/* Purpose Breakdown Pills */}
+                            {Object.keys(dayStats.purposeCounts).length > 0 && (
+                                <div className="space-y-1.5 pt-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Categories</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {Object.entries(dayStats.purposeCounts).map(([purpose, count]) => {
+                                            const style = getPurposeColorStyle(purpose);
+                                            return (
+                                                <span
+                                                    key={purpose}
+                                                    className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold ${style.bg} ${style.text} ${style.border} border`}
+                                                >
+                                                    <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                                                    <span>{purpose}</span>
+                                                    <span className="opacity-70">({count})</span>
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Quick Status Filter Tabs */}
+                            {dayStats.total > 0 && (
+                                <div className="space-y-1.5 pt-1 border-t border-gray-100">
+                                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        <span>Filter Itinerary</span>
+                                        {(dayStatusFilter !== 'all' || daySearchQuery) && (
+                                            <button
+                                                onClick={() => {
+                                                    setDayStatusFilter('all');
+                                                    setDaySearchQuery('');
+                                                }}
+                                                className="text-primary-600 hover:text-primary-700 capitalize text-[10px] font-bold"
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-1 rounded-xl bg-gray-100 p-1 text-[11px] font-bold">
+                                        <button
+                                            onClick={() => setDayStatusFilter('all')}
+                                            className={`rounded-lg py-1 transition ${
+                                                dayStatusFilter === 'all'
+                                                    ? 'bg-white text-gray-900 shadow-2xs font-extrabold'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            All ({dayStats.total})
+                                        </button>
+                                        <button
+                                            onClick={() => setDayStatusFilter('active')}
+                                            className={`rounded-lg py-1 transition ${
+                                                dayStatusFilter === 'active'
+                                                    ? 'bg-white text-blue-700 shadow-2xs font-extrabold'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            Active ({dayStats.active})
+                                        </button>
+                                        <button
+                                            onClick={() => setDayStatusFilter('checked_in')}
+                                            className={`rounded-lg py-1 transition ${
+                                                dayStatusFilter === 'checked_in'
+                                                    ? 'bg-white text-emerald-700 shadow-2xs font-extrabold'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            Used ({dayStats.checkedIn})
+                                        </button>
+                                        <button
+                                            onClick={() => setDayStatusFilter('expired')}
+                                            className={`rounded-lg py-1 transition ${
+                                                dayStatusFilter === 'expired'
+                                                    ? 'bg-white text-amber-700 shadow-2xs font-extrabold'
+                                                    : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            Exp ({dayStats.expired})
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Right Column: Selected Day Agenda (lg:col-span-5) */}
-                    <div className="space-y-3 lg:col-span-5">
-                        <div className="flex items-center justify-between px-1">
-                            <h2 className="text-sm font-bold text-gray-900">{format(selectedDate, 'EEEE, MMM d')}</h2>
-                            <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                                {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'visitor' : 'visitors'}
-                            </span>
-                        </div>
-
-                        {selectedDateEvents.length > 0 ? (
-                            <div className="space-y-2.5">
-                                {selectedDateEvents.map((ev) => (
-                                    <EventCard key={ev.id} event={ev} isAdmin={isAdmin} copiedCode={copiedCode} onCopyCode={handleCopyCode} />
-                                ))}
+                    {/* Right Column: Scrollable Daily Itinerary (lg:col-span-7 xl:col-span-7) */}
+                    <div className="space-y-3 lg:col-span-7 xl:col-span-7">
+                        {/* Daily Itinerary Header Card */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-2xs">
+                            <div className="min-w-0">
+                                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                    <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
+                                    {isToday(selectedDate) && (
+                                        <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[9px] font-extrabold text-primary-700 ring-1 ring-primary-500/20">
+                                            Today
+                                        </span>
+                                    )}
+                                </h2>
+                                <p className="text-[11px] font-medium text-gray-400">
+                                    Showing {filteredDayEvents.length} of {selectedDateEvents.length} scheduled {selectedDateEvents.length === 1 ? 'visitor' : 'visitors'}
+                                </p>
                             </div>
-                        ) : (
-                            <div className="space-y-2 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-10 text-center">
-                                <p className="text-xs font-medium text-gray-400">No visitors scheduled for {format(selectedDate, 'MMM d')}</p>
-                                {createUrl && (
+
+                            {/* Search within this day */}
+                            <div className="relative w-full sm:w-48">
+                                <Search className="absolute top-2.5 left-2.5 h-3.5 w-3.5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Filter visitors..."
+                                    value={daySearchQuery}
+                                    onChange={(e) => setDaySearchQuery(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-1.5 pr-7 pl-8 text-xs font-medium text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:bg-white focus:ring-0"
+                                />
+                                {daySearchQuery && (
                                     <button
-                                        onClick={() => router.get(createUrl)}
-                                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
+                                        onClick={() => setDaySearchQuery('')}
+                                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
                                     >
-                                        <Plus className="h-3 w-3" />
-                                        <span>Schedule a visitor</span>
+                                        <X className="h-3.5 w-3.5" />
                                     </button>
                                 )}
                             </div>
-                        )}
+                        </div>
+
+                        {/* Scrollable Event List Container */}
+                        <div className="max-h-[calc(100vh-240px)] overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
+                            {filteredDayEvents.length > 0 ? (
+                                filteredDayEvents.map((ev) => (
+                                    <EventCard key={ev.id} event={ev} isAdmin={isAdmin} copiedCode={copiedCode} onCopyCode={handleCopyCode} />
+                                ))
+                            ) : selectedDateEvents.length > 0 ? (
+                                <div className="space-y-2 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-12 text-center">
+                                    <p className="text-xs font-medium text-gray-500">No visitors match your filter criteria.</p>
+                                    <button
+                                        onClick={() => {
+                                            setDayStatusFilter('all');
+                                            setDaySearchQuery('');
+                                        }}
+                                        className="text-xs font-bold text-primary-600 hover:underline"
+                                    >
+                                        Clear day filters
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2.5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-14 text-center">
+                                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                                        <CalendarIcon className="h-5 w-5" />
+                                    </div>
+                                    <p className="text-xs font-medium text-gray-500">No visitors scheduled for {format(selectedDate, 'MMM d, yyyy')}</p>
+                                    {createUrl && (
+                                        <button
+                                            onClick={() => router.get(createUrl)}
+                                            className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-100 transition active:scale-95"
+                                        >
+                                            <Plus className="h-3.5 w-3.5" />
+                                            <span>Schedule a visitor</span>
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -538,6 +771,8 @@ function EventCard({
 }) {
     const style = getPurposeColorStyle(ev.extendedProps.purpose);
     const isCopied = copiedCode === ev.extendedProps.code;
+    const isCheckedIn = Boolean(ev.extendedProps.used_at || ev.extendedProps.status === 'used' || ev.extendedProps.status === 'checked_in');
+    const isExpired = Boolean(ev.extendedProps.is_valid === false || ev.extendedProps.status === 'expired');
 
     const detailUrl = `/resident/visitors/${ev.id}`;
 
@@ -548,38 +783,52 @@ function EventCard({
                     router.get(detailUrl);
                 }
             }}
-            className={`group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 transition ${
-                isAdmin ? '' : 'cursor-pointer hover:border-gray-200 active:scale-[0.99]'
+            className={`group relative flex items-center justify-between gap-3.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-2xs transition-all hover:border-gray-200 hover:shadow-sm ${
+                isAdmin ? '' : 'cursor-pointer active:scale-[0.99]'
             }`}
         >
             {/* Category-colored left accent bar */}
-            <div className={`w-0.5 shrink-0 self-stretch rounded-full ${style.dot}`} />
+            <div className={`w-1 shrink-0 self-stretch rounded-full ${style.dot}`} />
 
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-sm font-bold text-gray-900">{ev.extendedProps.visitor_name}</span>
                     <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${style.badge}`}>
                         {ev.extendedProps.purpose}
                     </span>
+                    {isCheckedIn ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                            Checked In
+                        </span>
+                    ) : isExpired ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                            Expired
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                            Active Pass
+                        </span>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-3 text-[11px] font-medium text-gray-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium text-gray-500">
                     {isAdmin && ev.extendedProps.host_name && (
-                        <span className="flex items-center gap-1">
-                            <User className="h-3 w-3 text-gray-400" />
-                            {ev.extendedProps.host_name}
+                        <span className="flex items-center gap-1 truncate text-gray-600">
+                            <User className="h-3 w-3 text-gray-400 shrink-0" />
+                            <span className="text-gray-400">Host:</span> {ev.extendedProps.host_name}
                         </span>
                     )}
                     {ev.start && (
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-gray-600">
                             {showDate ? (
                                 <>
-                                    <CalendarIcon className="h-3 w-3 text-gray-400" />
+                                    <CalendarIcon className="h-3 w-3 text-gray-400 shrink-0" />
                                     {format(parseISO(ev.start), 'MMM d, h:mm a')}
                                 </>
                             ) : (
                                 <>
-                                    <Clock className="h-3 w-3 text-gray-400" />
+                                    <Clock className="h-3 w-3 text-gray-400 shrink-0" />
                                     {format(parseISO(ev.start), 'h:mm a')}
                                 </>
                             )}
@@ -590,7 +839,7 @@ function EventCard({
 
             {/* Code + Copy */}
             <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                <span className="rounded-lg bg-gray-50 px-2 py-1 font-mono text-[10px] font-black tracking-widest text-gray-600">
+                <span className="rounded-lg bg-gray-50 px-2.5 py-1 font-mono text-[11px] font-black tracking-widest text-gray-700 border border-gray-100">
                     {ev.extendedProps.code}
                 </span>
                 <button
@@ -598,17 +847,17 @@ function EventCard({
                         e.stopPropagation();
                         onCopyCode(ev.extendedProps.code);
                     }}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all active:scale-90 ${
+                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95 ${
                         isCopied
-                            ? 'scale-105 border border-emerald-300 bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400/20'
+                            ? 'border border-emerald-300 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-400/20'
                             : 'border border-gray-200 bg-white text-gray-600 shadow-2xs hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     title="Copy code"
                 >
                     {isCopied ? (
                         <>
-                            <Check className="animate-in zoom-in-50 h-3.5 w-3.5 text-emerald-600 duration-150" />
-                            <span className="text-[10px] text-emerald-700">Copied!</span>
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                            <span className="text-[10px] text-emerald-700">Copied</span>
                         </>
                     ) : (
                         <>
@@ -621,3 +870,4 @@ function EventCard({
         </div>
     );
 }
+

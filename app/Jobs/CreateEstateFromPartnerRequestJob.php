@@ -13,10 +13,17 @@ use App\Services\Commission\PartnerAttributionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreateEstateFromPartnerRequestJob implements ShouldQueue
 {
     use Queueable;
+
+    /** Times the job may be attempted. Retried only where running it twice is harmless. */
+    public int $tries = 1;
+
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 300;
 
     public function __construct(
         public PartnerRequest $partnerRequest,
@@ -65,5 +72,13 @@ class CreateEstateFromPartnerRequestJob implements ShouldQueue
                 PartnerStatus::Activated,
             );
         });
+    }
+
+    /**
+     * Leave a trace when the job gives up, so a failed run is something we notice.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Queued job failed: '.static::class, ['error' => $exception?->getMessage()]);
     }
 }

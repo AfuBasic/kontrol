@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage, InfiniteScroll } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, MessageSquare, SlidersHorizontal } from 'lucide-react';
@@ -264,48 +264,6 @@ export default function EstateBoardIndex({
 
     const [showFilterSheet, setShowFilterSheet] = useState(false);
 
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-    const isLoadingMore = useRef(false);
-
-    const loadMore = useCallback(() => {
-        if (!posts.next_page_url || isLoadingMore.current) return;
-
-        isLoadingMore.current = true;
-        router.get(
-            posts.next_page_url,
-            {
-                filter: filter || undefined,
-                category: category || undefined,
-                unread_only: unread_only ? 1 : undefined,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['posts'],
-                onFinish: () => {
-                    isLoadingMore.current = false;
-                },
-            },
-        );
-    }, [posts.next_page_url, filter, category, unread_only]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMore();
-                }
-            },
-            { threshold: 0.1 },
-        );
-
-        if (loadMoreRef.current) {
-            observer.observe(loadMoreRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [loadMore]);
-
     const handleFilterApply = (newCategory?: string | null, newUnreadOnly?: boolean) => {
         router.get(
             index.url(),
@@ -397,7 +355,15 @@ export default function EstateBoardIndex({
 
             {/* Feed Stream */}
             {posts.data.length > 0 ? (
-                <div className="mt-1">
+                <InfiniteScroll
+                    data="posts"
+                    className="mt-1"
+                    loading={
+                        <div className="flex justify-center py-6">
+                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-400" />
+                        </div>
+                    }
+                >
                     {posts.data.map((post) => (
                         <FeedPost
                             key={post.id}
@@ -405,14 +371,7 @@ export default function EstateBoardIndex({
                             estateName={estateName}
                         />
                     ))}
-
-                    {/* Load More */}
-                    {posts.next_page_url && (
-                        <div ref={loadMoreRef} className="flex justify-center py-6">
-                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-400" />
-                        </div>
-                    )}
-                </div>
+                </InfiniteScroll>
             ) : (
                 /* Empty State */
                 <div className="mt-12 flex flex-col items-center justify-center text-center">

@@ -49,7 +49,7 @@ class EstateBoardService
             ->when($unreadOnly && $user, fn ($q) => $q->whereDoesntHave('reads', fn ($sub) => $sub->where('user_id', $user->id)))
             ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
             ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
-            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+            ->when($user && ! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
                 $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
                     $q->where(function ($estatePosts) use ($user, $propertyId, $userZoneIds) {
                         $estatePosts->whereNull('property_owner_id')
@@ -120,7 +120,7 @@ class EstateBoardService
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
             ])
             ->withCount('comments')
-            ->orderByRaw('COALESCE(published_at, created_at) desc')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->cursorPaginate($perPage);
     }

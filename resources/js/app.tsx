@@ -14,6 +14,7 @@ import AppLoader from './Components/AppLoader';
 import { ConfirmationProvider } from './Components/ConfirmationProvider';
 import AppErrorBoundary from './Components/ErrorBoundary/AppErrorBoundary';
 import RouteProgressBar from './Components/UI/RouteProgressBar';
+import ConnectionNotice from './Components/UI/ConnectionNotice';
 import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
@@ -117,6 +118,7 @@ createInertiaApp({
                             <>
                                 <App {...props} />
                                 <RouteProgressBar />
+                                <ConnectionNotice />
                             </>
                         )}
                     </ConfirmationProvider>

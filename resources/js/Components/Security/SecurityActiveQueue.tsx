@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
-import { Car, LogOut, Tag, Users, X, AlertCircle, Building2, User, ChevronRight } from 'lucide-react';
+import { router, InfiniteScroll } from '@inertiajs/react';
+import { Car, LogOut, Tag, Users, X, AlertCircle, Building2, User, ChevronRight, Loader2 } from 'lucide-react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 
@@ -50,18 +50,31 @@ export type SecurityActiveVisit = {
     checkout_constraint: string | null;
 };
 
+export type PaginatedActiveVisits = {
+    data: SecurityActiveVisit[];
+    links?: any[];
+    next_page_url: string | null;
+    current_page: number;
+    last_page: number;
+    total: number;
+};
+
 type Props = {
-    activeVisits: SecurityActiveVisit[];
+    activeVisits?: PaginatedActiveVisits | SecurityActiveVisit[];
+    activeCount?: number;
     onVisitSelected?: (visit: SecurityActiveVisit) => void;
 };
 
-export default function SecurityActiveQueue({ activeVisits }: Props) {
+export default function SecurityActiveQueue({ activeVisits, activeCount }: Props) {
     const [selectedVisit, setSelectedVisit] = useState<SecurityActiveVisit | null>(null);
     // The visit the guard has tapped Check Out on, awaiting a second confirming tap.
     const [confirmVisit, setConfirmVisit] = useState<SecurityActiveVisit | null>(null);
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
+
+    const visitsList = Array.isArray(activeVisits) ? activeVisits : (activeVisits?.data ?? []);
+    const totalCount = activeCount ?? (Array.isArray(activeVisits) ? activeVisits.length : (activeVisits?.total ?? visitsList.length));
 
     const handleCheckout = async (visit: SecurityActiveVisit) => {
         if (!visit.code && !visit.pass_uuid && !visit.tag) return;
@@ -101,7 +114,7 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
         setConfirmVisit(null);
     };
 
-    if (activeVisits.length === 0) {
+    if (visitsList.length === 0) {
         return (
             <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
@@ -112,6 +125,151 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
             </div>
         );
     }
+
+    const renderVisitCard = (visit: SecurityActiveVisit) => {
+        const isBusy = processingId === visit.id;
+        const isQuick = Boolean(visit.is_quick_entry);
+        const isOrgCred = visit.entry_type === 'organization_credential';
+        const destination = visit.destination_name || visit.host.name;
+        const isRedundantPurpose =
+            !visit.purpose ||
+            visit.purpose === 'Quick Entry' ||
+            visit.purpose === `Visit to ${destination}` ||
+            visit.purpose.toLowerCase() === destination.toLowerCase();
+
+        return (
+            <div
+                key={visit.id}
+                className={`flex flex-col rounded-2xl border bg-white p-4 shadow-xs transition-colors dark:bg-slate-900 ${
+                    visit.is_overstayed
+                        ? 'border-amber-300 ring-1 ring-amber-200 dark:border-amber-800 dark:ring-amber-950'
+                        : 'border-slate-200/90 dark:border-slate-800'
+                }`}
+            >
+                {/* TOP ROW: Identity + Destination vs Bold INSIDE status */}
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-2">
+                            <h3 className="truncate text-base font-bold text-slate-900 dark:text-white">{visit.visitor.name}</h3>
+                            {visit.outside_hours && (
+                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300">
+                                    Outside Hours
+                                </span>
+                            )}
+                            {visit.is_overstayed && (
+                                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-800 uppercase dark:bg-amber-900/50 dark:text-amber-300">
+                                    Overstayed
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Destination / Organization */}
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            {isQuick || isOrgCred ? (
+                                <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            ) : (
+                                <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            )}
+                            <span className="truncate">{destination}</span>
+                            {visit.host.unit && !isQuick && <span className="text-slate-400">· Unit {visit.host.unit}</span>}
+                        </div>
+                    </div>
+
+                    {/* Presence Status: Prominent, restrained INSIDE */}
+                    <div className="shrink-0 text-right">
+                        <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-800 ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-600 dark:bg-emerald-400" />
+                            <span className="text-xs font-black tracking-wider">INSIDE</span>
+                        </div>
+                        <div className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            Since {visit.verified_at_time || visit.verified_at}
+                        </div>
+                    </div>
+                </div>
+
+                {/* MIDDLE: Operational 3-Column Facts (Check-In | Gate | Entry Type) */}
+                <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50/80 p-2.5 sm:grid-cols-3 dark:bg-slate-800/50">
+                    <div>
+                        <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Check-In</span>
+                        <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
+                            {visit.verified_at_time || visit.verified_at}
+                        </p>
+                    </div>
+
+                    <div>
+                        <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Gate</span>
+                        <p className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+                            {visit.gate || visit.entry_point || 'Gate not recorded'}
+                        </p>
+                    </div>
+
+                    <div className="col-span-2 sm:col-span-1">
+                        <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Entry Type</span>
+                        <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
+                            {visit.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass')}
+                        </p>
+                    </div>
+                </div>
+
+                {/* LOWER: Guard, Identifier (Tag / Pass Code), Vehicle, Purpose */}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        {visit.tag ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+                                <Tag className="h-3 w-3" />
+                                <span>Visitor Tag #{visit.tag}</span>
+                            </span>
+                        ) : visit.code ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                <span>Pass #{visit.code}</span>
+                            </span>
+                        ) : null}
+
+                        {visit.vehicle && (
+                            <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+                                <Car className="h-3 w-3 text-slate-400" />
+                                <span>{visit.vehicle.plate}</span>
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="text-[11px] text-slate-400">
+                        Guard: <span className="font-semibold text-slate-600 dark:text-slate-300">{visit.verifier_name}</span>
+                    </div>
+                </div>
+
+                {!isRedundantPurpose && <p className="mt-1.5 text-[11px] text-slate-500 italic dark:text-slate-400">"{visit.purpose}"</p>}
+
+                {/* BOTTOM: Primary Operational Action & Secondary Detail */}
+                <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedVisit(visit)}
+                        className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                    >
+                        <span>View Details</span>
+                        <ChevronRight className="h-3 w-3" />
+                    </button>
+
+                    {visit.can_checkout ? (
+                        <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => setConfirmVisit(visit)}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                        >
+                            <LogOut className="h-3.5 w-3.5" />
+                            <span>{isBusy ? 'Checking out...' : 'Check Out'}</span>
+                        </button>
+                    ) : (
+                        <div className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-200/70 dark:bg-amber-950/30 dark:text-amber-300 dark:ring-amber-900/50">
+                            {visit.checkout_constraint || 'Checkout at entry gate'}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-3">
@@ -138,156 +296,27 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
 
             <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase">
-                    {activeVisits.length} {activeVisits.length === 1 ? 'Visitor Inside' : 'Visitors Inside'}
+                    {totalCount} {totalCount === 1 ? 'Visitor Inside' : 'Visitors Inside'}
                 </span>
             </div>
 
-            <div className="space-y-3">
-                {activeVisits.map((visit) => {
-                    const isBusy = processingId === visit.id;
-                    const isQuick = Boolean(visit.is_quick_entry);
-                    const isOrgCred = visit.entry_type === 'organization_credential';
-                    const destination = visit.destination_name || visit.host.name;
-                    const isRedundantPurpose =
-                        !visit.purpose ||
-                        visit.purpose === 'Quick Entry' ||
-                        visit.purpose === `Visit to ${destination}` ||
-                        visit.purpose.toLowerCase() === destination.toLowerCase();
-
-                    return (
-                        <div
-                            key={visit.id}
-                            className={`flex flex-col rounded-2xl border bg-white p-4 shadow-xs transition-colors dark:bg-slate-900 ${
-                                visit.is_overstayed
-                                    ? 'border-amber-300 ring-1 ring-amber-200 dark:border-amber-800 dark:ring-amber-950'
-                                    : 'border-slate-200/90 dark:border-slate-800'
-                            }`}
-                        >
-                            {/* TOP ROW: Identity + Destination vs Bold INSIDE status */}
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-baseline gap-2">
-                                        <h3 className="truncate text-base font-bold text-slate-900 dark:text-white">{visit.visitor.name}</h3>
-                                        {visit.outside_hours && (
-                                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300">
-                                                Outside Hours
-                                            </span>
-                                        )}
-                                        {visit.is_overstayed && (
-                                            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-800 uppercase dark:bg-amber-900/50 dark:text-amber-300">
-                                                Overstayed
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Destination / Organization */}
-                                    <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                                        {isQuick || isOrgCred ? (
-                                            <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                        ) : (
-                                            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                        )}
-                                        <span className="truncate">{destination}</span>
-                                        {visit.host.unit && !isQuick && <span className="text-slate-400">· Unit {visit.host.unit}</span>}
-                                    </div>
-                                </div>
-
-                                {/* Presence Status: Prominent, restrained INSIDE */}
-                                <div className="shrink-0 text-right">
-                                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-800 ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50">
-                                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-600 dark:bg-emerald-400" />
-                                        <span className="text-xs font-black tracking-wider">INSIDE</span>
-                                    </div>
-                                    <div className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                        Since {visit.verified_at_time || visit.verified_at}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* MIDDLE: Operational 3-Column Facts (Check-In | Gate | Entry Type) */}
-                            <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50/80 p-2.5 sm:grid-cols-3 dark:bg-slate-800/50">
-                                <div>
-                                    <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Check-In</span>
-                                    <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                                        {visit.verified_at_time || visit.verified_at}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Gate</span>
-                                    <p className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-100">
-                                        {visit.gate || visit.entry_point || 'Gate not recorded'}
-                                    </p>
-                                </div>
-
-                                <div className="col-span-2 sm:col-span-1">
-                                    <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Entry Type</span>
-                                    <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                                        {visit.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass')}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* LOWER: Guard, Identifier (Tag / Pass Code), Vehicle, Purpose */}
-                            <div className="mt-3 flex flex-wrap items-center justify-between gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                    {visit.tag ? (
-                                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
-                                            <Tag className="h-3 w-3" />
-                                            <span>Visitor Tag #{visit.tag}</span>
-                                        </span>
-                                    ) : visit.code ? (
-                                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                            <span>Pass #{visit.code}</span>
-                                        </span>
-                                    ) : null}
-
-                                    {visit.vehicle && (
-                                        <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
-                                            <Car className="h-3 w-3 text-slate-400" />
-                                            <span>{visit.vehicle.plate}</span>
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="text-[11px] text-slate-400">
-                                    Guard: <span className="font-semibold text-slate-600 dark:text-slate-300">{visit.verifier_name}</span>
-                                </div>
-                            </div>
-
-                            {!isRedundantPurpose && <p className="mt-1.5 text-[11px] text-slate-500 italic dark:text-slate-400">"{visit.purpose}"</p>}
-
-                            {/* BOTTOM: Primary Operational Action & Secondary Detail */}
-                            <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedVisit(visit)}
-                                    className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                                >
-                                    <span>View Details</span>
-                                    <ChevronRight className="h-3 w-3" />
-                                </button>
-
-                                {visit.can_checkout ? (
-                                    <button
-                                        type="button"
-                                        disabled={isBusy}
-                                        onClick={() => setConfirmVisit(visit)}
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                                    >
-                                        <LogOut className="h-3.5 w-3.5" />
-                                        <span>{isBusy ? 'Checking out...' : 'Check Out'}</span>
-                                    </button>
-                                ) : (
-                                    <div className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-200/70 dark:bg-amber-950/30 dark:text-amber-300 dark:ring-amber-900/50">
-                                        {visit.checkout_constraint || 'Checkout at entry gate'}
-                                    </div>
-                                )}
-                            </div>
+            {!Array.isArray(activeVisits) ? (
+                <InfiniteScroll
+                    data="activeVisits"
+                    className="space-y-3"
+                    loading={
+                        <div className="flex justify-center py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
                         </div>
-                    );
-                })}
-            </div>
+                    }
+                >
+                    {visitsList.map((visit) => renderVisitCard(visit))}
+                </InfiniteScroll>
+            ) : (
+                <div className="space-y-3">
+                    {visitsList.map((visit) => renderVisitCard(visit))}
+                </div>
+            )}
 
             {/* Visit Details Modal Sheet */}
             <MobileSheet isOpen={Boolean(selectedVisit)} onClose={() => setSelectedVisit(null)} title="Active Visit Details">

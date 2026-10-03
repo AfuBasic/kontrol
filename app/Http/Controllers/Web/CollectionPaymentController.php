@@ -4,21 +4,16 @@ namespace App\Http\Controllers\Web;
 
 use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
-use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
 use App\Models\ResidentSubscription;
-use App\Models\Scopes\CollectionAssignmentScope;
 use App\Models\Scopes\PaymentScope;
 use App\Models\User;
-use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
-use App\Notifications\Resident\CollectionPaymentSuccessfulNotification;
-use App\Services\Compliance\ComplianceEngine;
+use App\Services\Billing\CollectionPaymentSettler;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -147,49 +142,13 @@ class CollectionPaymentController extends Controller
                         continue;
                     }
 
-                    DB::transaction(function () use ($p, $assignment) {
-                        $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
-                        $lockedAssignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
-                            ->where('id', $assignment->id)->lockForUpdate()->first();
+                    $settled = app(CollectionPaymentSettler::class)->settle($p->reference, isset($verification['amount']) ? (int) $verification['amount'] : null);
 
-                        if ($lockedPayment && $lockedPayment->status !== 'success') {
-                            $lockedPayment->update([
-                                'status' => 'success',
-                                'paid_at' => now(),
-                            ]);
-
-                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount);
-                            $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $lockedPayment->amount * 0.005;
-                            $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
-                            if ($lockedAssignment->amount_paid >= $lockedAssignment->amount_due) {
-                                $lockedAssignment->update([
-                                    'status' => 'paid',
-                                    'paid_at' => now(),
-                                    'external_reference' => $lockedPayment->reference,
-                                ]);
-                            } else {
-                                $lockedAssignment->update(['status' => 'partial']);
-                            }
-
-                            $lockedAssignment->loadMissing('collection.creator');
-                            $creator = $lockedAssignment->collection?->creator;
-                            if ($creator && $creator->hasRole('property_owner')) {
-                                $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
-                            } else {
-                                $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
-                                    ->where('is_active', true)
-                                    ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-                                    ->pluck('user_id')
-                                    ->toArray();
-
-                                $admins = User::whereIn('id', $adminIds)->get();
-
-                                foreach ($admins as $admin) {
-                                    $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
-                                }
-                            }
-                        }
-                    });
+                    if (isset($settled['error'])) {
+                        return response()->json([
+                            'message' => 'We received a payment for this bill that is less than expected. Please contact support so it can be reviewed.',
+                        ], 409);
+                    }
 
                     return response()->json([
                         'already_paid' => true,
@@ -227,6 +186,9 @@ class CollectionPaymentController extends Controller
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
         $fees = $this->calculateFees($baseAmountNaira, $hasActiveSubscription);
         $amountKobo = (int) round($fees['total_amount'] * 100);
+
+        // Remember what we asked Paystack to collect, so settling can refuse a short payment.
+        $payment->update(['raw_payload' => array_merge($payment->raw_payload ?? [], ['expected_kobo' => $amountKobo])]);
 
         if ($amountKobo < 100) {
             return response()->json([
@@ -286,135 +248,44 @@ class CollectionPaymentController extends Controller
         }
     }
 
-    public function verify(string $reference): JsonResponse
+    /**
+     * Public route, so it must never credit a payment on a bare reference: Paystack has to confirm the
+     * money arrived first. The resident's status page does the same check on its own.
+     */
+    public function verify(string $reference, PaystackService $paystackService, CollectionPaymentSettler $settler): JsonResponse
     {
         Log::info("Paystack Verification Endpoint Hit: Ref={$reference}");
-        $result = DB::transaction(function () use ($reference) {
-            // 1. Find the payment and lock it
-            $payment = Payment::withoutGlobalScope(PaymentScope::class)
-                ->where('reference', $reference)
-                ->lockForUpdate()
-                ->first();
 
-            if (! $payment) {
-                Log::warning("Paystack Verification failed: Payment not found for Ref={$reference}");
+        $payment = Payment::withoutGlobalScope(PaymentScope::class)->where('reference', $reference)->first();
 
-                return ['error' => 'Payment not found', 'status' => 404];
+        if (! $payment) {
+            return response()->json(['message' => 'Payment not found'], 404);
+        }
+
+        $verification = [];
+
+        if ($payment->status !== 'success') {
+            try {
+                $verification = $paystackService->verifyPayment($reference);
+            } catch (\Throwable $e) {
+                Log::warning("Could not confirm Ref={$reference} with Paystack: ".$e->getMessage());
+
+                return response()->json(['message' => 'We could not confirm this payment with Paystack yet. Please try again shortly.'], 502);
             }
 
-            app(ContextManager::class)->setSystemContext($payment->estate_id);
-
-            // 2. If already success, just return success
-            if ($payment->status === 'success') {
-                Log::info("Paystack Verification: Already success for Ref={$reference}");
-
-                return ['message' => 'Payment already verified', 'status' => 200];
+            if (($verification['status'] ?? null) !== 'success') {
+                return response()->json(['message' => 'Payment is not confirmed yet.'], 409);
             }
 
-            // Update payment to success
-            $payment->update([
-                'status' => 'success',
-                'paid_at' => now(),
-            ]);
+            if (($verification['channel'] ?? 'bank_transfer') !== 'bank_transfer') {
+                Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$reference}");
+                $payment->update(['status' => 'failed']);
 
-            if ($payment->collection_assignment_id) {
-                $assignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
-                    ->where('id', $payment->collection_assignment_id)->lockForUpdate()->first();
-                if ($assignment) {
-                    $assignment->increment('amount_paid', $payment->amount);
-                    $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $payment->amount * 0.005;
-                    $assignment->increment('kontrol_fee_paid', $feeToRecord);
-                    if ($assignment->amount_paid >= $assignment->amount_due) {
-                        $assignment->update([
-                            'status' => 'paid',
-                            'paid_at' => now(),
-                            'external_reference' => $reference,
-                        ]);
-                        app(ComplianceEngine::class)->resolveCompliance($assignment, 'Paid in Full');
-                    } else {
-                        $assignment->update(['status' => 'partial']);
-                        // Re-evaluate compliance for partial payment balance reduction
-                        app(ComplianceEngine::class)->raiseViolation($assignment);
-                    }
-
-                    $assignment->loadMissing('collection.creator');
-                    $creator = $assignment->collection?->creator;
-                    if ($creator && $creator->hasRole('property_owner')) {
-                        $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
-                    } else {
-                        $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
-                            ->where('is_active', true)
-                            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-                            ->pluck('user_id')
-                            ->toArray();
-
-                        $admins = User::whereIn('id', $adminIds)->get();
-
-                        foreach ($admins as $admin) {
-                            $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
-                        }
-                    }
-
-                    if ($payment->user) {
-                        $payment->user->notify(new CollectionPaymentSuccessfulNotification($payment, $assignment));
-                    }
-                }
-            } elseif ($payment->raw_payload && isset($payment->raw_payload['assignment_ids'])) {
-                $assignmentIds = $payment->raw_payload['assignment_ids'];
-                $assignments = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
-                    ->whereIn('id', $assignmentIds)->lockForUpdate()->get();
-                foreach ($assignments as $assignment) {
-                    $due = $assignment->amount_due - $assignment->amount_paid;
-                    if ($due > 0) {
-                        $childPayment = Payment::create([
-                            'user_id' => $payment->user_id,
-                            'estate_id' => $payment->estate_id,
-                            'collection_assignment_id' => $assignment->id,
-                            'amount' => $due,
-                            'reference' => $reference.'-'.$assignment->id,
-                            'status' => 'success',
-                            'paid_at' => now(),
-                            'raw_payload' => ['bulk_parent_reference' => $reference],
-                        ]);
-
-                        $assignment->increment('amount_paid', $due);
-                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $due * 0.005;
-                        $assignment->increment('kontrol_fee_paid', $feeToRecord);
-                        $assignment->update([
-                            'status' => 'paid',
-                            'paid_at' => now(),
-                            'external_reference' => $reference,
-                        ]);
-
-                        $assignment->loadMissing('collection.creator');
-                        $creator = $assignment->collection?->creator;
-                        if ($creator && $creator->hasRole('property_owner')) {
-                            $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
-                        } else {
-                            $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
-                                ->where('is_active', true)
-                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-                                ->pluck('user_id')
-                                ->toArray();
-
-                            $admins = User::whereIn('id', $adminIds)->get();
-
-                            foreach ($admins as $admin) {
-                                $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
-                            }
-                        }
-
-                        if ($childPayment->user) {
-                            $childPayment->user->notify(new CollectionPaymentSuccessfulNotification($childPayment, $assignment));
-                        }
-                    }
-                }
+                return response()->json(['message' => 'Collections can only be paid by bank transfer.'], 422);
             }
+        }
 
-            Log::info("Paystack Verification completed successfully for Ref={$reference}");
-
-            return ['message' => 'Payment verified successfully', 'status' => 200];
-        });
+        $result = $settler->settle($reference, isset($verification['amount']) ? (int) $verification['amount'] : null);
 
         if (isset($result['error'])) {
             return response()->json(['message' => $result['error']], $result['status']);
@@ -445,7 +316,7 @@ class CollectionPaymentController extends Controller
                         Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$reference}, Channel={$channel}");
                         $payment->update(['status' => 'failed']);
                     } else {
-                        $this->verify($reference);
+                        app(CollectionPaymentSettler::class)->settle($reference, isset($verification['amount']) ? (int) $verification['amount'] : null);
                         $payment->refresh();
                     }
                 } elseif (in_array($paystackStatus, ['failed', 'abandoned', 'reversed'], true)) {
@@ -691,67 +562,13 @@ class CollectionPaymentController extends Controller
                         continue;
                     }
 
-                    DB::transaction(function () use ($p, $unpaidAssignments) {
-                        $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
+                    $settled = app(CollectionPaymentSettler::class)->settle($p->reference, isset($verification['amount']) ? (int) $verification['amount'] : null);
 
-                        if ($lockedPayment && $lockedPayment->status !== 'success') {
-                            $lockedPayment->update([
-                                'status' => 'success',
-                                'paid_at' => now(),
-                            ]);
-
-                            foreach ($unpaidAssignments as $assignment) {
-                                $lockedAssignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
-                                    ->where('id', $assignment->id)->lockForUpdate()->first();
-                                if ($lockedAssignment) {
-                                    $due = $lockedAssignment->amount_due - $lockedAssignment->amount_paid;
-                                    if ($due > 0) {
-                                        $childPayment = Payment::create([
-                                            'user_id' => $lockedPayment->user_id,
-                                            'estate_id' => $lockedPayment->estate_id,
-                                            'collection_assignment_id' => $lockedAssignment->id,
-                                            'amount' => $due,
-                                            'reference' => $lockedPayment->reference.'-'.$lockedAssignment->id,
-                                            'status' => 'success',
-                                            'paid_at' => now(),
-                                            'raw_payload' => ['bulk_parent_reference' => $lockedPayment->reference],
-                                        ]);
-
-                                        $lockedAssignment->increment('amount_paid', $due);
-                                        $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $due * 0.005;
-                                        $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
-                                        $lockedAssignment->update([
-                                            'status' => 'paid',
-                                            'paid_at' => now(),
-                                            'external_reference' => $lockedPayment->reference,
-                                        ]);
-
-                                        $lockedAssignment->loadMissing('collection.creator');
-                                        $creator = $lockedAssignment->collection ?? null ? $lockedAssignment->collection->creator : null;
-                                        if ($creator && $creator->hasRole('property_owner')) {
-                                            $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
-                                        } else {
-                                            $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
-                                                ->where('is_active', true)
-                                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-                                                ->pluck('user_id')
-                                                ->toArray();
-
-                                            $admins = User::whereIn('id', $adminIds)->get();
-
-                                            foreach ($admins as $admin) {
-                                                $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
-                                            }
-                                        }
-
-                                        if ($childPayment->user) {
-                                            $childPayment->user->notify(new CollectionPaymentSuccessfulNotification($childPayment, $lockedAssignment));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+                    if (isset($settled['error'])) {
+                        return response()->json([
+                            'message' => 'We received a payment for these bills that is less than expected. Please contact support so it can be reviewed.',
+                        ], 409);
+                    }
 
                     return response()->json([
                         'already_paid' => true,
@@ -792,6 +609,9 @@ class CollectionPaymentController extends Controller
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
         $amountKobo = (int) round($fees['total_amount'] * 100);
+
+        // Remember what we asked Paystack to collect, so settling can refuse a short payment.
+        $payment->update(['raw_payload' => array_merge($payment->raw_payload ?? [], ['expected_kobo' => $amountKobo])]);
 
         if ($amountKobo < 100) {
             return response()->json([

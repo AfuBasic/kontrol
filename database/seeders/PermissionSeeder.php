@@ -69,7 +69,6 @@ class PermissionSeeder extends Seeder
             'transactions.view_receipts' => 'View transaction receipts',
             'transactions.download_receipts' => 'Download transaction receipts',
             'transactions.record_offline_payment' => 'Record offline payments',
-            'transactions.refund' => 'Issue refunds',
             'transactions.adjust' => 'Create manual adjustments',
             'transactions.export' => 'Export transaction data',
             'transactions.audit' => 'View transaction audit history',

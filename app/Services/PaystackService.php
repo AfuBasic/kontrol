@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,9 +25,33 @@ class PaystackService
             'has_secret_key' => ! empty($secretKey),
         ]);
 
+        // Never wait forever on a gateway. Five seconds to connect and twenty to answer is generous for
+        // a weak mobile connection, and short enough that the person sees an error they can act on.
         $this->client = Http::baseUrl($baseUrl)
             ->withHeader('Authorization', "Bearer {$secretKey}")
+            ->connectTimeout(5)
+            ->timeout(20)
             ->asJson();
+    }
+
+    /**
+     * GET with a couple of quiet retries when the network drops or Paystack has a hiccup (5xx).
+     *
+     * Only reads go through here. Writes (initialize, charge, refund, subaccounts) are not retried:
+     * if the request reached Paystack and only the reply was lost, a second POST could repeat the action.
+     *
+     * @param  array<string, mixed>  $query
+     */
+    private function getWithRetry(string $url, array $query = []): Response
+    {
+        return $this->client
+            ->retry(
+                2,
+                500,
+                fn (\Throwable $e) => $e instanceof ConnectionException || ($e instanceof RequestException && $e->response->serverError()),
+                throw: false,
+            )
+            ->get($url, $query);
     }
 
     /**
@@ -107,7 +134,7 @@ class PaystackService
      */
     public function verifyPayment(string $reference): array
     {
-        $response = $this->client->get("/transaction/verify/{$reference}");
+        $response = $this->getWithRetry("/transaction/verify/{$reference}");
 
         if (! $response->successful()) {
             throw new \Exception('Failed to verify Paystack payment: '.$response->body());
@@ -212,11 +239,22 @@ class PaystackService
      */
     public function getBanks(): array
     {
-        return Cache::remember('paystack_banks_nigeria', 86400, function () {
-            $response = $this->client->get('/bank', ['country' => 'nigeria']);
+        $cached = Cache::get('paystack_banks_nigeria');
 
-            return $response->successful() ? $response->json('data') : [];
-        });
+        if (is_array($cached) && $cached !== []) {
+            return $cached;
+        }
+
+        $response = $this->getWithRetry('/bank', ['country' => 'nigeria']);
+        $banks = $response->successful() ? ($response->json('data') ?? []) : [];
+
+        // Remember a good list for a day, but never remember a failure: one network blip must not
+        // leave the bank picker empty until tomorrow.
+        if ($banks !== []) {
+            Cache::put('paystack_banks_nigeria', $banks, 86400);
+        }
+
+        return $banks;
     }
 
     /**
@@ -297,7 +335,7 @@ class PaystackService
         }
 
         try {
-            $response = $this->client->get('/bank/resolve', [
+            $response = $this->getWithRetry('/bank/resolve', [
                 'account_number' => $accountNumber,
                 'bank_code' => $bankCode,
             ]);

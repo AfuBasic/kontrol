@@ -14,6 +14,9 @@ class ProcessSOSAlert implements ShouldQueue
 {
     use Queueable;
 
+    /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
+    public int $timeout = 120;
+
     public int $tries = 3;
 
     public int $backoff = 30;
