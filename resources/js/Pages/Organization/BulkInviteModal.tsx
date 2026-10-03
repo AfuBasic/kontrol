@@ -52,6 +52,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        purpose: '',
         emails: [] as string[],
         valid_from: today,
         valid_until: defaultEnd,
@@ -200,6 +201,23 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-[#1a5dbf] focus:ring-2 focus:ring-[#1a5dbf]/20 focus:outline-none transition"
                                     />
                                     {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
+                                </div>
+
+                                {/* Event or reason: printed on every pass in the batch */}
+                                <div>
+                                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+                                        Event or reason <span className="normal-case font-normal">(optional)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={255}
+                                        placeholder="e.g. Estate AGM, Annual Dinner, Contractor onboarding"
+                                        value={data.purpose}
+                                        onChange={(e) => setData('purpose', e.target.value)}
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-[#1a5dbf] focus:ring-2 focus:ring-[#1a5dbf]/20 focus:outline-none transition"
+                                    />
+                                    <p className="mt-1.5 text-[11px] text-slate-400">Printed on every pass in this batch, so guards know what it is for.</p>
+                                    {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.purpose}</p>}
                                 </div>
 
                                 {/* Recipient Emails */}
@@ -361,6 +379,10 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                 <div className="flex justify-between px-4 py-3 text-[13px]">
                                     <span className="text-slate-500">Batch Name</span>
                                     <span className="font-semibold text-slate-900">{data.name || <span className="text-slate-400 italic">Not set</span>}</span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Event or reason</span>
+                                    <span className="font-semibold text-slate-900">{data.purpose || <span className="text-slate-400 italic">Not set</span>}</span>
                                 </div>
                                 <div className="flex justify-between px-4 py-3 text-[13px]">
                                     <span className="text-slate-500">Recipients</span>
