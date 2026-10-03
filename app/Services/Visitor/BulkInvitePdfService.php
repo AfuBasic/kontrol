@@ -93,7 +93,7 @@ class BulkInvitePdfService
             'maskedEmail' => MaskedEmail::mask($recipient->email),
             'role' => $bulkInvite->role,
             'batchLabel' => $batchLabel,
-            'entryMode' => $this->entryMode((string) $accessCode->type),
+            'entryMode' => $this->entryMode((string) $accessCode->type, (bool) $bulkInvite->single_entry),
             'passNumber' => $isBatch ? $position + 1 : null,
             'passTotal' => $isBatch ? $ids->count() : null,
             'issuedOn' => ($accessCode->created_at ?? now())->format('M d, Y'),
@@ -112,9 +112,9 @@ class BulkInvitePdfService
      *
      * @return array{label: string, hint: string}
      */
-    public function entryMode(string $type): array
+    public function entryMode(string $type, bool $singleEntry = false): array
     {
-        return $type === 'single_use'
+        return $singleEntry || $type === 'single_use'
             ? ['label' => 'Single entry', 'hint' => 'Works for one visit']
             : ['label' => 'Multiple entry', 'hint' => 'Works for repeat visits until it expires'];
     }
