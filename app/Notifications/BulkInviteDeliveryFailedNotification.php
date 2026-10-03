@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\OrganizationBulkInvite;
+use App\Support\BulkInviteDeliveryFailure;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -31,13 +32,12 @@ class BulkInviteDeliveryFailedNotification extends Notification implements Shoul
      */
     public function via(object $notifiable): array
     {
-        // The failure email is for the Kontrol team only. The batch creator is told in-app and by push,
-        // never by email (the email carries internal error details they cannot act on).
+        // The Kontrol team gets the technical email; the group creator gets a friendly one plus in-app and push.
         if ($notifiable instanceof AnonymousNotifiable) {
             return ['mail'];
         }
 
-        $channels = ['database'];
+        $channels = ['database', 'mail'];
 
         if (method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
@@ -51,6 +51,43 @@ class BulkInviteDeliveryFailedNotification extends Notification implements Shoul
     }
 
     public function toMail(object $notifiable): MailMessage
+    {
+        return $notifiable instanceof AnonymousNotifiable
+            ? $this->supportMail()
+            : $this->creatorMail($notifiable);
+    }
+
+    /** Plain-language version for the person who created the group: what happened and what to do. */
+    private function creatorMail(object $notifiable): MailMessage
+    {
+        $name = $this->bulkInvite->name ?: "Batch #{$this->bulkInvite->id}";
+        $count = count($this->failedRecipients);
+        $first = trim(explode(' ', (string) ($notifiable->name ?? ''))[0]);
+
+        $mail = (new MailMessage)
+            ->subject($count === 1 ? "A pass in '{$name}' wasn't delivered" : "{$count} passes in '{$name}' weren't delivered")
+            ->greeting($first !== '' ? "Hi {$first}," : 'Hi,')
+            ->line($count === 1
+                ? "We couldn't deliver 1 pass in your group '{$name}'. Here's what happened:"
+                : "We couldn't deliver {$count} passes in your group '{$name}'. Here's what happened:");
+
+        foreach (array_slice($this->failedRecipients, 0, 10) as $recipient) {
+            $reason = BulkInviteDeliveryFailure::friendly($recipient['error']) ?? BulkInviteDeliveryFailure::GENERIC;
+            $mail->line("• {$recipient['email']}: {$reason}");
+        }
+
+        if ($count > 10) {
+            $mail->line('...and '.($count - 10).' more.');
+        }
+
+        return $mail
+            ->line('The passes themselves are ready, so nothing needs to be recreated. You can resend them from your group in one tap.')
+            ->action('Review & resend', url("/org/bulk-invites/{$this->bulkInvite->id}"))
+            ->line('If this keeps happening, just reply to this email or contact support@usekontrol.com and we will sort it out.');
+    }
+
+    /** Technical version for Kontrol support: raw errors and the context needed to investigate. */
+    private function supportMail(): MailMessage
     {
         $name = $this->bulkInvite->name ?: "Batch #{$this->bulkInvite->id}";
         $count = count($this->failedRecipients);
@@ -96,7 +133,10 @@ class BulkInviteDeliveryFailedNotification extends Notification implements Shoul
             'title' => 'Pass Delivery Failed',
             'message' => "{$count} passes failed to deliver for '{$name}'.",
             'failed_count' => $count,
-            'failed_recipients' => array_slice($this->failedRecipients, 0, 5),
+            'failed_recipients' => array_map(
+                fn (array $recipient) => ['email' => $recipient['email'], 'error' => BulkInviteDeliveryFailure::friendly($recipient['error'])],
+                array_slice($this->failedRecipients, 0, 5),
+            ),
             'link' => "/org/bulk-invites/{$this->bulkInvite->id}",
         ];
     }
