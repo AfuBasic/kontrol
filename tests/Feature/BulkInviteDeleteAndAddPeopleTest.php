@@ -239,3 +239,69 @@ test('the group page says whether it sends on its own', function () {
     expect($props($held)['send_immediately'])->toBeFalse()
         ->and($props($this->group)['send_immediately'])->toBeTrue();
 });
+
+// ---------- Live delivery progress ----------
+
+test('the progress feed counts only the people currently in the group', function () {
+    $removed = $this->group->recipients()->where('email', 'two@example.com')->firstOrFail();
+    $this->actingAs($this->orgAdmin)->delete(route('org.bulk-invites.recipients.destroy', [$this->group, $removed]));
+
+    $json = $this->actingAs($this->orgAdmin)->getJson(route('org.bulk-invites.delivery-status', $this->group))->assertOk()->json();
+
+    expect($json['summary']['total'])->toBe(1)
+        ->and(collect($json['recipients'])->pluck('email')->all())->toBe(['one@example.com']);
+});
+
+test('the progress feed reports each person\'s delivery and when it happened', function () {
+    $one = $this->group->recipients()->where('email', 'one@example.com')->firstOrFail();
+    $one->update(['delivery_status' => 'sent', 'last_delivered_at' => now()]);
+    $this->group->recipients()->where('email', 'two@example.com')->update(['delivery_status' => 'queued']);
+
+    $json = $this->actingAs($this->orgAdmin)->getJson(route('org.bulk-invites.delivery-status', $this->group))->json();
+    $byEmail = collect($json['recipients'])->keyBy('email');
+
+    expect($json['summary'])->toMatchArray(['total' => 2, 'sent' => 1, 'queued' => 1, 'pending' => 0, 'failed' => 0])
+        ->and($byEmail['one@example.com']['delivery_status'])->toBe('sent')
+        ->and($byEmail['one@example.com']['delivered_label'])->not->toBe('')
+        ->and($byEmail['two@example.com']['delivery_status'])->toBe('queued');
+});
+
+test('another organization cannot read a group\'s delivery progress', function () {
+    $otherOrg = EstateOrganization::factory()->create(['estate_id' => $this->estate->id, 'is_active' => true]);
+    $stranger = User::factory()->create();
+    OrganizationMembership::create(['user_id' => $stranger->id, 'organization_id' => $otherOrg->id, 'role' => 'admin', 'is_active' => true]);
+
+    $this->actingAs($stranger)->getJson(route('org.bulk-invites.delivery-status', $this->group))->assertNotFound();
+});
+
+// ---------- Groups list: created date and whether each group has been sent ----------
+
+test('the groups list says when each group was created', function () {
+    $this->group->forceFill(['created_at' => now()->setDate(now()->year, 3, 5)])->saveQuietly();
+
+    $card = collect($this->actingAs($this->orgAdmin)->get(route('org.bulk-invites.index'))->inertiaPage()['props']['bulkInvites']['data'])->firstWhere('id', $this->group->id);
+
+    expect($card['created_on_label'])->toBe('5 Mar');
+});
+
+test('the groups list tells apart groups that are waiting, sending, sent and failed', function () {
+    $make = fn (array $statuses) => tap(app(CreateBulkVisitorInviteAction::class)->execute(
+        organization: $this->org,
+        user: $this->orgAdmin,
+        emails: array_map(fn ($i) => 'u'.$i.uniqid().'@example.com', array_keys($statuses)),
+    ), function ($group) use ($statuses) {
+        $group->recipients()->oldest('id')->get()->values()->each(fn ($r, $i) => $r->update(['delivery_status' => $statuses[$i]]));
+    });
+
+    $waiting = $make(['pending', 'pending', 'pending']);
+    $sending = $make(['sent', 'queued', 'queued']);
+    $sent = $make(['sent', 'sent']);
+    $failed = $make(['sent', 'failed']);
+
+    $cards = collect($this->actingAs($this->orgAdmin)->get(route('org.bulk-invites.index'))->inertiaPage()['props']['bulkInvites']['data'])->keyBy('id');
+
+    expect($cards[$waiting->id]['delivery'])->toMatchArray(['total' => 3, 'sent' => 0, 'pending' => 3, 'sending' => 0, 'failed' => 0])
+        ->and($cards[$sending->id]['delivery'])->toMatchArray(['total' => 3, 'sent' => 1, 'pending' => 0, 'sending' => 2, 'failed' => 0])
+        ->and($cards[$sent->id]['delivery'])->toMatchArray(['total' => 2, 'sent' => 2, 'pending' => 0, 'sending' => 0, 'failed' => 0])
+        ->and($cards[$failed->id]['delivery'])->toMatchArray(['total' => 2, 'sent' => 1, 'pending' => 0, 'sending' => 0, 'failed' => 1]);
+});
