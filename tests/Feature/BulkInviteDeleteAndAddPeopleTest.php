@@ -305,3 +305,43 @@ test('the groups list tells apart groups that are waiting, sending, sent and fai
         ->and($cards[$sent->id]['delivery'])->toMatchArray(['total' => 2, 'sent' => 2, 'pending' => 0, 'sending' => 0, 'failed' => 0])
         ->and($cards[$failed->id]['delivery'])->toMatchArray(['total' => 2, 'sent' => 1, 'pending' => 0, 'sending' => 0, 'failed' => 1]);
 });
+
+// ---------- "Event or reason" on a new group ----------
+
+test('an event or reason given when creating a group is kept and applied to every pass', function () {
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.store'), [
+        'name' => 'AGM guests',
+        'purpose' => 'Estate AGM',
+        'emails' => ['guest1@example.com', 'guest2@example.com'],
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(3)->toDateString(),
+    ])->assertSessionHasNoErrors();
+
+    $group = OrganizationBulkInvite::where('name', 'AGM guests')->firstOrFail();
+
+    expect($group->purpose)->toBe('Estate AGM')
+        ->and(AccessCode::whereIn('bulk_invite_recipient_id', $group->recipients()->pluck('id'))->pluck('purpose')->unique()->all())->toBe(['Estate AGM']);
+});
+
+test('leaving the event or reason blank keeps the old generated label, which the pass treats as blank', function () {
+    foreach ([null, '', '   '] as $i => $blank) {
+        $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.store'), [
+            'name' => "Blank {$i}",
+            'purpose' => $blank,
+            'emails' => ["blank{$i}@example.com"],
+            'valid_from' => now()->toDateString(),
+            'valid_until' => now()->addDays(3)->toDateString(),
+        ])->assertSessionHasNoErrors();
+
+        expect(OrganizationBulkInvite::where('name', "Blank {$i}")->value('purpose'))->toBe('Metro College - Visitor Pass');
+    }
+});
+
+test('an overlong event or reason is refused', function () {
+    $this->actingAs($this->orgAdmin)->post(route('org.bulk-invites.store'), [
+        'purpose' => str_repeat('x', 256),
+        'emails' => ['long@example.com'],
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(3)->toDateString(),
+    ])->assertSessionHasErrors('purpose');
+});
