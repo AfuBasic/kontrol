@@ -19,6 +19,7 @@ import {
     Home,
     Eye,
     MapPin,
+    SlidersHorizontal,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -130,6 +131,7 @@ export default function Residents({
     const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
     const [copied, setCopied] = useState(false);
     const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+    const [filtersOpen, setFiltersOpen] = useState(Boolean(filters.status || filters.role || filters.property || filters.sort));
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -178,6 +180,7 @@ export default function Residents({
     };
 
     const hasActiveFilters = Boolean(search || status || role || property || sort);
+    const activeFilterCount = [status, role, property, sort].filter(Boolean).length;
 
     const fallbackCopy = (text: string) => {
         const textArea = document.createElement('textarea');
@@ -429,20 +432,36 @@ export default function Residents({
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                     <div className="flex flex-col gap-3">
                         {/* Search Input */}
-                        <div className="relative w-full">
-                            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-500" />
-                            <input
-                                type="search"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search residents by name, email, phone, or unit..."
-                                aria-label="Search residents"
-                                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3.5 pr-4 pl-12 text-sm font-medium text-slate-900 shadow-xs placeholder:text-slate-500 focus:border-slate-800 focus:bg-white focus:ring-2 focus:ring-slate-800/10 focus:outline-hidden"
-                            />
+                        <div className="flex items-center gap-2">
+                            <div className="relative min-w-0 flex-1">
+                                <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                <input
+                                    type="search"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search residents"
+                                    aria-label="Search residents by name, email, phone or unit"
+                                    className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3.5 pr-4 pl-12 text-sm font-medium text-slate-900 shadow-xs placeholder:text-slate-500 focus:border-slate-800 focus:bg-white focus:ring-2 focus:ring-slate-800/10 focus:outline-hidden"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFiltersOpen((open) => !open)}
+                                aria-expanded={filtersOpen}
+                                className="relative inline-flex h-12 shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 shadow-xs transition active:scale-95 lg:hidden"
+                            >
+                                <SlidersHorizontal className="h-4 w-4" />
+                                Filters
+                                {activeFilterCount > 0 && (
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-900 px-1 text-[11px] font-black text-white">
+                                        {activeFilterCount}
+                                    </span>
+                                )}
+                            </button>
                         </div>
 
                         {/* Quick filters */}
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className={`${filtersOpen ? 'flex' : 'hidden'} flex-col gap-3 lg:flex lg:flex-row lg:items-start lg:justify-between`}>
                             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6">
                                 <FilterChips
                                     label="Status"
