@@ -1,7 +1,7 @@
-import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArchiveBoxIcon, EllipsisHorizontalIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, Building2, Loader2 } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { type FormEvent, useMemo, useState } from 'react';
 import Modal from '@/Components/Modal';
 import FilterBar, { FilterChips } from '@/Components/UI/FilterBar';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -29,6 +29,7 @@ export default function ZonesIndex({ zones }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingZone, setEditingZone] = useState<Zone | null>(null);
     const [archivingZone, setArchivingZone] = useState<Zone | null>(null);
+    const [menuZoneId, setMenuZoneId] = useState<number | null>(null);
 
     const createForm = useForm({
         name: '',
@@ -97,6 +98,14 @@ export default function ZonesIndex({ zones }: Props) {
     });
 
     const totalActive = zones.filter((z) => z.is_active).length;
+
+    const peopleIn = (z: Zone) => (z.residents_count ?? 0) + (z.property_owners_count ?? 0);
+    const totalPeople = zones.reduce((sum, z) => sum + peopleIn(z), 0);
+    const usedZones = zones.filter((z) => peopleIn(z) > 0).length;
+    const unusedZones = zones.length - usedZones;
+
+    // Busiest zones first; unused zones sink to the bottom.
+    const rankedZones = useMemo(() => [...filteredZones].sort((a, b) => peopleIn(b) - peopleIn(a)), [filteredZones]);
 
     return (
         <>
@@ -168,72 +177,122 @@ export default function ZonesIndex({ zones }: Props) {
 
                         {/* Zone Grid or Search Empty State */}
                         {filteredZones.length > 0 ? (
-                            <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
-                                {filteredZones.map((zone) => {
-                                    const residents = zone.residents_count ?? 0;
-                                    const landlords = zone.property_owners_count ?? 0;
+                            <div className="space-y-3">
+                                <p className="px-1 text-xs text-slate-500">
+                                    <span className="font-bold text-slate-900">{totalPeople}</span> people across{' '}
+                                    <span className="font-bold text-slate-900">{usedZones}</span> of {zones.length} zones
+                                    {unusedZones > 0 && ` · ${unusedZones} unused`}
+                                </p>
 
-                                    return (
-                                        <li key={zone.id} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                                                <Building2 className="h-4.5 w-4.5" />
-                                            </div>
+                                <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
+                                    {rankedZones.map((zone) => {
+                                        const residents = zone.residents_count ?? 0;
+                                        const landlords = zone.property_owners_count ?? 0;
+                                        const people = residents + landlords;
+                                        const share = totalPeople > 0 ? (people / totalPeople) * 100 : 0;
 
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="truncate text-sm font-bold text-slate-900">{zone.name}</h3>
-                                                    {!zone.is_active && (
-                                                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
-                                                            Inactive
-                                                        </span>
+                                        return (
+                                            <li key={zone.id} className="relative flex items-center gap-3 px-4 py-4 sm:gap-5 sm:px-5">
+                                                <div className="min-w-0 flex-1 sm:w-48 sm:flex-none">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="truncate text-sm font-bold text-slate-900">{zone.name}</h3>
+                                                        {!zone.is_active && (
+                                                            <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                                                                Inactive
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {zone.description && <p className="mt-0.5 truncate text-xs text-slate-500">{zone.description}</p>}
+                                                </div>
+
+                                                <div className="hidden min-w-0 flex-1 sm:block">
+                                                    {people === 0 ? (
+                                                        <span className="text-xs text-slate-400">Unused · nobody assigned yet</span>
+                                                    ) : (
+                                                        <div
+                                                            className="h-2 overflow-hidden rounded-full bg-slate-100"
+                                                            role="img"
+                                                            aria-label={`${Math.round(share)}% of people`}
+                                                        >
+                                                            <div
+                                                                className="h-full rounded-full bg-slate-800"
+                                                                style={{ width: `${Math.max(share, 2)}%` }}
+                                                            />
+                                                        </div>
                                                     )}
                                                 </div>
-                                                {zone.description && <p className="mt-0.5 truncate text-xs text-slate-500">{zone.description}</p>}
-                                            </div>
 
-                                            <div className="hidden shrink-0 items-center gap-4 text-xs sm:flex">
-                                                {residents + landlords === 0 ? (
-                                                    <span className="text-slate-400">Nobody assigned yet</span>
-                                                ) : (
-                                                    <>
-                                                        <Link
-                                                            href={`/admin/residents?zone=${zone.id}`}
-                                                            title={`View residents in ${zone.name}`}
-                                                            className="text-slate-600 hover:text-slate-900"
-                                                        >
-                                                            <span className="font-bold text-slate-900">{residents}</span> residents
-                                                        </Link>
-                                                        <Link
-                                                            href={`/admin/property-owners?zone=${zone.id}`}
-                                                            title={`View landlords in ${zone.name}`}
-                                                            className="text-slate-600 hover:text-slate-900"
-                                                        >
-                                                            <span className="font-bold text-slate-900">{landlords}</span> landlords
-                                                        </Link>
-                                                    </>
-                                                )}
-                                            </div>
+                                                <div className="shrink-0 text-right text-xs">
+                                                    {people === 0 ? (
+                                                        <span className="text-slate-400 sm:hidden">Unused</span>
+                                                    ) : (
+                                                        <>
+                                                            <p className="font-bold text-slate-900">{Math.round(share)}%</p>
+                                                            <p className="mt-0.5 text-slate-500">
+                                                                <Link
+                                                                    href={`/admin/residents?zone=${zone.id}`}
+                                                                    className="hover:text-slate-900 hover:underline"
+                                                                >
+                                                                    {residents} residents
+                                                                </Link>
+                                                                {' · '}
+                                                                <Link
+                                                                    href={`/admin/property-owners?zone=${zone.id}`}
+                                                                    className="hover:text-slate-900 hover:underline"
+                                                                >
+                                                                    {landlords} landlords
+                                                                </Link>
+                                                            </p>
+                                                        </>
+                                                    )}
+                                                </div>
 
-                                            <div className="flex shrink-0 items-center gap-1">
-                                                <button
-                                                    onClick={() => startEditing(zone)}
-                                                    aria-label={`Edit ${zone.name}`}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                                >
-                                                    <PencilSquareIcon className="h-4.5 w-4.5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setArchivingZone(zone)}
-                                                    aria-label={`Archive ${zone.name}`}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                                                >
-                                                    <ArchiveBoxIcon className="h-4.5 w-4.5" />
-                                                </button>
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                                                <div className="relative shrink-0">
+                                                    <button
+                                                        onClick={() => setMenuZoneId(menuZoneId === zone.id ? null : zone.id)}
+                                                        aria-label={`Actions for ${zone.name}`}
+                                                        aria-expanded={menuZoneId === zone.id}
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                                    >
+                                                        <EllipsisHorizontalIcon className="h-5 w-5" />
+                                                    </button>
+                                                    {menuZoneId === zone.id && (
+                                                        <>
+                                                            <div
+                                                                className="fixed inset-0 z-20"
+                                                                onClick={() => setMenuZoneId(null)}
+                                                                aria-hidden="true"
+                                                            />
+                                                            <div className="absolute top-full right-0 z-30 mt-1 w-40 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setMenuZoneId(null);
+                                                                        startEditing(zone);
+                                                                    }}
+                                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                >
+                                                                    <PencilSquareIcon className="h-4 w-4 text-slate-400" />
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setMenuZoneId(null);
+                                                                        setArchivingZone(zone);
+                                                                    }}
+                                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                >
+                                                                    <ArchiveBoxIcon className="h-4 w-4 text-rose-400" />
+                                                                    Archive
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
                         ) : (
                             <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs">
                                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
