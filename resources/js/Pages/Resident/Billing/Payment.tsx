@@ -181,15 +181,15 @@ export default function PaymentPage({ subscription }: Props) {
                     <motion.div
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-5 flex items-start justify-between gap-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/70 p-4"
+                        className="mb-5 flex items-start justify-between gap-3 rounded-2xl border border-primary-200/80 bg-primary-50/70 p-4"
                     >
                         <div className="flex gap-3">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700">
                                 <SparklesIcon className="h-4 w-4" strokeWidth={2.2} />
                             </span>
                             <div>
-                                <p className="text-sm font-black text-indigo-950">Turn on seamless automatic renewal</p>
-                                <p className="mt-0.5 text-xs leading-5 text-indigo-800/80">
+                                <p className="text-sm font-black text-primary-950">Turn on seamless automatic renewal</p>
+                                <p className="mt-0.5 text-xs leading-5 text-primary-800/80">
                                     You have a saved {cardBrand} card ending in {cardLast4}. Turn on auto-renewal so your resident access continues
                                     uninterrupted on {renewalDateLabel}.
                                 </p>
@@ -198,7 +198,7 @@ export default function PaymentPage({ subscription }: Props) {
                                         type="button"
                                         onClick={() => handleToggleAutoRenew(true)}
                                         disabled={isTogglingAutoRenew}
-                                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-black text-white shadow-2xs transition hover:bg-indigo-700 disabled:opacity-50"
+                                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-3.5 text-xs font-black text-white shadow-2xs transition hover:bg-primary-700 disabled:opacity-50"
                                     >
                                         {isTogglingAutoRenew && <Loader2 className="h-3 w-3 animate-spin" />}
                                         Turn on auto-renewal
@@ -287,7 +287,7 @@ export default function PaymentPage({ subscription }: Props) {
                         <div className="flex items-start gap-4">
                             <span
                                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 ${
-                                    autoRenewEnabled ? 'bg-indigo-50 text-indigo-600 ring-indigo-100' : 'bg-slate-50 text-slate-500 ring-slate-200'
+                                    autoRenewEnabled ? 'bg-primary-50 text-primary-600 ring-primary-100' : 'bg-slate-50 text-slate-500 ring-slate-200'
                                 }`}
                             >
                                 <ArrowPathIcon className="h-6 w-6" strokeWidth={2} />
@@ -298,7 +298,7 @@ export default function PaymentPage({ subscription }: Props) {
                                     <span
                                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black ${
                                             autoRenewEnabled
-                                                ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20'
+                                                ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-600/20'
                                                 : 'bg-slate-100 text-slate-600'
                                         }`}
                                     >
