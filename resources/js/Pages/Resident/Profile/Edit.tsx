@@ -1,21 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import {
-    User,
-    Shield,
-    ChevronRight,
-    Zap,
-    Users,
-    UserCircle,
-    Crown,
-    X,
-    Loader2,
-    Plus,
-    Wallet,
-    HelpCircle,
-    CreditCard,
-    ExternalLink,
-} from 'lucide-react';
+import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle, CreditCard } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
@@ -96,13 +81,9 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
 
             <div className="flex flex-col gap-8 pb-32">
                 {/* 1. PREMIUM PROFILE HEADER */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="relative overflow-hidden rounded-[40px] bg-slate-900 p-8 text-white shadow-2xl"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="brand-card !rounded-[40px] p-8 text-white">
                     {/* Background Accents */}
-                    <div className="absolute top-0 right-0 h-48 w-48 translate-x-12 -translate-y-12 rounded-full bg-indigo-500/20 blur-[80px]" />
+                    <div className="absolute top-0 right-0 h-48 w-48 translate-x-12 -translate-y-12 rounded-full bg-primary-500/20 blur-[80px]" />
                     <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-12 translate-y-12 rounded-full bg-emerald-500/10 blur-[80px]" />
 
                     <div className="relative z-10 flex flex-col items-center text-center">
@@ -120,7 +101,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                         <div className="mt-6">
                             <h1 className="text-2xl font-black tracking-tight">{auth.user?.name}</h1>
                             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black tracking-[0.2em] text-indigo-300 uppercase ring-1 ring-white/10">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black tracking-[0.2em] text-primary-300 uppercase ring-1 ring-white/10">
                                     <Shield className="h-3 w-3" />
                                     Resident
                                 </span>
@@ -153,19 +134,19 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                     <button
                         type="button"
                         onClick={() => openExternalBilling()}
-                        className="group relative w-full overflow-hidden rounded-3xl bg-[#0B101E] p-6 text-left shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10 active:scale-[0.99]"
+                        className="brand-card group w-full !rounded-3xl p-6 text-left transition-all duration-300 hover:shadow-2xl hover:ring-white/10 active:scale-[0.99]"
                     >
                         {/* Subtle Top Edge Highlight */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
 
                         {/* Soft Deep Glow */}
-                        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/10 blur-[60px]" />
+                        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary-500/10 blur-[60px]" />
 
                         <div className="relative z-10 flex flex-col gap-8">
                             {/* Header */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5 text-slate-300">
-                                    <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
+                                    <Crown className="h-4 w-4 text-primary-400" strokeWidth={2.5} />
                                     <h2 className="text-[14px] font-medium tracking-wide">{subscription.name || 'Estate Subscription'}</h2>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -338,7 +319,7 @@ function SettingsRow({
     const content = (
         <>
             <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-primary-50 group-hover:text-primary-600">
                     {icon}
                 </div>
                 <div>
@@ -397,7 +378,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                     />
                     {errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{errors.name}</p>}
                 </div>
@@ -421,7 +402,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                                 value={data.unit_number}
                                 onChange={(e) => setData('unit_number', e.target.value)}
                                 placeholder="e.g. Block A, Flat 5"
-                                className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             />
                         </div>
 
@@ -432,7 +413,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                                 value={data.address}
                                 onChange={(e) => setData('address', e.target.value)}
                                 placeholder="e.g. Lekki Gardens Estate, Lekki, Lagos"
-                                className="w-full resize-none rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="w-full resize-none rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             />
                         </div>
                     </>
@@ -469,15 +450,15 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-[32px] bg-indigo-50/50 p-6 ring-1 ring-indigo-100/50 backdrop-blur-sm"
+                className="rounded-[32px] bg-primary-50/50 p-6 ring-1 ring-primary-100/50 backdrop-blur-sm"
             >
                 <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-primary-600 shadow-sm ring-1 ring-primary-100">
                         <Shield className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[11px] font-black tracking-widest text-indigo-900 uppercase">Safety & Privacy Notice</p>
-                        <p className="text-xs leading-relaxed font-bold text-indigo-600/70">
+                        <p className="text-[11px] font-black tracking-widest text-primary-900 uppercase">Safety & Privacy Notice</p>
+                        <p className="text-xs leading-relaxed font-bold text-primary-600/70">
                             By adding emergency contacts, you acknowledge and agree that their names and phone numbers will be shared with the
                             estate's security personnel and administrators during an active SOS event to facilitate a rapid response.
                         </p>
@@ -497,7 +478,7 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                 {!isLimitReached && (
                     <button
                         onClick={onAddClick}
-                        className="flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-[10px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95"
+                        className="flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-[10px] font-black tracking-widest text-primary-600 uppercase transition-all active:scale-95"
                     >
                         <Plus className="h-3 w-3" />
                         Add New
@@ -535,10 +516,10 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                 key={contact.id}
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="group flex items-center justify-between rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-indigo-100"
+                                className="group flex items-center justify-between rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-primary-100"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-indigo-50 text-indigo-600 shadow-inner transition-colors group-hover:bg-indigo-100">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-primary-50 text-primary-600 shadow-inner transition-colors group-hover:bg-primary-100">
                                         <User className="h-7 w-7" />
                                     </div>
                                     <div>
@@ -546,7 +527,7 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                         <div className="mt-1 flex items-center gap-2">
                                             <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">{contact.phone}</p>
                                             <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                            <p className="text-[10px] font-bold tracking-wider text-indigo-500 uppercase">
+                                            <p className="text-[10px] font-bold tracking-wider text-primary-500 uppercase">
                                                 {contact.relationship || 'Contact'}
                                             </p>
                                         </div>
@@ -625,7 +606,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         required
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                     />
                 </div>
                 <div className="group relative">
@@ -638,7 +619,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         required
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                     />
                 </div>
                 <div className="group relative">
@@ -648,7 +629,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         placeholder="e.g. Spouse, Brother"
                         value={data.relationship || ''}
                         onChange={(e) => setData('relationship', e.target.value)}
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                     />
                 </div>
             </div>
