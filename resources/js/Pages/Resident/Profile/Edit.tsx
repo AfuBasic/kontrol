@@ -24,7 +24,7 @@ interface Props {
     };
     completeness?: {
         total: number;
-        missing: Array<'name' | 'address'>;
+        missing: Array<'name' | 'unit' | 'address'>;
     };
     stats: {
         active_codes_count: number;
@@ -113,7 +113,7 @@ export default function Edit({ telegram, profile, completeness, stats, emergency
                             {completeness && completeness.missing.length > 0 && (
                                 <p className="mt-4 text-xs font-medium text-blue-200/80">
                                     {completeness.total - completeness.missing.length} of {completeness.total} details added. Add your{' '}
-                                    {completeness.missing.join(' and ')} under Profile Information.
+                                    {completeness.missing.map((m) => (m === 'unit' ? 'unit number' : m)).join(', ')} under Profile Information.
                                 </p>
                             )}
                             {isHouseholdMember && parentResidentName && (
