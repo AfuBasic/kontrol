@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Cache;
  * @property int $access_code_grace_period_minutes
  * @property int|null $access_code_daily_limit_per_resident
  * @property bool $access_code_require_confirmation
+ * @property bool $zone_locked_passes
  * @property string $charge_type
  * @property array<array-key, mixed>|null $contacts
  * @property CarbonImmutable|null $created_at
@@ -62,6 +63,7 @@ class EstateSettings extends Model
         'visitor_checkout_enabled',
         'quick_entry_enabled',
         'entry_point_checkout_enforced',
+        'zone_locked_passes',
         'entry_points',
         'charge_type',
         'contacts',
@@ -101,6 +103,7 @@ class EstateSettings extends Model
             'visitor_checkout_enabled' => 'boolean',
             'quick_entry_enabled' => 'boolean',
             'entry_point_checkout_enforced' => 'boolean',
+            'zone_locked_passes' => 'boolean',
             'entry_points' => 'array',
             'require_vehicle_information' => 'boolean',
             'allow_residents_to_extend_visitor_passes' => 'boolean',
