@@ -303,7 +303,7 @@ export default function Show({
                             </div>
 
                             {/* Recent Payments Card */}
-                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 ring-1 ring-indigo-500">
+                            <div className="brand-card !rounded-[32px] p-6">
                                 <div className="relative">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-black tracking-widest text-indigo-200 uppercase">Total Collected</h3>
@@ -542,7 +542,7 @@ export default function Show({
                     {activeTab === 'collections' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
                             {/* FINANCIAL SUMMARY HERO */}
-                            <div className="relative overflow-hidden rounded-[24px] bg-slate-950 p-8 shadow-xl">
+                            <div className="brand-card !rounded-[24px] p-8">
                                 {/* Background elements */}
                                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
                                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
