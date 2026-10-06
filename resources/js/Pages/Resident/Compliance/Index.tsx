@@ -168,7 +168,7 @@ export default function ResidentComplianceIndex({ violations, activeRestrictions
                                 <div className="ml-2 space-y-3 border-l-2 border-slate-200 pl-4">
                                     {violation.timeline?.map((event) => (
                                         <div key={event.id} className="relative">
-                                            <div className="absolute top-1 -left-[21px] h-2.5 w-2.5 rounded-full bg-indigo-600"></div>
+                                            <div className="absolute top-1 -left-[21px] h-2.5 w-2.5 rounded-full bg-primary-600"></div>
                                             <div className="text-sm font-semibold text-slate-900">{event.title}</div>
                                             {event.description && <div className="mt-0.5 text-xs text-slate-600">{event.description}</div>}
                                             <div className="mt-1 text-[10px] text-slate-400">{new Date(event.created_at).toLocaleString()}</div>
