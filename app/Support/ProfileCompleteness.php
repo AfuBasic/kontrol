@@ -8,18 +8,16 @@ use App\Models\UserProfile;
 /**
  * What a resident still has to fill in, and whether it is time to remind them.
  *
- * Complete means: a name, and either a unit number or an address (that is what guards read at the gate).
- * The reminder is deliberately gentle: dismissing it hides it for a week, and after the third dismissal
- * it stops appearing on the dashboard for good. The profile page and the pass form still show the gap.
+ * Complete means: a name, a unit number and an address (that is what guards read at the gate).
+ * The reminder is deliberately gentle: dismissing it hides it for a week, but it comes back for as long
+ * as anything is still missing.
  */
 final class ProfileCompleteness
 {
     public const SNOOZE_DAYS = 7;
 
-    public const MAX_DISMISSALS = 3;
-
     /**
-     * @return array<int, 'name'|'address'>
+     * @return array<int, 'name'|'unit'|'address'>
      */
     public static function missing(User $user): array
     {
@@ -32,7 +30,11 @@ final class ProfileCompleteness
         }
 
         $profile = $user->profile;
-        if (blank($profile?->unit_number) && blank($profile?->address)) {
+        if (blank($profile?->unit_number)) {
+            $missing[] = 'unit';
+        }
+
+        if (blank($profile?->address)) {
             $missing[] = 'address';
         }
 
@@ -62,7 +64,7 @@ final class ProfileCompleteness
     }
 
     /**
-     * Hide the dashboard reminder for a week; after the third time, for good.
+     * Hide the dashboard reminder for a week.
      */
     public static function dismiss(User $user): void
     {
@@ -75,7 +77,7 @@ final class ProfileCompleteness
 
         $metadata['profile_nudge'] = [
             'dismissed_count' => $count,
-            'snoozed_until' => $count >= self::MAX_DISMISSALS ? null : now()->addDays(self::SNOOZE_DAYS)->toIso8601String(),
+            'snoozed_until' => now()->addDays(self::SNOOZE_DAYS)->toIso8601String(),
         ];
 
         $profile->metadata = $metadata;
@@ -87,10 +89,6 @@ final class ProfileCompleteness
     private static function isQuiet(User $user): bool
     {
         $state = (array) (($user->profile?->metadata ?? [])['profile_nudge'] ?? []);
-
-        if ((int) ($state['dismissed_count'] ?? 0) >= self::MAX_DISMISSALS) {
-            return true;
-        }
 
         $until = $state['snoozed_until'] ?? null;
 
