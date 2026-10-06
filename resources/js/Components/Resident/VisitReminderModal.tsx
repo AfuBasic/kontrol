@@ -126,7 +126,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                     {/* Header */}
                     <div className="flex items-start justify-between pt-3 sm:pt-0">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-4 ring-indigo-50/50">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 ring-4 ring-primary-50/50">
                                 <Bell className="h-5 w-5" />
                             </div>
                             <div>
@@ -167,14 +167,14 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                         }}
                                         className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99] ${
                                             isSelected
-                                                ? 'border-indigo-600 bg-indigo-50/70 text-indigo-950 shadow-sm'
+                                                ? 'border-primary-600 bg-primary-50/70 text-primary-950 shadow-sm'
                                                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div
                                                 className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
-                                                    isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'
+                                                    isSelected ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-500'
                                                 }`}
                                             >
                                                 <Clock className="h-4 w-4" />
@@ -183,7 +183,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                         </div>
                                         <div
                                             className={`flex h-5 w-5 items-center justify-center rounded-full border transition ${
-                                                isSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                                isSelected ? 'border-primary-600 bg-primary-600 text-white' : 'border-slate-300 bg-white'
                                             }`}
                                         >
                                             {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -198,14 +198,14 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                 onClick={() => setIsCustomSelected(true)}
                                 className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99] ${
                                     isCustomSelected
-                                        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-950 shadow-sm'
+                                        ? 'border-primary-600 bg-primary-50/70 text-primary-950 shadow-sm'
                                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                                 }`}
                             >
                                 <div className="flex items-center gap-3">
                                     <div
                                         className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
-                                            isCustomSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'
+                                            isCustomSelected ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-500'
                                         }`}
                                     >
                                         <Pencil className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                 </div>
                                 <div
                                     className={`flex h-5 w-5 items-center justify-center rounded-full border transition ${
-                                        isCustomSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+                                        isCustomSelected ? 'border-primary-600 bg-primary-600 text-white' : 'border-slate-300 bg-white'
                                     }`}
                                 >
                                     {isCustomSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -232,7 +232,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="mt-1 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+                                        <div className="mt-1 space-y-3 rounded-2xl border border-primary-100 bg-primary-50/60 p-4">
                                             {/* Stepper row */}
                                             <div className="flex items-center justify-between gap-3">
                                                 <button
@@ -245,8 +245,8 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                                                 </button>
 
                                                 <div className="flex-1 text-center">
-                                                    <p className="text-lg leading-none font-black text-indigo-900">{formatOffset(customMinutes)}</p>
-                                                    <p className="mt-0.5 text-[10px] font-semibold text-indigo-500">before the visit</p>
+                                                    <p className="text-lg leading-none font-black text-primary-900">{formatOffset(customMinutes)}</p>
+                                                    <p className="mt-0.5 text-[10px] font-semibold text-primary-500">before the visit</p>
                                                 </div>
 
                                                 <button
@@ -261,7 +261,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
 
                                             {/* Wall-clock preview */}
                                             {customWallClock && (
-                                                <p className="text-center text-xs font-semibold text-indigo-700">
+                                                <p className="text-center text-xs font-semibold text-primary-700">
                                                     We'll notify you at <span className="font-black">{customWallClock}</span>
                                                 </p>
                                             )}
@@ -278,7 +278,7 @@ export default function VisitReminderModal({ isOpen, onClose, accessCode, availa
                             type="button"
                             onClick={handleSetReminder}
                             disabled={submitting || availableOptions.length === 0}
-                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
+                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-primary-600 text-sm font-bold text-white shadow-lg shadow-primary-600/30 transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50"
                         >
                             {submitting ? (
                                 <>
