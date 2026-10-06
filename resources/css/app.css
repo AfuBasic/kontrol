@@ -203,6 +203,9 @@ html.dark .kontrol-form-validation-error {
     --color-primary-900: #061f4a;
     --color-primary-950: #041230;
 
+    /* Hero surfaces: the deep navy used for hero cards, with a faint white sheen on top */
+    --color-hero: #0a2558;
+
     /* === NEUTRALS === */
     --color-gray-50: #f9fafb; /* Cloud White */
     --color-gray-100: #f3f4f6;
