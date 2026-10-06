@@ -15,6 +15,7 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Security\ZonePassGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -83,6 +84,7 @@ class VerifyController extends Controller
         $result = app(ValidateAccessCodeAction::class)->execute(
             code: $request->input('code'),
             estateId: $estate->id,
+            guard: $user,
         );
 
         if ($result['valid']) {
@@ -282,6 +284,9 @@ class VerifyController extends Controller
                 ->withCount('accessLogs')
                 ->get();
 
+            // Offline scans are decided on the device, so a zone-locked guard's cache holds only the passes they may admit.
+            $activeCodes = app(ZonePassGuard::class)->filterFor($activeCodes, $user, $estate->id);
+
             $cachedCodes = $activeCodes->map(function (AccessCode $code) {
                 return [
                     'hash' => hash('sha256', strtoupper(trim($code->code))),
@@ -357,6 +362,14 @@ class VerifyController extends Controller
                         ->forEstate($estate->id)
                         ->where('code', $code)
                         ->first();
+
+                    if ($accessCode && ! app(ZonePassGuard::class)->allows($accessCode, $user, $estate->id)) {
+                        // Refused, not failed: retrying would never succeed, so record it and move on.
+                        app(ZonePassGuard::class)->recordRefusal($accessCode, $user, $estate->id);
+                        $syncedCount++;
+
+                        continue;
+                    }
 
                     if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
                         app(RecordCheckInAction::class)->execute(
