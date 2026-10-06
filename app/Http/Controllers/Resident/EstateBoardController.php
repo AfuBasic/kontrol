@@ -37,6 +37,8 @@ class EstateBoardController extends Controller
         $filter = request('filter', 'estate');
         $category = request('category');
         $unreadOnly = request()->boolean('unread_only');
+        $search = trim((string) request('search', ''));
+        $priority = request('priority') === 'important' ? 'important' : null;
         $estateId = $this->estateContext->getEstateId();
 
         $posts = $this->boardService->getFeed(
@@ -44,7 +46,9 @@ class EstateBoardController extends Controller
             perPage: 10,
             audiences: $this->allowedAudiences,
             filter: $filter,
+            search: $search !== '' ? $search : null,
             category: $category ?: null,
+            priority: $priority,
             unreadOnly: $unreadOnly
         );
         $unreadCount = $this->boardService->getResidentUnreadCount($estateId, $this->allowedAudiences, $filter);
@@ -55,6 +59,9 @@ class EstateBoardController extends Controller
             'category' => $category ?: null,
             'unread_only' => $unreadOnly,
             'unread_count' => $unreadCount,
+            'search' => $search !== '' ? $search : null,
+            'priority' => $priority,
+            'estateName' => $this->estateContext->getEstate()->name,
         ]);
     }
 
