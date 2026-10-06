@@ -1031,7 +1031,7 @@ const CreateAccessCode = () => {
                                     <div className="relative overflow-hidden bg-slate-900 p-6 text-white">
                                         {/* Decorative background elements */}
                                         <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
-                                        <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl" />
+                                        <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-primary-500/20 blur-2xl" />
 
                                         <div className="relative z-10 flex items-center gap-3">
                                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
