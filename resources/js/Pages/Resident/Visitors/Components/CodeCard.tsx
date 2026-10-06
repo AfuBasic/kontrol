@@ -49,7 +49,7 @@ function getPassTypeDetails(type: string) {
         case 'long_lived':
             return { label: 'Long-Term', icon: Calendar, bg: 'bg-blue-50/50 text-blue-700 border-blue-100/50' };
         case 'event':
-            return { label: 'Event', icon: Users, bg: 'bg-purple-50/50 text-purple-700 border-purple-100/50' };
+            return { label: 'Event', icon: Users, bg: 'bg-primary-50/50 text-primary-700 border-primary-100/50' };
         default:
             return { label: 'Visitor', icon: Tag, bg: 'bg-slate-50/50 text-slate-700 border-slate-100/50' };
     }
@@ -236,7 +236,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                     <div className="space-y-1 rounded-lg border border-slate-100 bg-slate-50/50 p-2 text-[10px] text-slate-500">
                         <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1 font-medium">
-                                <Users className="text-purple-550 h-3 w-3" />
+                                <Users className="text-primary-550 h-3 w-3" />
                                 Attendance
                             </span>
                             <span className="font-semibold text-slate-700">
@@ -246,7 +246,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         {code.guest_limit && (
                             <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
                                 <div
-                                    className="h-full rounded-full bg-purple-600 transition-all duration-500"
+                                    className="h-full rounded-full bg-primary-600 transition-all duration-500"
                                     style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
                                 />
                             </div>
@@ -312,7 +312,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         onClick={handleShare}
                         className="flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all hover:bg-slate-50 active:bg-slate-100"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
                             <Share2 className="h-5 w-5" />
                         </div>
                         <div>
