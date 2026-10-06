@@ -109,7 +109,7 @@ export default function ZonesIndex({ zones }: Props) {
 
     return (
         <>
-            <Head title="Zone Management - Kontrol" />
+            <Head title="Zone Management" />
 
             <div className="space-y-6">
                 {/* Page Header */}
