@@ -48,7 +48,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                             <div className="mb-2 flex w-full items-center gap-1">
                                 <div
                                     className={`h-1.5 w-full rounded-full transition-all ${
-                                        isCurrent ? 'bg-indigo-600' : isCompleted ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-800'
+                                        isCurrent ? 'bg-primary-600' : isCompleted ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-800'
                                     }`}
                                 />
                             </div>
@@ -56,7 +56,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                             <div
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
                                     isCurrent
-                                        ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-500/20'
+                                        ? 'bg-primary-600 text-white shadow-xs ring-2 ring-primary-500/20'
                                         : isCompleted
                                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                                           : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
@@ -68,7 +68,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                             <span
                                 className={`mt-1.5 max-w-full truncate text-[10px] font-bold sm:text-xs ${
                                     isCurrent
-                                        ? 'text-indigo-600 dark:text-indigo-400'
+                                        ? 'text-primary-600 dark:text-primary-400'
                                         : isCompleted
                                           ? 'text-slate-900 dark:text-slate-200'
                                           : 'text-slate-400 dark:text-slate-500'
