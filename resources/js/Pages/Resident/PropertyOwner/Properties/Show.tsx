@@ -214,11 +214,11 @@ export default function Show({
             <Head title={`Property Details - ${property.name}`} />
 
             {/* Premium Header */}
-            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-50/40 via-white to-rose-50/20 p-6 ring-1 ring-slate-200/50 sm:p-8">
+            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-primary-50/40 via-white to-rose-50/20 p-6 ring-1 ring-slate-200/50 sm:p-8">
                 <div className="relative flex items-center gap-4">
                     <Link
                         href={index.url()}
-                        className="group flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition-all hover:bg-indigo-50 hover:text-indigo-600"
+                        className="group flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition-all hover:bg-primary-50 hover:text-primary-600"
                     >
                         <ArrowLeftIcon className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
                     </Link>
@@ -240,13 +240,13 @@ export default function Show({
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`relative pt-2 pb-4 text-[11px] font-black tracking-widest uppercase transition-all ${
-                                    activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-700'
+                                    activeTab === tab ? 'text-primary-600' : 'text-slate-400 hover:text-slate-700'
                                 }`}
                             >
                                 {activeTab === tab && (
                                     <motion.div
                                         layoutId="activePropertyTab"
-                                        className="absolute right-0 bottom-0 left-0 h-[3px] rounded-t-full bg-indigo-600"
+                                        className="absolute right-0 bottom-0 left-0 h-[3px] rounded-t-full bg-primary-600"
                                         transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                                     />
                                 )}
@@ -264,11 +264,11 @@ export default function Show({
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {/* Total Residents Card */}
-                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-white to-indigo-50/30 p-6 ring-1 ring-slate-200/50">
+                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-white to-primary-50/30 p-6 ring-1 ring-slate-200/50">
                                 <div className="relative">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Total Occupants</h3>
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
                                             <UsersIcon className="h-5 w-5" />
                                         </div>
                                     </div>
@@ -306,13 +306,13 @@ export default function Show({
                             <div className="brand-card !rounded-[32px] p-6">
                                 <div className="relative">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-black tracking-widest text-indigo-200 uppercase">Total Collected</h3>
+                                        <h3 className="text-xs font-black tracking-widest text-primary-200 uppercase">Total Collected</h3>
                                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm">
                                             <ArrowDownLeftIcon className="h-5 w-5" />
                                         </div>
                                     </div>
                                     <p className="mt-4 text-4xl font-black tracking-tight text-white">₦{totalCollected.toLocaleString()}</p>
-                                    <div className="mt-6 flex items-center justify-between border-t border-indigo-500/50 pt-4 text-[10px] font-black tracking-wider text-indigo-200 uppercase">
+                                    <div className="mt-6 flex items-center justify-between border-t border-primary-500/50 pt-4 text-[10px] font-black tracking-wider text-primary-200 uppercase">
                                         <span>Recent Payment History</span>
                                     </div>
                                 </div>
@@ -334,7 +334,7 @@ export default function Show({
                                     <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200/50">
                                         <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Assigned Profiles</p>
                                         <div className="mt-2 flex items-center gap-3">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-xs ring-1 ring-slate-200">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-primary-600 shadow-xs ring-1 ring-slate-200">
                                                 <UserPlusIcon className="h-4 w-4" />
                                             </div>
                                             <p className="truncate text-sm font-bold text-slate-900">
@@ -355,7 +355,7 @@ export default function Show({
                                 {!showAssignForm && (
                                     <button
                                         onClick={() => setShowAssignForm(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-50 px-4 py-2 text-xs font-black text-indigo-600 transition-colors hover:bg-indigo-100"
+                                        className="inline-flex items-center gap-1.5 rounded-2xl bg-primary-50 px-4 py-2 text-xs font-black text-primary-600 transition-colors hover:bg-primary-100"
                                     >
                                         <PlusIcon className="h-4 w-4" />
                                         Assign Occupant
@@ -382,7 +382,7 @@ export default function Show({
                                         <input
                                             type="text"
                                             placeholder="Search occupants by name..."
-                                            className="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 pr-4 pl-11 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                                            className="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 pr-4 pl-11 text-sm focus:border-primary-500 focus:bg-white focus:ring-primary-500"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
@@ -462,7 +462,7 @@ export default function Show({
                                             type="button"
                                             onClick={handleAssign}
                                             disabled={assignForm.processing || assignForm.data.resident_ids.length === 0}
-                                            className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
+                                            className="w-full rounded-2xl bg-primary-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-primary-600/20 hover:bg-primary-700 disabled:opacity-50"
                                         >
                                             {assignForm.processing
                                                 ? 'Assigning...'
@@ -487,7 +487,7 @@ export default function Show({
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 font-black text-indigo-600 shadow-inner">
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-50 to-primary-100 font-black text-primary-600 shadow-inner">
                                                             {resident.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
@@ -544,7 +544,7 @@ export default function Show({
                             {/* FINANCIAL SUMMARY HERO */}
                             <div className="brand-card !rounded-[24px] p-8">
                                 {/* Background elements */}
-                                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
+                                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl"></div>
                                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
 
                                 <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -610,9 +610,9 @@ export default function Show({
                                         <p className="text-xs font-semibold text-rose-600 uppercase">Overdue</p>
                                         <p className="mt-1 text-xl font-black text-rose-900">{metrics.bills_overdue}</p>
                                     </div>
-                                    <div className="col-span-2 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-900/5">
-                                        <p className="text-xs font-semibold text-indigo-600 uppercase">Outstanding</p>
-                                        <p className="mt-1 text-xl font-black text-indigo-900">{metrics.bills_outstanding}</p>
+                                    <div className="col-span-2 rounded-2xl bg-primary-50 p-4 ring-1 ring-primary-900/5">
+                                        <p className="text-xs font-semibold text-primary-600 uppercase">Outstanding</p>
+                                        <p className="mt-1 text-xl font-black text-primary-900">{metrics.bills_outstanding}</p>
                                     </div>
                                 </div>
                             </div>
@@ -656,7 +656,7 @@ export default function Show({
                                         type="text"
                                         value={searchCollection}
                                         onChange={(e) => setSearchCollection(e.target.value)}
-                                        className="block w-full rounded-full border-0 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset"
+                                        className="block w-full rounded-full border-0 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-primary-600 focus:ring-inset"
                                         placeholder="Search bills..."
                                     />
                                 </div>
@@ -676,7 +676,7 @@ export default function Show({
                                                         {bill.resident_name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
+                                                        <p className="text-sm font-bold text-slate-900 transition-colors group-hover:text-primary-600">
                                                             {bill.name}
                                                         </p>
                                                         <p className="mt-1 text-sm font-semibold text-slate-500">{bill.resident_name}</p>
@@ -763,7 +763,7 @@ export default function Show({
                                     announcements.map((a) => (
                                         <div key={a.id} className="rounded-3xl bg-white p-6 shadow-xs ring-1 ring-slate-100">
                                             <div className="flex items-center justify-between">
-                                                <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
+                                                <span className="inline-flex rounded-full bg-primary-50 px-2.5 py-0.5 text-[9px] font-black tracking-wider text-primary-700 uppercase">
                                                     {a.status}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase">{a.created_at}</span>
@@ -773,7 +773,7 @@ export default function Show({
                                                 <span className="text-xs font-semibold text-slate-500">Target: {a.applies_to}</span>
                                                 <Link
                                                     href={showAnnouncement.url(a.hashid as any)}
-                                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                                                    className="text-xs font-bold text-primary-600 hover:text-primary-700"
                                                 >
                                                     Read Announcement
                                                 </Link>
@@ -813,7 +813,7 @@ export default function Show({
                                                         ) : null}
                                                         <div className="relative flex items-start space-x-3">
                                                             <div className="relative">
-                                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-8 ring-white">
+                                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 ring-8 ring-white">
                                                                     <ClockIcon className="h-5 w-5" />
                                                                 </div>
                                                             </div>
