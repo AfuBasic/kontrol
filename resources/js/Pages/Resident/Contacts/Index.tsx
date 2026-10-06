@@ -51,8 +51,8 @@ function ContactGroup({
 
     const gradients = {
         phone: 'from-emerald-400 to-teal-500',
-        email: 'from-blue-400 to-indigo-500',
-        other: 'from-purple-400 to-pink-500',
+        email: 'from-blue-400 to-primary-500',
+        other: 'from-primary-400 to-pink-500',
     };
 
     const gradient = gradients[type] || gradients.other;
@@ -150,7 +150,7 @@ export default function Contacts({ contacts, estateName }: Props) {
                         Back to Home
                     </Link>
                     <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Contacts</h1>
-                    <p className="mt-2 text-lg text-indigo-100">
+                    <p className="mt-2 text-lg text-primary-100">
                         {estateName
                             ? `${estateName} - Quick access to emergency hotlines and estate contacts.`
                             : 'Quick access to emergency hotlines and estate contacts.'}
