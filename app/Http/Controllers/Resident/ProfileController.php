@@ -7,6 +7,7 @@ use App\Http\Requests\Resident\UpdateProfileRequest;
 use App\Models\AccessCode;
 use App\Models\ResidentSubscription;
 use App\Services\EstateContextService;
+use App\Support\ProfileCompleteness;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,10 @@ class ProfileController extends Controller
             'telegram' => [
                 'linked' => $user->hasTelegramLinked(),
                 'bot_username' => config('services.telegram.bot_username'),
+            ],
+            'completeness' => [
+                'total' => 2,
+                'missing' => ProfileCompleteness::appliesTo($user) ? ProfileCompleteness::missing($user) : [],
             ],
             'profile' => [
                 'unit_number' => $user->profile?->unit_number ?? '',
