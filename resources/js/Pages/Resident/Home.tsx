@@ -26,6 +26,7 @@ type UnpaidDue = {
 };
 
 type Props = SharedData & {
+    profileNudge?: { missing: Array<'name' | 'address'>; show: boolean } | null;
     stats: HomeStats;
     activeCodes?: AccessCode[] | null;
     recentActivity?: ActivityItem[] | null;
@@ -83,6 +84,7 @@ export default function Home({
     unpaidDuesCount,
     totalUnpaidDuesAmount,
     billingPrompt,
+    profileNudge,
 }: Props) {
     const { openExternalBilling } = useExternalBilling();
     // Lapsed subscription: only dues and the profile stay available, so nothing here may point at locked pages.
@@ -242,6 +244,26 @@ export default function Home({
         ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues')
         : attentionItems;
 
+    // Lowest priority and easy to wave away: "Not now" hides it for a week, and it stops coming back after the third time.
+    if (profileNudge?.show) {
+        const both = profileNudge.missing.length > 1;
+        const onlyName = profileNudge.missing[0] === 'name';
+        attentionItems.push({
+            type: 'profile_details',
+            title: both ? 'Add your name and address' : onlyName ? 'Add your name' : 'Add your address',
+            desc: onlyName ? 'So the gate and your visitors know who invited them.' : 'So guards can tell which house your visitors are for.',
+            href: '/resident/profile',
+            color: 'border-primary-100 bg-primary-50/40 text-primary-700',
+            isDismissible: true,
+            dismissLabel: 'Not now',
+            onDismiss: (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.post('/resident/profile/nudge/dismiss', {}, { preserveScroll: true, only: ['profileNudge'] });
+            },
+        });
+    }
+
     const handleDismissBillingPrompt = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -314,16 +336,26 @@ export default function Home({
                                             <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
                                         </div>
                                         <div className="flex shrink-0 items-center gap-1.5">
-                                            {item.isDismissible && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleDismissBillingPrompt}
-                                                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
-                                                    title="Dismiss for this billing period"
-                                                >
-                                                    <X className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
+                                            {item.isDismissible &&
+                                                (item.dismissLabel ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={item.onDismiss}
+                                                        className="rounded-lg px-2 py-1 text-[11px] font-bold text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+                                                        title="Hide this for a week"
+                                                    >
+                                                        {item.dismissLabel}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={item.onDismiss ?? handleDismissBillingPrompt}
+                                                        className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
+                                                        title="Dismiss for this billing period"
+                                                    >
+                                                        <X className="h-3.5 w-3.5" />
+                                                    </button>
+                                                ))}
                                             {item.href && <ChevronRight className="h-4 w-4 text-slate-400" />}
                                         </div>
                                     </div>
