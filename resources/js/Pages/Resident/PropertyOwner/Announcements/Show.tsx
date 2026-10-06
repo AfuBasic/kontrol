@@ -160,7 +160,7 @@ export default function Show({ announcement, metrics, targets }: Props) {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl"
+                        className="brand-card !rounded-3xl p-6 text-white"
                     >
                         <div className="mb-6 flex items-center gap-2 text-indigo-200">
                             <ChartBarIcon className="h-5 w-5 opacity-70" />
