@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sign-in Code Queue
+    |--------------------------------------------------------------------------
+    |
+    | Queue that carries sign-in code emails. Leave as "default" until the worker is started with a
+    | dedicated queue listed first (e.g. --queue=auth,default,mail,payments), then set OTP_QUEUE=auth so
+    | a sign-in code never waits behind pass deliveries or PDF jobs.
+    |
+    */
+
+    'otp_queue' => env('OTP_QUEUE', 'default'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |
