@@ -58,7 +58,7 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
         {
             pending: 'border-l-amber-500',
             acknowledged: 'border-l-blue-500',
-            resolving: 'border-l-indigo-600',
+            resolving: 'border-l-primary-600',
             solved: 'border-l-emerald-500',
             closed: 'border-l-slate-400',
         }[incident.status] || 'border-l-slate-300';
@@ -191,7 +191,7 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
                 }`}
             >
                 <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-50 text-xs font-black text-purple-700 ring-1 ring-purple-200/50 ${dark('dark:bg-purple-950/50 dark:text-purple-300 dark:ring-purple-800/40')}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-xs font-black text-primary-700 ring-1 ring-primary-200/50 ${dark('dark:bg-primary-950/50 dark:text-primary-300 dark:ring-primary-800/40')}`}
                 >
                     {getInitials(reporterName)}
                 </div>
@@ -214,7 +214,7 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
                             disabled={!canUpvote}
                             className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
                                 isUpvoted
-                                    ? 'bg-purple-100 text-purple-800 ring-1 ring-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:ring-purple-800'
+                                    ? 'bg-primary-100 text-primary-800 ring-1 ring-primary-300 dark:bg-primary-950/60 dark:text-primary-300 dark:ring-primary-800'
                                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800'
                             } ${!canUpvote ? 'cursor-not-allowed opacity-50' : 'active:scale-95'}`}
                             title={isResolved ? 'Upvoting closed incidents is disabled' : isUpvoted ? 'Remove upvote' : 'Upvote this incident'}
