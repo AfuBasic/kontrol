@@ -97,7 +97,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] border shadow-xl transition-all duration-300 ${
                 isEvent
-                    ? 'border-primary-500/30 bg-gradient-to-br from-[#14357a] via-[#0a2558] to-[#0a2558] text-slate-100'
+                    ? 'border-primary-500/30 bg-gradient-to-br from-[#041533] via-[#082a61] to-[#104e9a] text-slate-100'
                     : 'border-blue-100 bg-white text-slate-900'
             }`}
         >
