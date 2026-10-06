@@ -35,7 +35,7 @@ class UpdateEstateSettingsRequest extends FormRequest
             'visitor_checkout_enabled' => ['required', 'boolean'],
             'quick_entry_enabled' => ['required', 'boolean'],
             'entry_point_checkout_enforced' => ['required', 'boolean'],
-            'zone_locked_passes' => ['required', 'boolean'],
+            'zone_locked_passes' => ['sometimes', 'boolean'],
             'entry_points' => ['nullable', 'array'],
             'entry_points.*' => ['required', 'string', 'max:100'],
 
