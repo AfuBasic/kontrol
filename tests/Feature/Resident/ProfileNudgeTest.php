@@ -50,22 +50,23 @@ beforeEach(function () {
 
 // ---------- What counts as missing ----------
 
-it('asks for an address when neither unit number nor address is set', function () {
-    expect(ProfileCompleteness::missing($this->resident))->toBe(['address']);
+it('asks for the unit number and the address when neither is set', function () {
+    expect(ProfileCompleteness::missing($this->resident))->toBe(['unit', 'address']);
 });
 
-it('is satisfied by a unit number alone or an address alone', function (array $profile) {
+it('keeps asking until both the unit number and the address are there', function (array $profile, array $expected) {
     UserProfile::create(['user_id' => $this->resident->id, ...$profile]);
 
-    expect(ProfileCompleteness::missing($this->resident->fresh()))->toBe([]);
+    expect(ProfileCompleteness::missing($this->resident->fresh()))->toBe($expected);
 })->with([
-    'unit number only' => [['unit_number' => 'Block C, Flat 4']],
-    'address only' => [['address' => '12 Palm Avenue']],
+    'unit number only' => [['unit_number' => 'Block C, Flat 4'], ['address']],
+    'address only' => [['address' => '12 Palm Avenue'], ['unit']],
+    'both' => [['unit_number' => 'Block C, Flat 4', 'address' => '12 Palm Avenue'], []],
 ]);
 
 it('treats an empty name or an email stand-in as not set', function (string $name) {
     $this->resident->update(['name' => $name]);
-    UserProfile::create(['user_id' => $this->resident->id, 'unit_number' => 'A1']);
+    UserProfile::create(['user_id' => $this->resident->id, 'unit_number' => 'A1', 'address' => '12 Palm Avenue']);
 
     expect(ProfileCompleteness::missing($this->resident->fresh()))->toBe(['name']);
 })->with(['empty' => '', 'spaces' => '   ', 'email as name' => 'ada@example.com']);
@@ -86,12 +87,12 @@ it('shows the dashboard reminder when details are missing', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('profileNudge.show', true)
-            ->where('profileNudge.missing', ['address'])
+            ->where('profileNudge.missing', ['unit', 'address'])
         );
 });
 
 it('shows nothing once the details are complete', function () {
-    UserProfile::create(['user_id' => $this->resident->id, 'address' => '12 Palm Avenue']);
+    UserProfile::create(['user_id' => $this->resident->id, 'unit_number' => 'A1', 'address' => '12 Palm Avenue']);
 
     ($this->act)()->get(route('resident.home'))
         ->assertInertia(fn ($page) => $page->where('profileNudge.show', false)->where('profileNudge.missing', []));
@@ -109,18 +110,15 @@ it('hides the reminder for a week after "Not now", then brings it back', functio
     expect(($this->nudge)()['show'])->toBeTrue();
 });
 
-it('stops asking on the dashboard after the third dismissal', function () {
-    foreach (range(1, ProfileCompleteness::MAX_DISMISSALS) as $round) {
+it('keeps coming back after every dismissal while something is missing', function () {
+    foreach (range(1, 5) as $round) {
         expect(($this->nudge)()['show'])->toBeTrue();
         ($this->act)()->post(route('resident.profile.nudge.dismiss'));
+        expect(($this->nudge)()['show'])->toBeFalse();
         $this->travel(ProfileCompleteness::SNOOZE_DAYS + 1)->days();
     }
 
-    // A fortnight and more later it still stays quiet, but the gap itself is still reported for the profile page.
-    $this->travel(60)->days();
-
-    expect(($this->nudge)()['show'])->toBeFalse()
-        ->and(($this->nudge)()['missing'])->toBe(['address']);
+    expect(($this->nudge)()['show'])->toBeTrue();
 });
 
 it('lets a resident with a lapsed subscription dismiss the reminder', function () {
@@ -135,19 +133,25 @@ it('lets a resident with a lapsed subscription dismiss the reminder', function (
 
 // ---------- Fixing it where it is noticed ----------
 
-it('saves the address from the pass form and then stops flagging it', function () {
+it('saves the missing details from the pass form without blanking the other one', function () {
     ($this->act)()->get(route('resident.visitors.create'))
-        ->assertInertia(fn ($page) => $page->where('residentAddressMissing', true));
+        ->assertInertia(fn ($page) => $page->where('residentDetailsMissing', ['unit', 'address']));
 
-    ($this->act)()->patch(route('resident.profile.address.update'), ['unit_number' => 'Block C, Flat 4', 'address' => ''])
+    ($this->act)()->patch(route('resident.profile.address.update'), ['unit_number' => 'Block C, Flat 4'])
         ->assertRedirect()
         ->assertSessionHas('success');
 
-    expect($this->resident->fresh()->profile->unit_number)->toBe('Block C, Flat 4')
+    expect(ProfileCompleteness::missing($this->resident->fresh()))->toBe(['address']);
+
+    ($this->act)()->patch(route('resident.profile.address.update'), ['address' => '12 Palm Avenue'])->assertRedirect();
+
+    $profile = $this->resident->fresh()->profile;
+    expect($profile->unit_number)->toBe('Block C, Flat 4')
+        ->and($profile->address)->toBe('12 Palm Avenue')
         ->and(ProfileCompleteness::missing($this->resident->fresh()))->toBe([]);
 
     ($this->act)()->get(route('resident.visitors.create'))
-        ->assertInertia(fn ($page) => $page->where('residentAddressMissing', false));
+        ->assertInertia(fn ($page) => $page->where('residentDetailsMissing', []));
 });
 
 it('requires at least a unit number or an address when saving', function () {
@@ -160,7 +164,7 @@ it('requires at least a unit number or an address when saving', function () {
 it('reports the completeness on the profile page', function () {
     ($this->act)()->get(route('resident.profile'))
         ->assertInertia(fn ($page) => $page
-            ->where('completeness.total', 2)
-            ->where('completeness.missing', ['address'])
+            ->where('completeness.total', 3)
+            ->where('completeness.missing', ['unit', 'address'])
         );
 });
