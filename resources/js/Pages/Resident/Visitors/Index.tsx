@@ -508,7 +508,7 @@ export default function Visitors({
                             onClick={() => setShowCreateSheet(false)}
                             className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                         >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                                 <Calendar className="h-4 w-4" />
                             </div>
                             <div>
@@ -525,7 +525,7 @@ export default function Visitors({
                         onClick={() => setShowCreateSheet(false)}
                         className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                     >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <Calendar className="h-4 w-4" />
                         </div>
                         <div>
