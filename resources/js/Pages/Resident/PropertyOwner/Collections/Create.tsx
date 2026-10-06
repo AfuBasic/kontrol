@@ -199,7 +199,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                             <div
                                 className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-300 ${
                                     isActive
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20'
                                         : isCompleted
                                           ? 'bg-emerald-500 text-white'
                                           : 'bg-slate-50 text-slate-400'
@@ -251,7 +251,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                     autoComplete="on"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                     placeholder="e.g. June Rent, Utility Fee"
                                 />
                                 {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
@@ -270,7 +270,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={4}
-                                    className="mt-2 block w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    className="mt-2 block w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                     placeholder="Provide any context about this charge sheet..."
                                 />
                                 {errors.description && <p className="mt-1 text-xs font-bold text-rose-600">{errors.description}</p>}
@@ -291,7 +291,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         required
                                         value={formatMoney(data.amount)}
                                         onChange={handleAmountChange}
-                                        className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-9 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                        className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-9 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         placeholder="50,000"
                                     />
                                 </div>
@@ -303,7 +303,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                     type="button"
                                     disabled={!isStep1Valid}
                                     onClick={nextStep}
-                                    className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                 >
                                     Continue
                                     <ArrowRightIcon className="h-4 w-4" />
@@ -336,7 +336,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         onClick={() => setData('billing_type', 'one_time')}
                                         className={`flex flex-col items-start rounded-2xl border-2 p-4 text-left transition-all ${
                                             data.billing_type === 'one_time'
-                                                ? 'border-indigo-600 bg-indigo-50/20'
+                                                ? 'border-primary-600 bg-primary-50/20'
                                                 : 'border-slate-200 bg-slate-50 hover:bg-white'
                                         }`}
                                     >
@@ -348,7 +348,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         onClick={() => setData('billing_type', 'recurring')}
                                         className={`flex flex-col items-start rounded-2xl border-2 p-4 text-left transition-all ${
                                             data.billing_type === 'recurring'
-                                                ? 'border-indigo-600 bg-indigo-50/20'
+                                                ? 'border-primary-600 bg-primary-50/20'
                                                 : 'border-slate-200 bg-slate-50 hover:bg-white'
                                         }`}
                                     >
@@ -373,7 +373,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                             min={getTomorrowDate()}
                                             value={data.due_at}
                                             onChange={(e) => setData('due_at', e.target.value)}
-                                            className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                            className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         />
                                         {/* Friendly Date Shortcuts */}
                                         <div className="mt-2 flex flex-wrap gap-2">
@@ -382,8 +382,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 onClick={() => setData('due_at', getTomorrowDate())}
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getTomorrowDate()
-                                                        ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                        ? 'bg-primary-500 text-white ring-primary-500'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                 }`}
                                             >
                                                 Tomorrow
@@ -393,8 +393,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 onClick={() => setData('due_at', getNextWeekDate())}
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getNextWeekDate()
-                                                        ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                        ? 'bg-primary-500 text-white ring-primary-500'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                 }`}
                                             >
                                                 Next Week
@@ -404,8 +404,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 onClick={() => setData('due_at', getEndOfMonthDate())}
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getEndOfMonthDate()
-                                                        ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                        ? 'bg-primary-500 text-white ring-primary-500'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                 }`}
                                             >
                                                 End of Month
@@ -432,7 +432,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 min={getTodayDate()}
                                                 value={data.start_date}
                                                 onChange={(e) => setData('start_date', e.target.value)}
-                                                className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                             />
                                             {/* Start Date Shortcuts */}
                                             <div className="mt-2 flex flex-wrap gap-2">
@@ -441,8 +441,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     onClick={() => setData('start_date', getTodayDate())}
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getTodayDate()
-                                                            ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                            ? 'bg-primary-500 text-white ring-primary-500'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                     }`}
                                                 >
                                                     Today
@@ -452,8 +452,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     onClick={() => setData('start_date', getTomorrowDate())}
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getTomorrowDate()
-                                                            ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                            ? 'bg-primary-500 text-white ring-primary-500'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                     }`}
                                                 >
                                                     Tomorrow
@@ -463,8 +463,8 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     onClick={() => setData('start_date', getFirstOfNextMonthDate())}
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getFirstOfNextMonthDate()
-                                                            ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
+                                                            ? 'bg-primary-500 text-white ring-primary-500'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-primary-50/50'
                                                     }`}
                                                 >
                                                     1st of Next Month
@@ -512,7 +512,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 max="28"
                                                 value={data.due_day}
                                                 onChange={(e) => setData('due_day', Number(e.target.value))}
-                                                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                                 placeholder="1"
                                             />
                                             {errors.due_day && <p className="mt-1 text-xs font-bold text-rose-600">{errors.due_day}</p>}
@@ -531,7 +531,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 min="0"
                                                 value={data.grace_days}
                                                 onChange={(e) => setData('grace_days', Number(e.target.value))}
-                                                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                                 placeholder="0"
                                             />
                                             {errors.grace_days && <p className="mt-1 text-xs font-bold text-rose-600">{errors.grace_days}</p>}
@@ -551,7 +551,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     id="late_fee"
                                                     value={formatMoney(data.late_fee)}
                                                     onChange={handleLateFeeChange}
-                                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-9 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-9 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                                     placeholder="500"
                                                 />
                                             </div>
@@ -573,7 +573,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                     type="button"
                                     disabled={!isStep2Valid}
                                     onClick={nextStep}
-                                    className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                 >
                                     Continue
                                     <ArrowRightIcon className="h-4 w-4" />
@@ -621,7 +621,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         id="include_creator"
                                         checked={data.include_creator}
                                         onChange={handleIncludeCreatorChange}
-                                        className="peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all before:content-[''] checked:border-indigo-600 checked:bg-indigo-600 focus:outline-none"
+                                        className="peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all before:content-[''] checked:border-primary-600 checked:bg-primary-600 focus:outline-none"
                                     />
                                     {data.include_creator && (
                                         <span className="pointer-events-none absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4 text-white">
@@ -658,7 +658,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     value={search}
                                                     onChange={(e) => setSearch(e.target.value)}
                                                     placeholder="Search residents or properties..."
-                                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                                 />
                                             </div>
 
@@ -680,16 +680,16 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                                             key={r.id}
                                                                             type="button"
                                                                             onClick={() => toggleTarget({ type: 'user', id: r.id, name: r.name })}
-                                                                            className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white ${selected ? 'bg-indigo-50/60' : ''}`}
+                                                                            className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white ${selected ? 'bg-primary-50/60' : ''}`}
                                                                         >
                                                                             <div
-                                                                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'}`}
+                                                                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-primary-600 bg-primary-600' : 'border-slate-300 bg-white'}`}
                                                                             >
                                                                                 {selected && (
                                                                                     <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />
                                                                                 )}
                                                                             </div>
-                                                                            <UserIcon className="h-4 w-4 shrink-0 text-indigo-400" />
+                                                                            <UserIcon className="h-4 w-4 shrink-0 text-primary-400" />
                                                                             <span className="text-sm font-semibold text-slate-800">{r.name}</span>
                                                                         </button>
                                                                     );
@@ -738,7 +738,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                             className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow-xs ring-1 ring-slate-200"
                                                         >
                                                             {target.type === 'user' ? (
-                                                                <UserIcon className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                                                                <UserIcon className="h-3.5 w-3.5 shrink-0 text-primary-500" />
                                                             ) : (
                                                                 <BuildingOfficeIcon className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                                                             )}
@@ -772,7 +772,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Amount Due</p>
-                                        <p className="mt-0.5 text-sm font-black text-indigo-600">₦{Number(data.amount).toLocaleString()}</p>
+                                        <p className="mt-0.5 text-sm font-black text-primary-600">₦{Number(data.amount).toLocaleString()}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Billing Frequency</p>
@@ -840,7 +840,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                 <button
                                     type="submit"
                                     disabled={processing || !isStep3Valid}
-                                    className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                    className="rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                 >
                                     {processing ? 'Publishing...' : 'Publish Bill'}
                                 </button>
