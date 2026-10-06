@@ -96,13 +96,14 @@ export default function IncidentFeedPost({ incident, href }: Props) {
                         {relative}
                     </p>
                 </div>
-
-                <IncidentStatusBadge status={incident.status} size="sm" showDot />
             </header>
 
-            <div className="mt-3.5 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-                <IncidentCategoryLabel category={incident.category} size="xs" showBadge={false} className="shrink-0 text-slate-500" />
-                {place && <span className="truncate font-medium tracking-normal text-slate-400 normal-case">· {place}</span>}
+            <div className="mt-3.5 flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                    <IncidentCategoryLabel category={incident.category} size="xs" showBadge={false} className="shrink-0 text-slate-500" />
+                    {place && <span className="truncate font-medium tracking-normal text-slate-400 normal-case">· {place}</span>}
+                </div>
+                <IncidentStatusBadge status={incident.status} size="sm" showDot />
             </div>
 
             <h3 className="mt-1.5 text-[17px] leading-snug font-semibold tracking-tight text-slate-900">{incident.title}</h3>
@@ -123,7 +124,7 @@ export default function IncidentFeedPost({ incident, href }: Props) {
                     aria-pressed={isUpvoted}
                     title={isResolved ? 'Upvoting is closed for resolved incidents' : isUpvoted ? 'Remove upvote' : 'Upvote'}
                     className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 transition-colors ${
-                        isUpvoted ? 'text-purple-700' : 'hover:bg-slate-50 hover:text-slate-700'
+                        isUpvoted ? 'text-primary-700' : 'hover:bg-slate-50 hover:text-slate-700'
                     } ${canUpvote ? 'active:scale-95' : 'cursor-not-allowed opacity-50'}`}
                 >
                     <ArrowBigUp className={`h-[18px] w-[18px] ${isUpvoted ? 'fill-current' : ''}`} />
