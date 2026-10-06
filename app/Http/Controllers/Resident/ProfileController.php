@@ -36,7 +36,7 @@ class ProfileController extends Controller
                 'bot_username' => config('services.telegram.bot_username'),
             ],
             'completeness' => [
-                'total' => 2,
+                'total' => 3,
                 'missing' => ProfileCompleteness::appliesTo($user) ? ProfileCompleteness::missing($user) : [],
             ],
             'profile' => [
