@@ -34,11 +34,11 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                     >
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <div>
-                                <h4 className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">Resident Pass</h4>
+                                <h4 className="text-[10px] font-black tracking-widest text-primary-400 uppercase">Resident Pass</h4>
                                 <p className="mt-0.5 text-xs font-bold text-white">{userName}</p>
                             </div>
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/20">
-                                <Home className="h-4 w-4 text-indigo-400" />
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary-500/30 bg-primary-500/20">
+                                <Home className="h-4 w-4 text-primary-400" />
                             </div>
                         </div>
 
@@ -126,7 +126,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: -10 }}
                         transition={{ duration: 0.6 }}
-                        className="relative z-10 w-56 rounded-xl border border-white/10 bg-gradient-to-tr from-emerald-600 to-indigo-600 p-4 shadow-2xl"
+                        className="relative z-10 w-56 rounded-xl border border-white/10 bg-gradient-to-tr from-emerald-600 to-primary-600 p-4 shadow-2xl"
                     >
                         <div className="flex items-start justify-between">
                             <CreditCard className="h-7 w-7 text-white" />
@@ -185,8 +185,8 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             transition={{ delay: 0.2, duration: 0.5 }}
                             className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-800 p-3 shadow-lg"
                         >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
-                                <MessageSquare className="h-4 w-4 text-indigo-400" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500/20">
+                                <MessageSquare className="h-4 w-4 text-primary-400" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-bold text-white">Admins & Notices</p>
@@ -221,7 +221,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-lg border border-white/5 bg-slate-900 p-2.5 text-center">
                                 <span className="block text-[9px] font-medium text-slate-400">Total Units</span>
-                                <span className="mt-0.5 block text-base font-black text-indigo-400">12</span>
+                                <span className="mt-0.5 block text-base font-black text-primary-400">12</span>
                             </div>
                             <div className="rounded-lg border border-white/5 bg-slate-900 p-2.5 text-center">
                                 <span className="block text-[9px] font-medium text-slate-400">Occupied</span>
@@ -248,7 +248,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                     >
                         <div className="flex items-center justify-between border-b border-white/5 pb-3">
                             <span className="text-[10px] font-bold text-white">Recent Collections</span>
-                            <CreditCard className="h-4 w-4 text-indigo-400" />
+                            <CreditCard className="h-4 w-4 text-primary-400" />
                         </div>
                         <div className="mt-3 space-y-2.5">
                             <div className="flex items-center justify-between text-[10px]">
@@ -333,7 +333,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             transition={{ duration: 0.2, ease: 'easeOut' }}
                             className="text-center"
                         >
-                            <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase sm:text-xs">{slide.subtitle}</span>
+                            <span className="text-[10px] font-black tracking-widest text-primary-400 uppercase sm:text-xs">{slide.subtitle}</span>
                             <h2 className="mt-2 text-2xl leading-snug font-black tracking-tight text-white sm:text-3xl">{slide.title}</h2>
                             <p className="mt-3 text-xs leading-relaxed font-semibold text-slate-400 sm:text-sm">{slide.description}</p>
                         </motion.div>
@@ -349,7 +349,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                                 key={i}
                                 onClick={() => setCurrentSlide(i)}
                                 className={`h-1.5 cursor-pointer rounded-full transition-colors duration-300 ${
-                                    currentSlide === i ? 'w-8 bg-indigo-500' : 'w-2 bg-white/10 hover:bg-white/20'
+                                    currentSlide === i ? 'w-8 bg-primary-500' : 'w-2 bg-white/10 hover:bg-white/20'
                                 }`}
                             />
                         ))}
@@ -375,7 +375,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                         <button
                             onClick={nextSlide}
-                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-transform active:scale-95 sm:text-sm"
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-primary-600/30 transition-transform active:scale-95 sm:text-sm"
                         >
                             {currentSlide === slides.length - 1 ? (
                                 <>
