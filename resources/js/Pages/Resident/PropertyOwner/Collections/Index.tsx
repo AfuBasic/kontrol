@@ -1,4 +1,4 @@
-import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router, WhenVisible } from '@inertiajs/react';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -116,7 +116,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
             </div>
 
             {/* Unified Premium Financial Overview Card */}
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20">
+            <div className="brand-card !rounded-[2.5rem] p-6 text-white">
                 {/* Background glow effects */}
                 <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-indigo-600/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
