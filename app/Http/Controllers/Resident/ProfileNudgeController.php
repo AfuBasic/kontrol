@@ -20,7 +20,7 @@ class ProfileNudgeController extends Controller
     }
 
     /**
-     * Save just the address from where the gap is noticed (the pass form), without leaving it.
+     * Save the missing unit and/or address from where the gap is noticed (the pass form), without leaving it.
      */
     public function saveAddress(Request $request): RedirectResponse
     {
@@ -32,13 +32,13 @@ class ProfileNudgeController extends Controller
             'address.required_without' => 'Add your unit number or your address.',
         ]);
 
-        $request->user()->profile()->updateOrCreate(
-            ['user_id' => $request->user()->id],
-            [
-                'unit_number' => filled($validated['unit_number'] ?? null) ? trim($validated['unit_number']) : null,
-                'address' => filled($validated['address'] ?? null) ? trim($validated['address']) : null,
-            ],
-        );
+        // Only write what was sent, so saving one missing detail never blanks the other.
+        $changes = array_map('trim', array_filter(
+            array_intersect_key($validated, array_flip(['unit_number', 'address'])),
+            filled(...),
+        ));
+
+        $request->user()->profile()->updateOrCreate(['user_id' => $request->user()->id], $changes);
 
         // Drop the cached copy so the rest of this session sees the saved address straight away.
         $request->user()->unsetRelation('profile');
