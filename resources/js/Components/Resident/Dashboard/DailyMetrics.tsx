@@ -22,14 +22,14 @@ export default function DailyMetrics({ stats }: Props) {
                                 {stats.visitors_today} / {total}
                             </p>
                         </div>
-                        <p className="text-sm font-bold text-indigo-600">{Math.round(arrivalRate)}%</p>
+                        <p className="text-sm font-bold text-primary-600">{Math.round(arrivalRate)}%</p>
                     </div>
                     <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${arrivalRate}%` }}
                             transition={{ duration: 1, ease: 'easeOut' }}
-                            className="h-full bg-linear-to-r from-indigo-500 to-blue-500"
+                            className="h-full bg-linear-to-r from-primary-500 to-blue-500"
                         />
                     </div>
                 </div>
