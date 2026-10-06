@@ -18,6 +18,7 @@ type SettingsProps = {
         visitor_checkout_enabled: boolean;
         quick_entry_enabled: boolean;
         entry_point_checkout_enforced: boolean;
+        zone_locked_passes: boolean;
         entry_points: string[];
 
         // 2. Security Operations
@@ -36,6 +37,7 @@ type SettingsProps = {
         collection_maximum_reminder_attempts: number;
         send_reminder_before_due_date_days: number;
     };
+    zoneCount: number;
 };
 
 function formatDuration(minutes: number): string {
@@ -393,7 +395,7 @@ function IncidentCategoryManager({ categories, error, onChange }: IncidentCatego
     );
 }
 
-export default function Settings({ settings }: SettingsProps) {
+export default function Settings({ settings, zoneCount }: SettingsProps) {
     const { data, setData, put, processing, errors } = useForm({
         // Visitor Access
         access_codes_enabled: settings.access_codes_enabled,
@@ -406,6 +408,7 @@ export default function Settings({ settings }: SettingsProps) {
         visitor_checkout_enabled: settings.visitor_checkout_enabled,
         quick_entry_enabled: settings.quick_entry_enabled ?? false,
         entry_point_checkout_enforced: settings.entry_point_checkout_enforced,
+        zone_locked_passes: settings.zone_locked_passes ?? false,
         entry_points: settings.entry_points || [],
 
         // Security Operations
@@ -806,6 +809,35 @@ export default function Settings({ settings }: SettingsProps) {
                                         </div>
                                     )}
 
+                                    {/* Zone-locked passes */}
+                                    <div className="mt-4 rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span className="block text-sm font-medium text-slate-900 dark:text-white">Zone-Locked Passes</span>
+                                                <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                    A visitor pass only works at gates staffed by security assigned to the same zone as the resident
+                                                    who issued it. Security with no zone, and residents with no zone, are not restricted.
+                                                </span>
+                                                {zoneCount === 0 && (
+                                                    <span className="mt-1 block text-xs font-medium text-amber-600 dark:text-amber-500">
+                                                        Create zones and assign residents and security to them first, or this has no effect.
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label="Zone-locked passes"
+                                                    checked={data.zone_locked_passes}
+                                                    onChange={(e) => setData('zone_locked_passes', e.target.checked)}
+                                                    className="peer sr-only"
+                                                />
+                                                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            </label>
+                                        </div>
+                                        {errors.zone_locked_passes && <p className="mt-2 text-xs text-red-500">{errors.zone_locked_passes}</p>}
+                                    </div>
+
                                     {/* Quick Entry & Operating Hours Enforcement Card */}
                                     <div className="mt-4 rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
                                         <div className="flex items-start justify-between gap-3">
@@ -828,7 +860,6 @@ export default function Settings({ settings }: SettingsProps) {
                                                 <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                             </label>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
