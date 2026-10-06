@@ -9,6 +9,7 @@ use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
 use App\Services\Resident\VisitorPassReminderService;
 use App\Services\Visitor\ActiveVisitService;
+use App\Support\ProfileCompleteness;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -193,6 +194,7 @@ class AccessCodeController extends Controller
             'isSubscriptionActive' => $isSubscriptionActive,
             'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
             'requireVehicleInfo' => $settings ? (bool) $settings->require_vehicle_information : false,
+            'residentAddressMissing' => ProfileCompleteness::appliesTo(auth()->user()) && in_array('address', ProfileCompleteness::missing(auth()->user()), true),
         ]);
     }
 
