@@ -31,7 +31,7 @@ export default function DailyLimitCard({ used, limit }: Props) {
                 </div>
                 <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        isAtLimit ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'
+                        isAtLimit ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'
                     }`}
                 >
                     {isUnlimited ? <span className="text-xl font-bold">∞</span> : <span className="text-sm font-bold">{limit - used}</span>}
@@ -44,7 +44,7 @@ export default function DailyLimitCard({ used, limit }: Props) {
                     initial={{ width: 0 }}
                     animate={{ width: isUnlimited ? '100%' : `${percentage}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className={`absolute inset-y-0 left-0 rounded-full ${isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                    className={`absolute inset-y-0 left-0 rounded-full ${isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-primary-500'}`}
                 />
             </div>
 
