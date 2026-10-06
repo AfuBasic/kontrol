@@ -145,7 +145,7 @@ export default function Index({
                             onClick={() => setCurrentTab(item.id)}
                             className={`min-h-[44px] rounded-2xl border px-3 py-2 text-xs font-bold transition-all ${
                                 currentTab === item.id
-                                    ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                    ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
                                     : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}
                         >
@@ -165,7 +165,7 @@ export default function Index({
                             onClick={() => setSelectedCategory('')}
                             className={`min-h-[44px] rounded-2xl border px-4 py-2.5 text-left text-xs font-bold transition-all ${
                                 !selectedCategory
-                                    ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                    ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
                                     : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}
                         >
@@ -180,7 +180,7 @@ export default function Index({
                                     onClick={() => setSelectedCategory(c.value)}
                                     className={`flex min-h-[44px] items-center justify-between rounded-2xl border px-4 py-2.5 text-left text-xs font-bold transition-all ${
                                         isSelected
-                                            ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                            ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
                                             : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                                     }`}
                                 >
@@ -201,7 +201,7 @@ export default function Index({
                         onClick={() => setCurrentSort('newest')}
                         className={`min-h-[44px] rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
                             currentSort === 'newest'
-                                ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
                                 : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                     >
@@ -212,7 +212,7 @@ export default function Index({
                         onClick={() => setCurrentSort('popular')}
                         className={`min-h-[44px] rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
                             currentSort === 'popular'
-                                ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
                                 : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                     >
@@ -240,7 +240,7 @@ export default function Index({
                         });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="min-h-[44px] flex-[2] rounded-2xl bg-purple-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-600/20 transition-all hover:bg-purple-700 active:scale-95"
+                    className="min-h-[44px] flex-[2] rounded-2xl bg-primary-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-700 active:scale-95"
                 >
                     Apply Filters
                 </button>
@@ -254,14 +254,13 @@ export default function Index({
 
             <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 sm:px-4 sm:py-6 md:px-6">
                 {/* 1. RESTORED INCIDENT BOARD HERO (Dark Navy Surface + Purple CTA) */}
-                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-5 py-6 text-white shadow-xl shadow-slate-900/10 sm:px-6 sm:py-7 dark:shadow-black/40">
+                <div className="relative overflow-hidden rounded-3xl bg-hero px-5 py-6 text-white shadow-xl shadow-primary-900/20 sm:px-6 sm:py-7 dark:shadow-black/40">
                     {/* Ambient Glow Accents */}
-                    <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-indigo-500/15 blur-3xl" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
 
                     <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
                         <div>
-                            <span className="text-[10px] font-black tracking-[0.2em] text-purple-400 uppercase">Community Issue Tracker</span>
+                            <span className="text-[10px] font-black tracking-[0.2em] text-sky-300 uppercase">Community Issue Tracker</span>
                             <div className="mt-1 flex items-center gap-2.5">
                                 <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Incident Board</h1>
                                 {typeof estateTotalCount === 'number' && estateTotalCount > 0 && (
@@ -279,7 +278,7 @@ export default function Index({
                             <div className="shrink-0">
                                 <Link
                                     href="/resident/incidents/create"
-                                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-xs font-black text-white shadow-lg shadow-purple-600/30 transition-all hover:from-purple-500 hover:to-indigo-500 hover:shadow-purple-600/40 active:scale-95"
+                                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-xs font-black text-white shadow-lg shadow-primary-600/30 transition-all hover:bg-primary-500 hover:shadow-primary-600/40 active:scale-95"
                                 >
                                     <Plus className="h-4 w-4" strokeWidth={3} />
                                     <span>Report Incident</span>
@@ -317,7 +316,7 @@ export default function Index({
                 {/* 2. STATE A: TRUE ZERO STATE (Estate has 0 incidents in total) */}
                 {isTrueZeroState ? (
                     <div className="rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-xs sm:p-12 dark:border-slate-800 dark:bg-slate-900/50">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-50 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400">
                             <Shield className="h-8 w-8" strokeWidth={1.75} />
                         </div>
                         <h2 className="mt-4 text-lg font-black text-slate-900 dark:text-slate-100">No incidents reported</h2>
@@ -340,7 +339,7 @@ export default function Index({
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search keywords, locations..."
-                                        className="min-h-[42px] w-full rounded-2xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                        className="min-h-[42px] w-full rounded-2xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                                     />
                                     {search && (
                                         <button
@@ -361,14 +360,14 @@ export default function Index({
                                     onClick={() => setIsFilterSheetOpen(true)}
                                     className={`relative flex min-h-[42px] items-center gap-2 rounded-2xl border px-3.5 text-xs font-bold transition-all active:scale-95 ${
                                         activeFilterCount > 0
-                                            ? 'border-purple-500 bg-purple-50/50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/30 dark:text-purple-300'
+                                            ? 'border-primary-500 bg-primary-50/50 text-primary-700 dark:border-primary-800 dark:bg-primary-950/30 dark:text-primary-300'
                                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
                                     }`}
                                 >
                                     <SlidersHorizontal className="h-4 w-4" />
                                     <span className="hidden sm:inline">Filters</span>
                                     {activeFilterCount > 0 && (
-                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-black text-white">
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-black text-white">
                                             {activeFilterCount}
                                         </span>
                                     )}
@@ -402,12 +401,12 @@ export default function Index({
                         {hasActiveFilters && (
                             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
                                 {selectedCategory && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-300">
                                         <span>Category: {selectedCategory}</span>
                                         <button
                                             type="button"
                                             onClick={() => handleCategoryClick('')}
-                                            className="hover:text-purple-900 dark:hover:text-white"
+                                            className="hover:text-primary-900 dark:hover:text-white"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -415,7 +414,7 @@ export default function Index({
                                 )}
 
                                 {currentSort !== 'newest' && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-300">
                                         <span>Sort: Popular</span>
                                         <button
                                             type="button"
@@ -423,7 +422,7 @@ export default function Index({
                                                 setCurrentSort('newest');
                                                 applyFilters({ sort: undefined });
                                             }}
-                                            className="hover:text-purple-900 dark:hover:text-white"
+                                            className="hover:text-primary-900 dark:hover:text-white"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -449,7 +448,7 @@ export default function Index({
                                 <button
                                     type="button"
                                     onClick={clearAllFilters}
-                                    className="ml-1 text-xs font-bold text-slate-400 transition-colors hover:text-purple-600 dark:hover:text-purple-400"
+                                    className="ml-1 text-xs font-bold text-slate-400 transition-colors hover:text-primary-600 dark:hover:text-primary-400"
                                 >
                                     Clear all
                                 </button>
