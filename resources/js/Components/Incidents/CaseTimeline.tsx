@@ -95,7 +95,7 @@ export default function CaseTimeline({ incident, activities = [], className = ''
             icon: Flame,
             isMilestone: true,
             badge: 'In Progress',
-            dotColor: 'bg-indigo-600 text-white border-indigo-600',
+            dotColor: 'bg-primary-600 text-white border-primary-600',
         });
     }
 
