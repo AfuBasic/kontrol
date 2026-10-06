@@ -11,6 +11,7 @@ use App\Models\ResidentSubscription;
 use App\Services\Admin\EstateBoardService;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
+use App\Support\ProfileCompleteness;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -96,6 +97,7 @@ class HomeController extends Controller
             ->count();
 
         return Inertia::render('Resident/Home', [
+            'profileNudge' => ProfileCompleteness::nudge($user),
             // Eager - lightweight command center shell
             'stats' => $this->accessCodeService->getHomeStats(),
             'estateName' => $estate->name,
