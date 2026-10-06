@@ -100,7 +100,7 @@ export default function HouseholdIndex({ members }: Props) {
                             setShowForm(!showForm);
                         }}
                         className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-xl transition-all ${
-                            isAtLimit ? 'cursor-not-allowed bg-slate-300 shadow-none' : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'
+                            isAtLimit ? 'cursor-not-allowed bg-slate-300 shadow-none' : 'bg-primary-600 shadow-primary-100 hover:bg-primary-700'
                         }`}
                     >
                         <UserPlus className="h-6 w-6" />
@@ -170,7 +170,7 @@ export default function HouseholdIndex({ members }: Props) {
                                         value={form.data.name}
                                         onChange={(e) => form.setData('name', e.target.value)}
                                         placeholder="e.g. Jane Doe"
-                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-900"
+                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-900"
                                     />
                                     {form.errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.name}</p>}
                                 </div>
@@ -188,7 +188,7 @@ export default function HouseholdIndex({ members }: Props) {
                                         value={form.data.email}
                                         onChange={(e) => form.setData('email', e.target.value)}
                                         placeholder="e.g. jane@example.com"
-                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-900"
+                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:bg-slate-900"
                                     />
                                     {form.errors.email && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.email}</p>}
                                 </div>
@@ -298,7 +298,7 @@ export default function HouseholdIndex({ members }: Props) {
                                         {member.status !== 'accepted' && (
                                             <button
                                                 onClick={() => setMemberToReset(member)}
-                                                className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
+                                                className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-primary-600 active:scale-90"
                                             >
                                                 <KeyRound className="h-5 w-5" />
                                             </button>
@@ -326,7 +326,7 @@ export default function HouseholdIndex({ members }: Props) {
                             title="Visitor Management"
                             description="They can generate short-term access codes for their own guests and deliveries."
                             icon={<Zap className="h-6 w-6" />}
-                            color="bg-indigo-50 text-indigo-600"
+                            color="bg-primary-50 text-primary-600"
                             delay={0.1}
                         />
                         <FeatureCard
@@ -346,7 +346,7 @@ export default function HouseholdIndex({ members }: Props) {
                     </div>
                     <div className="brand-card !rounded-3xl p-6 text-white">
                         <div className="mb-2 flex items-center gap-3">
-                            <ShieldCheck className="h-5 w-5 text-indigo-400" />
+                            <ShieldCheck className="h-5 w-5 text-primary-400" />
                             <h4 className="text-sm font-black tracking-widest uppercase">Privacy & Control</h4>
                         </div>
                         <p className="text-xs leading-relaxed font-medium text-slate-400">
