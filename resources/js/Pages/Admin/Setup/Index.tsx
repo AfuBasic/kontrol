@@ -29,7 +29,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
 
     return (
         <>
-            <Head title="Estate Setup - Kontrol" />
+            <Head title="Estate Setup" />
 
             <div className="mx-auto max-w-4xl py-12">
                 <div className="mb-10 text-center">
