@@ -71,7 +71,7 @@ export default function CommandCenter({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className={`group relative overflow-hidden rounded-[38px] p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] ${
-                activeSos ? 'bg-slate-950 ring-1 ring-rose-500/30' : 'bg-slate-950'
+                activeSos ? 'bg-slate-950 ring-1 ring-rose-500/30' : 'bg-hero'
             }`}
         >
             {/* Advanced Layering & Texture */}
@@ -84,7 +84,7 @@ export default function CommandCenter({
                     </>
                 ) : (
                     <>
-                        <div className="absolute -top-[20%] -right-[10%] h-[80%] w-[80%] animate-pulse rounded-full bg-indigo-600/30 blur-[100px]" />
+                        <div className="absolute -top-[20%] -right-[10%] h-[80%] w-[80%] animate-pulse rounded-full bg-primary-600/30 blur-[100px]" />
                         <div className="absolute -bottom-[20%] -left-[10%] h-[70%] w-[70%] rounded-full bg-blue-500/20 blur-[80px]" />
                     </>
                 )}
@@ -178,23 +178,23 @@ export default function CommandCenter({
 
                     <div className="flex flex-col gap-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 shadow-inner ring-1 ring-white/10 backdrop-blur-md">
-                            {activeSos ? <ShieldAlert className="h-5 w-5 text-rose-400" /> : <Users className="h-5 w-5 text-indigo-400" />}
+                            {activeSos ? <ShieldAlert className="h-5 w-5 text-rose-400" /> : <Users className="h-5 w-5 text-primary-400" />}
                         </div>
                     </div>
                 </div>
 
                 <div className={`mb-6 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} items-stretch gap-4`}>
                     {/* Expected Today Card with gradient & glowing effect */}
-                    <div className="relative flex flex-col justify-center overflow-hidden rounded-[24px] bg-linear-to-br from-indigo-500/10 via-indigo-600/5 to-transparent p-5 ring-1 ring-indigo-500/20 backdrop-blur-md transition-all hover:ring-indigo-500/40">
+                    <div className="relative flex flex-col justify-center overflow-hidden rounded-[24px] bg-linear-to-br from-primary-500/10 via-primary-600/5 to-transparent p-5 ring-1 ring-primary-500/20 backdrop-blur-md transition-all hover:ring-primary-500/40">
                         {/* Corner Glow */}
-                        <div className="pointer-events-none absolute top-0 right-0 h-16 w-16 rounded-full bg-indigo-500/25 blur-xl" />
+                        <div className="pointer-events-none absolute top-0 right-0 h-16 w-16 rounded-full bg-primary-500/25 blur-xl" />
 
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-indigo-400/80 uppercase">Expected Today</p>
+                        <p className="mb-1 text-[10px] font-black tracking-widest text-primary-400/80 uppercase">Expected Today</p>
                         <div className="flex items-baseline gap-2">
                             <span className="text-3xl font-black tracking-tight text-white">
                                 <CountUpNumber value={expectedToday} />
                             </span>
-                            <span className="text-xs font-bold text-indigo-300/60">{expectedToday === 1 ? 'visitor' : 'visitors'}</span>
+                            <span className="text-xs font-bold text-primary-300/60">{expectedToday === 1 ? 'visitor' : 'visitors'}</span>
                         </div>
                     </div>
 
