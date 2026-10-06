@@ -254,9 +254,8 @@ export default function Index({
 
             <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 sm:px-4 sm:py-6 md:px-6">
                 {/* 1. RESTORED INCIDENT BOARD HERO (Dark Navy Surface + Purple CTA) */}
-                <div className="relative overflow-hidden rounded-3xl bg-hero px-5 py-6 text-white shadow-xl shadow-primary-900/20 sm:px-6 sm:py-7 dark:shadow-black/40">
+                <div className="brand-card !rounded-3xl px-5 py-6 text-white sm:px-6 sm:py-7 dark:shadow-black/40">
                     {/* Ambient Glow Accents */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
 
                     <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
                         <div>
