@@ -226,9 +226,9 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
 
             {/* Total Balance Card */}
             <section>
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl shadow-slate-900/20">
+                <div className="brand-card !rounded-[2.5rem] p-8 text-white">
                     <div className="relative z-10">
-                        <p className="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Total Outstanding</p>
+                        <p className="text-xs font-black tracking-[0.2em] text-blue-200/70 uppercase">Total Outstanding</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight">{formatCurrency(totalOutstanding)}</h2>
 
                         <div className="mt-8 flex items-center gap-3">
