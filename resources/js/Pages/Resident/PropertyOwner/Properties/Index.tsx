@@ -72,7 +72,7 @@ export default function Index({ properties }: Props) {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="shadow-indigo-650/15 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98 sm:w-auto"
+                    className="shadow-primary-650/15 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-primary-700 active:scale-98 sm:w-auto"
                 >
                     <PlusIcon className="h-5 w-5" />
                     Add Property
@@ -89,7 +89,7 @@ export default function Index({ properties }: Props) {
                         >
                             <div>
                                 <div className="flex items-start justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
                                         <BuildingOffice2Icon className="h-6 w-6" />
                                     </div>
                                     <div className="flex items-center gap-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
@@ -99,7 +99,7 @@ export default function Index({ properties }: Props) {
                                                 setEditingProperty(property);
                                                 editForm.setData('name', property.name);
                                             }}
-                                            className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+                                            className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-slate-50 hover:text-primary-600"
                                         >
                                             <PencilSquareIcon className="h-4.5 w-4.5" />
                                         </button>
@@ -116,7 +116,7 @@ export default function Index({ properties }: Props) {
                                 </div>
 
                                 <div className="mt-4">
-                                    <h2 className="text-lg font-black text-slate-900 transition-colors group-hover:text-indigo-600">
+                                    <h2 className="text-lg font-black text-slate-900 transition-colors group-hover:text-primary-600">
                                         {property.name}
                                     </h2>
                                     <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase">Created {property.created_at}</p>
@@ -148,7 +148,7 @@ export default function Index({ properties }: Props) {
                         <p className="mt-1 text-sm text-slate-500">Create your first property to start organizing residents and collections.</p>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
+                            className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-700"
                         >
                             Add Property
                         </button>
@@ -193,7 +193,7 @@ export default function Index({ properties }: Props) {
                                         id="create-name"
                                         value={createForm.data.name}
                                         onChange={(e) => createForm.setData('name', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:ring-primary-500 focus:outline-none"
                                         placeholder="e.g. Block A, Villa 12"
                                     />
                                     {createForm.errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{createForm.errors.name}</p>}
@@ -210,7 +210,7 @@ export default function Index({ properties }: Props) {
                                     <button
                                         type="submit"
                                         disabled={createForm.processing}
-                                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                        className="rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                     >
                                         {createForm.processing ? 'Adding...' : 'Add Property'}
                                     </button>
@@ -258,7 +258,7 @@ export default function Index({ properties }: Props) {
                                         id="edit-name"
                                         value={editForm.data.name}
                                         onChange={(e) => editForm.setData('name', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:ring-primary-500 focus:outline-none"
                                         placeholder="e.g. Block A, Villa 12"
                                     />
                                     {editForm.errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{editForm.errors.name}</p>}
@@ -275,7 +275,7 @@ export default function Index({ properties }: Props) {
                                     <button
                                         type="submit"
                                         disabled={editForm.processing}
-                                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                        className="rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                     >
                                         {editForm.processing ? 'Saving...' : 'Rename'}
                                     </button>
