@@ -194,7 +194,9 @@ class AccessCodeController extends Controller
             'isSubscriptionActive' => $isSubscriptionActive,
             'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
             'requireVehicleInfo' => $settings ? (bool) $settings->require_vehicle_information : false,
-            'residentAddressMissing' => ProfileCompleteness::appliesTo(auth()->user()) && in_array('address', ProfileCompleteness::missing(auth()->user()), true),
+            'residentDetailsMissing' => ProfileCompleteness::appliesTo(auth()->user())
+                ? array_values(array_intersect(ProfileCompleteness::missing(auth()->user()), ['unit', 'address']))
+                : [],
         ]);
     }
 
