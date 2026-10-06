@@ -71,7 +71,7 @@ export default function CommandCenter({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className={`group relative overflow-hidden rounded-[38px] p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] ${
-                activeSos ? 'bg-slate-950 ring-1 ring-rose-500/30' : 'bg-hero'
+                activeSos ? 'bg-slate-950 ring-1 ring-rose-500/30' : 'brand-card !rounded-[38px]'
             }`}
         >
             {/* Advanced Layering & Texture */}
@@ -95,15 +95,6 @@ export default function CommandCenter({
                     style={{
                         backgroundImage:
                             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
-                    }}
-                />
-
-                {/* Subtle Grid / Pattern */}
-                <div
-                    className="absolute inset-0 opacity-[0.05]"
-                    style={{
-                        backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-                        backgroundSize: '32px 32px',
                     }}
                 />
 
