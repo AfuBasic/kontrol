@@ -131,7 +131,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                             className="relative flex cursor-pointer overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.02)] transition-all duration-300 hover:shadow-md active:scale-[0.99]"
                                         >
                                             {/* Left side tear-off (Discount Badge) */}
-                                            <div className="relative flex w-28 shrink-0 flex-col items-center justify-center bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 p-5 text-center text-white">
+                                            <div className="relative flex w-28 shrink-0 flex-col items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-5 text-center text-white">
                                                 {/* Left notch ticket cutouts */}
                                                 <div className="absolute top-[-10px] right-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
                                                 <div className="absolute right-[-10px] bottom-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
@@ -141,7 +141,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                 >
                                                     {coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value}
                                                 </span>
-                                                <span className="mt-1 text-[9px] font-black tracking-wider text-indigo-200 uppercase">
+                                                <span className="mt-1 text-[9px] font-black tracking-wider text-primary-200 uppercase">
                                                     {coupon.type === 'percentage' ? 'OFF' : 'LESS'}
                                                 </span>
 
@@ -153,7 +153,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                             <div className="flex min-w-0 flex-1 flex-col justify-between p-5">
                                                 <div>
                                                     <div className="mb-1 flex items-center gap-1.5">
-                                                        <span className="rounded-sm bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-600 uppercase">
+                                                        <span className="rounded-sm bg-primary-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-primary-600 uppercase">
                                                             {getScopeLabel(coupon.scope)}
                                                         </span>
                                                         {coupon.expires_at && (
@@ -213,7 +213,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                             animate={{ opacity: 1, scale: 1 }}
                             className="flex flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white p-12 text-center"
                         >
-                            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-500">
                                 <Ticket className="h-5 w-5" />
                             </span>
                             <h2 className="text-base font-black tracking-tight text-slate-900">No active offers today</h2>
@@ -318,7 +318,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                             {/* Header */}
                             <div className="mb-4 flex items-start justify-between gap-4">
                                 <div className="min-w-0">
-                                    <span className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-indigo-600 uppercase">
+                                    <span className="inline-flex items-center rounded-md border border-primary-100 bg-primary-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-primary-600 uppercase">
                                         {getScopeLabel(selectedCoupon.scope)}
                                     </span>
                                     <h3 className="mt-1.5 text-lg leading-snug font-black tracking-tight text-slate-900">
@@ -354,11 +354,11 @@ export default function CouponIndexPage({ coupons }: Props) {
                             <div className="space-y-4 text-xs">
                                 <div>
                                     <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Coupon code</span>
-                                    <div className="border-slate-150 text-indigo-650 mt-1 flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2.5 font-mono text-sm tracking-wider">
+                                    <div className="border-slate-150 text-primary-650 mt-1 flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2.5 font-mono text-sm tracking-wider">
                                         <span>{selectedCoupon.code}</span>
                                         <button
                                             onClick={(e) => handleCopy(e, selectedCoupon)}
-                                            className="text-slate-400 transition-colors hover:text-indigo-600"
+                                            className="text-slate-400 transition-colors hover:text-primary-600"
                                         >
                                             {copiedId === selectedCoupon.id ? (
                                                 <Check className="h-4 w-4 text-emerald-500" />
