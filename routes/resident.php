@@ -20,6 +20,7 @@ use App\Http\Controllers\Resident\NotificationController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\PaymentCallbackController;
 use App\Http\Controllers\Resident\ProfileController;
+use App\Http\Controllers\Resident\ProfileNudgeController;
 use App\Http\Controllers\Resident\PropertyOwner\AnnouncementController as POAnnouncementController;
 use App\Http\Controllers\Resident\PropertyOwner\CollectionController as POCollectionController;
 use App\Http\Controllers\Resident\PropertyOwner\DashboardController as PODashboardController;
@@ -60,6 +61,8 @@ Route::middleware(['role:resident,household_member,property_owner', 'resident.ac
     Route::get('/profile', [ProfileController::class, 'edit'])->name('resident.profile');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('resident.profile.update');
     Route::put('/password', [PasswordController::class, 'update'])->name('resident.password.update');
+    Route::post('/profile/nudge/dismiss', [ProfileNudgeController::class, 'dismiss'])->name('resident.profile.nudge.dismiss');
+    Route::patch('/profile/address', [ProfileNudgeController::class, 'saveAddress'])->name('resident.profile.address.update');
 
     // Activity feed & Notifications
     Route::middleware('check-estate-feature:real-time-visit-feed')->group(function (): void {
