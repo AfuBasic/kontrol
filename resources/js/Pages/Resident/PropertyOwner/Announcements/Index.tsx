@@ -121,7 +121,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
             </div>
 
             {/* Communication Summary Hero */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 shadow-2xl sm:p-10">
+            <div className="brand-card !rounded-[2rem] p-8 sm:p-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent"></div>
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
