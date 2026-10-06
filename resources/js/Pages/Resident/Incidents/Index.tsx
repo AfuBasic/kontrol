@@ -250,7 +250,7 @@ export default function Index({
 
     return (
         <>
-            <Head title="Incidents & Maintenance - Kontrol" />
+            <Head title="Incidents & Maintenance" />
 
             <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 sm:px-4 sm:py-6 md:px-6">
                 {/* 1. RESTORED INCIDENT BOARD HERO (Dark Navy Surface + Purple CTA) */}
