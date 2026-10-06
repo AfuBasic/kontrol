@@ -22,6 +22,10 @@ interface Props {
         unit_number: string;
         address: string;
     };
+    completeness?: {
+        total: number;
+        missing: Array<'name' | 'address'>;
+    };
     stats: {
         active_codes_count: number;
         household_members_count: number;
@@ -44,7 +48,7 @@ import { useFeature } from '@/Hooks/useFeature';
 import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
-export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
+export default function Edit({ telegram, profile, completeness, stats, emergency_contacts, subscription }: Props) {
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
@@ -106,6 +110,12 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                     Resident
                                 </span>
                             </div>
+                            {completeness && completeness.missing.length > 0 && (
+                                <p className="mt-4 text-xs font-medium text-blue-200/80">
+                                    {completeness.total - completeness.missing.length} of {completeness.total} details added. Add your{' '}
+                                    {completeness.missing.join(' and ')} under Profile Information.
+                                </p>
+                            )}
                             {isHouseholdMember && parentResidentName && (
                                 <p className="mt-4 text-xs font-bold text-slate-400">
                                     Household member of <span className="text-white">{parentResidentName}</span>
