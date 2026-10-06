@@ -9,6 +9,7 @@ use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\VisitorCheckedOutNotification;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Security\ZonePassGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -53,6 +54,14 @@ class RecordCheckOutAction
                     ->forEstate($estateId)
                     ->where('code', $code)
                     ->firstOrFail();
+            }
+
+            // Zone-locked passes: the same rule as scanning, so the decision and offline paths cannot be used to get around it.
+            $zoneGuard = app(ZonePassGuard::class);
+            if (! $zoneGuard->allows($accessCode, $verifiedBy, $estateId)) {
+                $zoneGuard->recordRefusal($accessCode, $verifiedBy, $estateId);
+
+                throw ValidationException::withMessages(['zone' => ZonePassGuard::MESSAGE]);
             }
 
             // Find the most recent active log that is not checked out
