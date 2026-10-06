@@ -143,3 +143,66 @@ test('upvote toggle reflects on incident is_upvoted and upvotes_count', function
         ->where('incidents.data.0.upvotes_count', 1)
     );
 });
+
+test('incidents created in the same second page without repeating or skipping any, newest id first', function () {
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('resident');
+    $user->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $sameSecond = now()->subDay()->startOfSecond();
+    foreach (range(1, 40) as $i) {
+        $incident = Incident::create([
+            'estate_id' => $estate->id,
+            'reporter_id' => $user->id,
+            'reporter_type' => User::class,
+            'title' => "Incident {$i}",
+            'body' => 'Body text for the incident.',
+            'category' => 'Security',
+            'status' => 'pending',
+        ]);
+        $incident->forceFill(['created_at' => $sameSecond])->saveQuietly();
+    }
+
+    $ids = collect([1, 2, 3])->flatMap(function (int $page) use ($user) {
+        return $this->actingAs($user)
+            ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+            ->get(route('resident.incidents.index', ['page' => $page]))
+            ->viewData('page')['props']['incidents']['data'] ?? [];
+    })->pluck('id');
+
+    expect($ids)->toHaveCount(40)
+        ->and($ids->unique())->toHaveCount(40)
+        ->and($ids->all())->toBe($ids->sortDesc()->values()->all());
+});
+
+test('the feed lists the newest incidents first', function () {
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('resident');
+    $user->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    foreach ([['Oldest', 5], ['Middle', 3], ['Newest', 1]] as [$title, $daysAgo]) {
+        $incident = Incident::create([
+            'estate_id' => $estate->id,
+            'reporter_id' => $user->id,
+            'reporter_type' => User::class,
+            'title' => $title,
+            'body' => 'Body text for the incident.',
+            'category' => 'Security',
+            'status' => 'pending',
+        ]);
+        $incident->forceFill(['created_at' => now()->subDays($daysAgo)])->saveQuietly();
+    }
+
+    $this->actingAs($user)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.incidents.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('incidents.data.0.title', 'Newest')
+            ->where('incidents.data.1.title', 'Middle')
+            ->where('incidents.data.2.title', 'Oldest')
+        );
+});
