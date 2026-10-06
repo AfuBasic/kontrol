@@ -244,12 +244,8 @@ export default function HouseholdIndex({ members }: Props) {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="group relative overflow-hidden rounded-[40px] bg-slate-900 p-12 text-center shadow-2xl"
+                        className="brand-card group !rounded-[40px] p-12 text-center"
                     >
-                        <div
-                            className="pointer-events-none absolute inset-0 opacity-[0.1]"
-                            style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }}
-                        />
                         <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[32px] bg-white/10 text-white backdrop-blur-md transition-transform group-hover:rotate-6">
                             <Users className="h-12 w-12" />
                         </div>
@@ -348,7 +344,7 @@ export default function HouseholdIndex({ members }: Props) {
                             delay={0.3}
                         />
                     </div>
-                    <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl">
+                    <div className="brand-card !rounded-3xl p-6 text-white">
                         <div className="mb-2 flex items-center gap-3">
                             <ShieldCheck className="h-5 w-5 text-indigo-400" />
                             <h4 className="text-sm font-black tracking-widest uppercase">Privacy & Control</h4>
