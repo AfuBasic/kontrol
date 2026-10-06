@@ -131,7 +131,7 @@ export default function IncidentDiscussion({
                                 </button>
                             </div>
                         )}
-                        <div className="relative rounded-xl border border-slate-200 bg-white focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600">
+                        <div className="relative rounded-xl border border-slate-200 bg-white focus-within:border-primary-600 focus-within:ring-1 focus-within:ring-primary-600">
                             <label htmlFor="incident-discussion-composer" className="sr-only">
                                 {replyTo ? `Reply to ${replyTo.author}` : 'Share an update or comment'}
                             </label>
@@ -158,7 +158,7 @@ export default function IncidentDiscussion({
                                 aria-label={submitting ? 'Sending comment' : 'Send comment'}
                                 aria-disabled={!canSend}
                                 className={`absolute right-2 bottom-2 inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors active:scale-[0.97] ${
-                                    canSend ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400'
+                                    canSend ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-slate-100 text-slate-400'
                                 }`}
                             >
                                 {submitting ? (
@@ -206,7 +206,7 @@ export default function IncidentDiscussion({
                                                     });
                                                     requestAnimationFrame(() => textareaRef.current?.focus());
                                                 }}
-                                                className="mt-1 inline-flex min-h-9 items-center text-[11px] font-medium text-slate-500 hover:text-indigo-600"
+                                                className="mt-1 inline-flex min-h-9 items-center text-[11px] font-medium text-slate-500 hover:text-primary-600"
                                                 aria-label={`Reply to ${comment.author?.name || 'Resident'}`}
                                             >
                                                 Reply
@@ -260,7 +260,7 @@ export default function IncidentDiscussion({
                 <form onSubmit={handleSubmit} className="mb-5" noValidate>
                     {replyTo && (
                         <div
-                            className={`mb-2 flex items-center justify-between rounded-lg bg-indigo-50 px-3 py-1.5 text-xs text-indigo-700 ${dark('dark:bg-indigo-950/40 dark:text-indigo-300')}`}
+                            className={`mb-2 flex items-center justify-between rounded-lg bg-primary-50 px-3 py-1.5 text-xs text-primary-700 ${dark('dark:bg-primary-950/40 dark:text-primary-300')}`}
                         >
                             <span className="flex items-center gap-1.5 truncate">
                                 <CornerDownRight className="h-3.5 w-3.5 shrink-0" />
@@ -283,12 +283,12 @@ export default function IncidentDiscussion({
                             placeholder="Share an update or comment on this incident..."
                             rows={3}
                             disabled={submitting}
-                            className={`w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 pr-12 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none sm:p-3.5 sm:text-sm ${dark('dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-indigo-500 dark:focus:bg-slate-900')}`}
+                            className={`w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 pr-12 text-xs text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none sm:p-3.5 sm:text-sm ${dark('dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-primary-500 dark:focus:bg-slate-900')}`}
                         />
                         <button
                             type="submit"
                             disabled={!body.trim() || submitting}
-                            className="absolute right-2.5 bottom-3 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-40 disabled:hover:bg-indigo-600"
+                            className="absolute right-2.5 bottom-3 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white shadow-xs transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-40 disabled:hover:bg-primary-600"
                         >
                             <Send className="h-4 w-4 shrink-0" />
                         </button>
@@ -315,7 +315,7 @@ export default function IncidentDiscussion({
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         <div
-                                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-black text-indigo-700 ${dark('dark:bg-indigo-950 dark:text-indigo-300')}`}
+                                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-black text-primary-700 ${dark('dark:bg-primary-950 dark:text-primary-300')}`}
                                         >
                                             {comment.author?.name ? comment.author.name[0].toUpperCase() : 'U'}
                                         </div>
@@ -346,7 +346,7 @@ export default function IncidentDiscussion({
                                                     author: comment.author?.name || 'Resident',
                                                 })
                                             }
-                                            className={`inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:underline ${dark('dark:text-indigo-400')}`}
+                                            className={`inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:underline ${dark('dark:text-primary-400')}`}
                                         >
                                             <CornerDownRight className="h-3 w-3 shrink-0" />
                                             <span>Reply</span>
