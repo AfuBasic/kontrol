@@ -49,33 +49,33 @@ export default function Dashboard({
             <Head title="Property Owner Dashboard" />
 
             {/* Header section with gradient glow */}
-            <div className="relative overflow-hidden rounded-[32px] bg-linear-to-br from-indigo-900 to-indigo-950 p-6 text-white shadow-xl shadow-indigo-950/20 sm:p-8">
+            <div className="relative overflow-hidden rounded-[32px] bg-linear-to-br from-primary-900 to-primary-950 p-6 text-white shadow-xl shadow-primary-950/20 sm:p-8">
                 <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-bold tracking-wider text-indigo-300 uppercase">
+                        <span className="rounded-full bg-primary-500/20 px-3 py-1 text-xs font-bold tracking-wider text-primary-300 uppercase">
                             Property Owner
                         </span>
                         <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Estate Hub</h1>
-                        <p className="mt-1 text-sm text-indigo-200/80">Monitor and manage your property holdings and occupants.</p>
+                        <p className="mt-1 text-sm text-primary-200/80">Monitor and manage your property holdings and occupants.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Link
                             href={propertiesIndex.url()}
-                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-indigo-950 transition-all hover:bg-slate-100 active:scale-95"
+                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-primary-950 transition-all hover:bg-slate-100 active:scale-95"
                         >
                             Properties
                         </Link>
                         <Link
                             href={residentsIndex.url()}
-                            className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-indigo-700 active:scale-95"
+                            className="inline-flex items-center gap-1.5 rounded-2xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-700 active:scale-95"
                         >
                             Residents
                         </Link>
                     </div>
                 </div>
                 {/* Visual decorative circles */}
-                <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
-                <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
+                <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary-500/10 blur-3xl" />
+                <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-primary-500/10 blur-3xl" />
             </div>
 
             {/* Metrics cards grid */}
@@ -83,10 +83,10 @@ export default function Dashboard({
                 {/* Properties */}
                 <Link
                     href={propertiesIndex.url()}
-                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-indigo-100"
+                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-primary-100"
                 >
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white">
                             <BuildingOffice2Icon className="h-5 w-5" />
                         </div>
                         <ChevronRightIcon className="h-4 w-4 text-slate-400 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
@@ -100,10 +100,10 @@ export default function Dashboard({
                 {/* Residents */}
                 <Link
                     href={residentsIndex.url()}
-                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-indigo-100"
+                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-primary-100"
                 >
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white">
                             <UsersIcon className="h-5 w-5" />
                         </div>
                         <ChevronRightIcon className="h-4 w-4 text-slate-400 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
@@ -117,10 +117,10 @@ export default function Dashboard({
                 {/* Outstanding Bills */}
                 <Link
                     href={collectionsIndex.url()}
-                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-indigo-100"
+                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-primary-100"
                 >
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white">
                             <WalletIcon className="h-5 w-5" />
                         </div>
                         <ChevronRightIcon className="h-4 w-4 text-slate-400 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
@@ -134,10 +134,10 @@ export default function Dashboard({
                 {/* Announcements */}
                 <Link
                     href={announcementsIndex.url()}
-                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-indigo-100"
+                    className="group flex flex-col justify-between rounded-[32px] bg-white p-5 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-primary-100"
                 >
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white">
                             <MegaphoneIcon className="h-5 w-5" />
                         </div>
                         <ChevronRightIcon className="h-4 w-4 text-slate-400 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
@@ -157,7 +157,7 @@ export default function Dashboard({
                         <h2 className="text-lg font-black text-slate-900">Recent Rent & Fee Payments</h2>
                         <Link
                             href={collectionsIndex.url()}
-                            className="text-xs font-bold tracking-wider text-indigo-600 uppercase hover:text-indigo-700"
+                            className="text-xs font-bold tracking-wider text-primary-600 uppercase hover:text-primary-700"
                         >
                             View All
                         </Link>
@@ -200,7 +200,7 @@ export default function Dashboard({
                             recentActivity.map((log) => (
                                 <div key={log.id} className="flex items-start justify-between py-3.5">
                                     <div className="flex gap-3">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 font-black text-indigo-600">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 font-black text-primary-600">
                                             {log.visitor_name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
