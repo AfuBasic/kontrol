@@ -90,9 +90,7 @@ export default function EstateBoardIndex({
 
             <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 pb-28 text-left sm:px-4 sm:py-6 md:px-6">
                 {/* Hero */}
-                <div className="relative overflow-hidden rounded-3xl bg-hero px-5 py-6 text-white shadow-xl shadow-primary-900/20 sm:px-6 sm:py-7">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-
+                <div className="brand-card !rounded-3xl px-5 py-6 text-white sm:px-6 sm:py-7">
                     <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
                         <div>
                             <span className="text-[10px] font-black tracking-[0.2em] text-sky-300 uppercase">Community Notice Board</span>
