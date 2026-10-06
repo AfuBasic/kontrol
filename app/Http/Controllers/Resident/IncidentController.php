@@ -45,7 +45,8 @@ class IncidentController extends Controller
         $totalIncidentsCount = $this->incidentService->getTotalCount($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
-            'incidents' => $incidents,
+            // Infinite scroll: each scroll request fetches only the next page, keeping the active filters.
+            'incidents' => Inertia::scroll(fn () => $incidents),
             'filters' => (object) $filters,
             'categories' => $categories,
             'allowResidentReporting' => (bool) $settings->allow_residents_to_report_incidents,
