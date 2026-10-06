@@ -1,6 +1,6 @@
 import { Head, InfiniteScroll, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Mail, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
+import { Calendar, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
@@ -419,6 +419,7 @@ export default function Visitors({
                                     {/* Show Quick Contacts / Invite Again if available */}
                                     {recentVisitors && recentVisitors.length > 0 && (
                                         <QuickActions
+                                            showInvite={false}
                                             recentVisitors={recentVisitors}
                                             onInvite={() => setShowCreateSheet(true)}
                                             onInviteAgain={handleInviteAgain}
