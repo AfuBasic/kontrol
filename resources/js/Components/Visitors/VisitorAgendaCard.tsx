@@ -19,8 +19,8 @@ const DEFAULT_STATUS_MAP: Record<string, StatusConfig> = {
     },
     scheduled: {
         label: 'Scheduled',
-        nodeClass: 'border-2 border-indigo-400 bg-white text-indigo-500',
-        textClass: 'text-indigo-600 font-medium',
+        nodeClass: 'border-2 border-primary-400 bg-white text-primary-500',
+        textClass: 'text-primary-600 font-medium',
         icon: 'ring',
     },
     used: {
