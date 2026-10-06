@@ -39,7 +39,7 @@ export default function AdminActivation({ acceptUrl, user, flash, errors, estate
 
     return (
         <>
-            <Head title="Activate Administrator Account - Kontrol" />
+            <Head title="Activate Administrator Account" />
 
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] px-4 py-12">
                 {/* Ambient logic background */}
