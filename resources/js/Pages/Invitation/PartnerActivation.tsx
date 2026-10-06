@@ -32,7 +32,7 @@ export default function PartnerActivation({ acceptUrl, user, partner_name, flash
 
     return (
         <>
-            <Head title="Activate Partner Account - Kontrol" />
+            <Head title="Activate Partner Account" />
 
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A3D91] to-[#041E4A] px-4 py-12">
                 {/* Ambient logic background */}
