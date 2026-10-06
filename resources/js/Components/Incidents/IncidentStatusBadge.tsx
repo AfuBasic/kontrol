@@ -93,7 +93,7 @@ export default function IncidentStatusBadge({ status, size = 'md', showIcon = tr
 
     return (
         <span
-            className={`inline-flex items-center rounded-full border transition-colors ${bgClasses} ${textClasses} ${borderClasses} ${sizeClasses} ${className}`}
+            className={`inline-flex shrink-0 items-center rounded-full border whitespace-nowrap transition-colors ${bgClasses} ${textClasses} ${borderClasses} ${sizeClasses} ${className}`}
         >
             {showDot && <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />}
             {showIcon && !showDot && <Icon className={`${iconSizes} shrink-0`} />}
