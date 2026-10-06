@@ -6,7 +6,7 @@ import React from 'react';
 export default function Success() {
     return (
         <>
-            <Head title="Invitation Accepted - Kontrol" />
+            <Head title="Invitation Accepted" />
 
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] px-4 py-12">
                 {/* Ambient logic background */}
