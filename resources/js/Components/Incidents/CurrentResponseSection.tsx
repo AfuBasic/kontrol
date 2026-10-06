@@ -53,10 +53,10 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
         description:
             'Work is actively being executed on this case. Once technicians or security confirm the issue has been rectified, record resolution notes and mark as resolved.',
         icon: Flame,
-        bgClass: 'bg-gradient-to-br from-indigo-50/90 via-indigo-50/40 to-white dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900',
-        borderClass: 'border-indigo-200/90 dark:border-indigo-900/50',
-        textClass: 'text-indigo-900 dark:text-indigo-200',
-        accentClass: 'bg-indigo-600 text-white',
+        bgClass: 'bg-gradient-to-br from-primary-50/90 via-primary-50/40 to-white dark:from-primary-950/30 dark:via-slate-900 dark:to-slate-900',
+        borderClass: 'border-primary-200/90 dark:border-primary-900/50',
+        textClass: 'text-primary-900 dark:text-primary-200',
+        accentClass: 'bg-primary-600 text-white',
     },
     solved: {
         badgeLabel: 'Resolved by Management',
@@ -149,7 +149,7 @@ export default function CurrentResponseSection({
                             type="button"
                             onClick={onBeginResolution}
                             disabled={isUpdatingStatus}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto"
                         >
                             <Flame className="h-4 w-4" />
                             <span>{isUpdatingStatus ? 'Updating...' : 'Begin Resolution'}</span>
