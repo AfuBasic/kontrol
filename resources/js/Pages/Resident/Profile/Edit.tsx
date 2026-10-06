@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle, CreditCard } from 'lucide-react';
+import { Check, User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle, CreditCard } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
@@ -111,10 +111,49 @@ export default function Edit({ telegram, profile, completeness, stats, emergency
                                 </span>
                             </div>
                             {completeness && completeness.missing.length > 0 && (
-                                <p className="mt-4 text-xs font-medium text-blue-200/80">
-                                    {completeness.total - completeness.missing.length} of {completeness.total} details added. Add your{' '}
-                                    {completeness.missing.map((m) => (m === 'unit' ? 'unit number' : m)).join(', ')} under Profile Information.
-                                </p>
+                                <div className="mx-auto mt-6 w-full max-w-sm rounded-3xl bg-white/10 p-4 text-left ring-1 ring-white/15 backdrop-blur-sm">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black tracking-[0.2em] text-primary-200 uppercase">Complete your profile</p>
+                                        <p className="text-xs font-black text-white">
+                                            {completeness.total - completeness.missing.length}/{completeness.total}
+                                        </p>
+                                    </div>
+                                    <div className="mt-3 flex gap-1.5">
+                                        {Array.from({ length: completeness.total }).map((_, i) => (
+                                            <span
+                                                key={i}
+                                                className={`h-1.5 flex-1 rounded-full ${i < completeness.total - completeness.missing.length ? 'bg-emerald-400' : 'bg-white/20'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {(['name', 'unit', 'address'] as const).map((key) => {
+                                            const missing = completeness.missing.includes(key);
+                                            const label = key === 'unit' ? 'Unit number' : key === 'name' ? 'Name' : 'Address';
+                                            return (
+                                                <span
+                                                    key={key}
+                                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                                                        missing
+                                                            ? 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-300/40'
+                                                            : 'bg-emerald-400/15 text-emerald-200'
+                                                    }`}
+                                                >
+                                                    {missing ? <Plus className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                                                    {label}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveSheet('profile')}
+                                        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-3 text-sm font-black text-primary-700 shadow-lg shadow-black/20 transition active:scale-[0.98]"
+                                    >
+                                        Add missing details
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
                             )}
                             {isHouseholdMember && parentResidentName && (
                                 <p className="mt-4 text-xs font-bold text-slate-400">
