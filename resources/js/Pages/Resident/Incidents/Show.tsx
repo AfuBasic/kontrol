@@ -188,7 +188,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
                                     </h4>
                                     <div
                                         onClick={() => setIsLightboxOpen(true)}
-                                        className="group relative inline-block max-w-sm cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs transition-all hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950"
+                                        className="group relative inline-block max-w-sm cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs transition-all hover:border-primary-300 dark:border-slate-800 dark:bg-slate-950"
                                     >
                                         <img
                                             src={incident.attachment_url}
@@ -229,7 +229,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
                                         disabled={isReporter || isClosed}
                                         className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
                                             incident.is_upvoted
-                                                ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300'
+                                                ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-900/60 dark:bg-primary-950/40 dark:text-primary-300'
                                                 : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
                                         } ${isReporter || isClosed ? 'cursor-default opacity-70' : ''}`}
                                     >
