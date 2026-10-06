@@ -257,7 +257,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
 
     return (
         <>
-            <Head title="Report an Incident - Kontrol" />
+            <Head title="Report an Incident" />
 
             <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
                 {/* Header with Navigation */}
