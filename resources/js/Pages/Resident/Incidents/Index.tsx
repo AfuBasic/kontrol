@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
 import { Plus, RefreshCw, Search, Shield, SlidersHorizontal, X } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
-import IncidentCard from '@/Components/Incidents/IncidentCard';
+import IncidentFeedPost from '@/Components/Incidents/IncidentFeedPost';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import { type PendingIncident, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
@@ -55,7 +55,7 @@ export default function Index({
             const synced = stored.filter((i) => operations.find((o) => o.id === i.id)?.status === SyncStatus.Synced);
             if (synced.length > 0) {
                 await Promise.all(synced.map((i) => ResidentStore.removePendingIncident(i.id)));
-                router.reload({ only: ['incidents'] });
+                router.reload({ only: ['incidents'], reset: ['incidents'] });
             }
         } catch {
             setPendingIncidents([]);
@@ -480,46 +480,21 @@ export default function Index({
                                 </div>
                             </div>
                         ) : (
-                            /* STATE C: POPULATED STATE (Newsfeed Incident Cards) */
-                            <div className="space-y-4">
-                                {incidentList.map((incident) => (
-                                    <IncidentCard
-                                        key={incident.id}
-                                        incident={incident}
-                                        variant="resident"
-                                        href={`/resident/incidents/${incident.hashid}`}
-                                    />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Pagination */}
-                        {incidents.links && incidents.links.length > 3 && !isFilteredZeroState && (
-                            <div className="flex items-center justify-center gap-1.5 pt-4">
-                                {incidents.links.map((link, i) => {
-                                    if (!link.url) {
-                                        return (
-                                            <span
-                                                key={i}
-                                                className="rounded-xl px-3 py-2 text-xs font-bold text-slate-400 opacity-50 dark:text-slate-600"
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        );
-                                    }
-                                    return (
-                                        <Link
-                                            key={i}
-                                            href={link.url}
-                                            className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                                                link.active
-                                                    ? 'bg-purple-600 text-white shadow-xs'
-                                                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    );
-                                })}
-                            </div>
+                            /* STATE C: POPULATED STATE: a feed that loads the next page as the viewer scrolls */
+                            <InfiniteScroll
+                                data="incidents"
+                                loading={
+                                    <div className="flex justify-center py-6" role="status" aria-label="Loading more incidents">
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500" />
+                                    </div>
+                                }
+                            >
+                                <div className="space-y-3">
+                                    {incidentList.map((incident) => (
+                                        <IncidentFeedPost key={incident.id} incident={incident} href={`/resident/incidents/${incident.hashid}`} />
+                                    ))}
+                                </div>
+                            </InfiniteScroll>
                         )}
                     </div>
                 )}
