@@ -26,7 +26,7 @@ type UnpaidDue = {
 };
 
 type Props = SharedData & {
-    profileNudge?: { missing: Array<'name' | 'address'>; show: boolean } | null;
+    profileNudge?: { missing: Array<'name' | 'unit' | 'address'>; show: boolean } | null;
     stats: HomeStats;
     activeCodes?: AccessCode[] | null;
     recentActivity?: ActivityItem[] | null;
@@ -244,13 +244,15 @@ export default function Home({
         ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues')
         : attentionItems;
 
-    // Lowest priority and easy to wave away: "Not now" hides it for a week, and it stops coming back after the third time.
+    // Lowest priority and easy to wave away: "Not now" hides it for a week, and it keeps coming back until the details are in.
     if (profileNudge?.show) {
-        const both = profileNudge.missing.length > 1;
-        const onlyName = profileNudge.missing[0] === 'name';
+        const missing = profileNudge.missing;
+        const onlyName = missing.length === 1 && missing[0] === 'name';
+        const labels = missing.map((m) => (m === 'unit' ? 'unit number' : m));
+        const list = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}` : labels[0];
         attentionItems.push({
             type: 'profile_details',
-            title: both ? 'Add your name and address' : onlyName ? 'Add your name' : 'Add your address',
+            title: `Add your ${list}`,
             desc: onlyName ? 'So the gate and your visitors know who invited them.' : 'So guards can tell which house your visitors are for.',
             href: '/resident/profile',
             color: 'border-primary-100 bg-primary-50/40 text-primary-700',
@@ -396,20 +398,13 @@ export default function Home({
                                 Visitor passes, estate updates, incidents and your family list unlock once your subscription is settled. Dues and your
                                 profile stay available.
                             </p>
-                            <div className="mt-3 flex flex-wrap items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => openExternalBilling({ destination: 'subscription' })}
-                                    className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white transition active:scale-95"
-                                >
-                                    Settle now
-                                </button>
-                                {hasPaymentCollection && (
-                                    <Link href="/resident/dues" className="rounded-xl px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
-                                        View dues
-                                    </Link>
-                                )}
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => openExternalBilling({ destination: 'subscription' })}
+                                className="mt-4 w-full rounded-2xl bg-primary-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700 active:scale-[0.98]"
+                            >
+                                Settle now
+                            </button>
                         </div>
                     )}
                 </section>
