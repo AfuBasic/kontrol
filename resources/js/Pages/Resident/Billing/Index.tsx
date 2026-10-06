@@ -2,7 +2,6 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import {
     ArrowLeftIcon,
-    ArrowPathIcon,
     ArrowTopRightOnSquareIcon,
     ChevronRightIcon,
     CreditCardIcon,
@@ -263,11 +262,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                 )}
 
                 {/* Hero Summary Card */}
-                <motion.section
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-900 bg-slate-950 text-white shadow-[0_24px_70px_-42px_rgba(15,23,42,0.75)]"
-                >
+                <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="brand-card !rounded-3xl text-white">
                     <div className="p-5 sm:p-7">
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
