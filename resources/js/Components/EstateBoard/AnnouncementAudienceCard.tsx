@@ -77,7 +77,7 @@ export default function AnnouncementAudienceCard({
                                 {target.type.toLowerCase().includes('zone') ? (
                                     <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                                 ) : target.type.toLowerCase().includes('property') ? (
-                                    <Building className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                                    <Building className="h-3.5 w-3.5 shrink-0 text-primary-500" />
                                 ) : (
                                     <User className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                                 )}
