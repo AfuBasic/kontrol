@@ -30,6 +30,6 @@ class GenerateLoginOtp
             'created_at' => now(),
         ]);
 
-        Mail::to($user->email)->queue(new LoginOtpMail($user, $code));
+        Mail::to($user->email)->queue((new LoginOtpMail($user, $code))->onQueue(config('queue.otp_queue', 'default')));
     }
 }
