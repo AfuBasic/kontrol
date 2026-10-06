@@ -191,7 +191,7 @@ export default function Home({
             title: 'Visitors Expected Today',
             desc,
             href: '/resident/visitors',
-            color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',
+            color: 'border-primary-100 bg-primary-50/20 text-primary-700',
         });
     }
 
@@ -233,7 +233,7 @@ export default function Home({
             title: 'Make renewals automatic',
             desc: `Your ${cardBrand}${cardLast4} is ready. Turn on automatic renewal to pay future subscriptions seamlessly.`,
             href: '/resident/billing?section=renewal',
-            color: 'border-indigo-100 bg-indigo-50/30 text-indigo-900',
+            color: 'border-primary-100 bg-primary-50/30 text-primary-900',
             isDismissible: true,
         });
     }
@@ -259,7 +259,7 @@ export default function Home({
     const getActivityIcon = (type: string) => {
         switch (type) {
             case 'created':
-                return <PlusCircle className="h-4 w-4 text-indigo-500" />;
+                return <PlusCircle className="h-4 w-4 text-primary-500" />;
             case 'used':
                 return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
             case 'expired':
@@ -392,7 +392,7 @@ export default function Home({
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Visitors</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{totalExpectedToday}</span>
                             </div>
-                            <div className="text-indigo-650 flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+                            <div className="text-primary-650 flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                                 <Users className="h-4 w-4" />
                             </div>
                         </SnapshotCard>
@@ -414,7 +414,7 @@ export default function Home({
                         {/* Announcements Card */}
                         <SnapshotCard href="/resident/estate-board" locked={accessRestricted}>
                             <div className="min-w-0">
-                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Updates</span>
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Estate Board</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{announcements.length}</span>
                             </div>
                             <div className="text-amber-650 flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
@@ -441,10 +441,10 @@ export default function Home({
                         {announcements.length > 0 && (
                             <section className="space-y-2">
                                 <div className="flex items-center justify-between px-1">
-                                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Updates</h3>
+                                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Board</h3>
                                     <Link
                                         href="/resident/estate-board"
-                                        className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                        className="text-[10px] font-bold tracking-wide text-primary-600 uppercase hover:text-primary-700"
                                     >
                                         View All
                                     </Link>
@@ -460,7 +460,7 @@ export default function Home({
                                                 <Megaphone className="h-4 w-4" />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h4 className="group-hover:text-indigo-650 truncate text-xs font-semibold text-slate-800 transition-colors">
+                                                <h4 className="group-hover:text-primary-650 truncate text-xs font-semibold text-slate-800 transition-colors">
                                                     {post.title}
                                                 </h4>
                                                 <p className="mt-0.5 text-[9px] font-medium text-slate-400">
@@ -499,7 +499,7 @@ export default function Home({
                                         <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Activity</h3>
                                         <Link
                                             href="/resident/activity"
-                                            className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                            className="text-[10px] font-bold tracking-wide text-primary-600 uppercase hover:text-primary-700"
                                         >
                                             View All
                                         </Link>
