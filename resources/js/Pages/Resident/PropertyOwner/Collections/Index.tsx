@@ -107,7 +107,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                     </Link>
                     <Link
                         href={create.url()}
-                        className="shadow-indigo-650/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold whitespace-nowrap text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98"
+                        className="shadow-primary-650/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary-600 px-4 py-2.5 text-sm font-bold whitespace-nowrap text-white shadow-lg transition-all hover:bg-primary-700 active:scale-98"
                     >
                         <PlusIcon className="h-5 w-5" />
                         New Collection
@@ -118,7 +118,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
             {/* Unified Premium Financial Overview Card */}
             <div className="brand-card !rounded-[2.5rem] p-6 text-white">
                 {/* Background glow effects */}
-                <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-indigo-600/20 blur-3xl" />
+                <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-primary-600/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
 
                 <div className="relative z-10">
@@ -140,7 +140,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                     <div className="mt-6">
                         <div className="h-2.5 w-full overflow-hidden rounded-full border border-slate-800 bg-slate-900">
                             <motion.div
-                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500"
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-primary-500"
                                 initial={{ width: '0%' }}
                                 animate={{
                                     width: `${stats.expecting_amount > 0 ? Math.min(100, (stats.realised_amount / stats.expecting_amount) * 100) : 0}%`,
@@ -163,7 +163,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         </div>
                         <div className="border-l border-slate-900/60 pl-4">
                             <div className="flex items-center gap-1.5">
-                                <div className="h-2 w-2 rounded-full bg-indigo-400" />
+                                <div className="h-2 w-2 rounded-full bg-primary-400" />
                                 <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">Outstanding</span>
                             </div>
                             <p className="mt-1 text-lg font-black text-white">
@@ -210,7 +210,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             placeholder="Search collections..."
                         />
                     </div>
@@ -249,11 +249,11 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                             <Link
                                 key={col.id}
                                 href={show.url(col.ulid)}
-                                className="group relative flex flex-col justify-between overflow-hidden rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-lg hover:ring-indigo-100"
+                                className="group relative flex flex-col justify-between overflow-hidden rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-lg hover:ring-primary-100"
                             >
                                 <div>
                                     <div className="flex items-center justify-between">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
                                             <WalletIcon className="h-5 w-5" />
                                         </div>
                                         <span
@@ -266,7 +266,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                                     </div>
 
                                     <div className="mt-4">
-                                        <h3 className="text-base font-black text-slate-900 transition-colors group-hover:text-indigo-600">
+                                        <h3 className="text-base font-black text-slate-900 transition-colors group-hover:text-primary-600">
                                             {col.name}
                                         </h3>
                                         <div className="mt-2 flex flex-col gap-1 text-xs font-bold text-slate-400">
@@ -290,7 +290,10 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                                             </span>
                                         </div>
                                         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                                            <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${collectedPct}%` }} />
+                                            <div
+                                                className="h-full bg-primary-600 transition-all duration-500"
+                                                style={{ width: `${collectedPct}%` }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -315,7 +318,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         <p className="mt-1 text-sm text-slate-500">You haven't setup any payment collection sheets yet.</p>
                         <Link
                             href={create.url()}
-                            className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
+                            className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-700"
                         >
                             Create First Collection
                         </Link>
@@ -338,12 +341,12 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                     }}
                     fallback={
                         <div className="mt-8 flex justify-center pb-12">
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"></div>
                         </div>
                     }
                 >
                     <div className="mt-8 flex justify-center pb-12">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"></div>
                     </div>
                 </WhenVisible>
             )}
