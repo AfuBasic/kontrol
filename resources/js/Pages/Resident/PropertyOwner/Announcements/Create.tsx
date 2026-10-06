@@ -103,7 +103,7 @@ export default function Create({ residents, properties }: Props) {
                             autoComplete="on"
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
-                            className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             placeholder="e.g. Repairs Notice, General Estate Update"
                         />
                         {errors.title && <p className="mt-1 text-xs font-bold text-rose-600">{errors.title}</p>}
@@ -123,7 +123,7 @@ export default function Create({ residents, properties }: Props) {
                             value={data.body}
                             onChange={(e) => setData('body', e.target.value)}
                             rows={6}
-                            className="mt-2 block w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="mt-2 block w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             placeholder="Type details of your announcement here..."
                         />
                         {errors.body && <p className="mt-1 text-xs font-bold text-rose-600">{errors.body}</p>}
@@ -165,7 +165,7 @@ export default function Create({ residents, properties }: Props) {
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                             placeholder="Search residents or properties..."
-                                            className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                            className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         />
                                     </div>
 
@@ -187,14 +187,14 @@ export default function Create({ residents, properties }: Props) {
                                                                     key={r.id}
                                                                     type="button"
                                                                     onClick={() => toggleTarget({ type: 'user', id: r.id, name: r.name })}
-                                                                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white ${selected ? 'bg-indigo-50/60' : ''}`}
+                                                                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white ${selected ? 'bg-primary-50/60' : ''}`}
                                                                 >
                                                                     <div
-                                                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'}`}
+                                                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-primary-600 bg-primary-600' : 'border-slate-300 bg-white'}`}
                                                                     >
                                                                         {selected && <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />}
                                                                     </div>
-                                                                    <UserIcon className="h-4 w-4 shrink-0 text-indigo-400" />
+                                                                    <UserIcon className="h-4 w-4 shrink-0 text-primary-400" />
                                                                     <span className="text-sm font-semibold text-slate-800">{r.name}</span>
                                                                 </button>
                                                             );
@@ -241,7 +241,7 @@ export default function Create({ residents, properties }: Props) {
                                                     className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow-xs ring-1 ring-slate-200"
                                                 >
                                                     {target.type === 'user' ? (
-                                                        <UserIcon className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                                                        <UserIcon className="h-3.5 w-3.5 shrink-0 text-primary-500" />
                                                     ) : (
                                                         <BuildingOfficeIcon className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                                                     )}
@@ -273,7 +273,7 @@ export default function Create({ residents, properties }: Props) {
                     <button
                         type="submit"
                         disabled={processing || (data.applies_to === 'target' && selectedTargets.length === 0)}
-                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                        className="rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                     >
                         {processing ? 'Publishing...' : 'Publish'}
                     </button>
