@@ -240,10 +240,6 @@ export default function Home({
         });
     }
 
-    const visibleAttentionItems = accessRestricted
-        ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues')
-        : attentionItems;
-
     // Lowest priority and easy to wave away: "Not now" hides it for a week, and it keeps coming back until the details are in.
     if (profileNudge?.show) {
         const missing = profileNudge.missing;
@@ -265,6 +261,10 @@ export default function Home({
             },
         });
     }
+
+    const visibleAttentionItems = accessRestricted
+        ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues' || item.type === 'profile_details')
+        : attentionItems;
 
     const handleDismissBillingPrompt = (e: React.MouseEvent) => {
         e.preventDefault();
