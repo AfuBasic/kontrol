@@ -185,12 +185,15 @@ class UpdateEstateSettingsRequest extends FormRequest
 
         $chosen = $this->gateZones();
 
-        foreach ($gates as $gate) {
+        $unchosen = array_values(array_filter($gates, function (string $gate) use ($chosen, $zoneIds): bool {
             $zone = $chosen[$gate] ?? null;
 
-            if ($zone === null || ($zone !== 'all' && ! in_array($zone, $zoneIds, true))) {
-                $validator->errors()->add('entry_point_zones', "Choose a zone for \"{$gate}\", or All zones if it serves every zone.");
-            }
+            return $zone === null || ($zone !== 'all' && ! in_array($zone, $zoneIds, true));
+        }));
+
+        if ($unchosen !== []) {
+            $names = implode(', ', array_map(fn (string $gate) => "\"{$gate}\"", $unchosen));
+            $validator->errors()->add('entry_point_zones', "Choose a zone for {$names}, or All zones if a gate serves every zone.");
         }
     }
 }
