@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Zone;
+use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateEstateSettingsRequest extends FormRequest
 {
@@ -38,6 +41,9 @@ class UpdateEstateSettingsRequest extends FormRequest
             'zone_locked_passes' => ['sometimes', 'boolean'],
             'entry_points' => ['nullable', 'array'],
             'entry_points.*' => ['required', 'string', 'max:100'],
+            'entry_point_zones' => ['nullable', 'array'],
+            'entry_point_zones.*.gate' => ['required', 'string', 'max:100'],
+            'entry_point_zones.*.zone' => ['nullable'],
 
             // 2. Security Operations
             'incident_categories' => ['nullable', 'array'],
@@ -99,10 +105,92 @@ class UpdateEstateSettingsRequest extends FormRequest
                     $validator->errors()->add('entry_points', 'Entry points must have unique names.');
                 }
 
+                $this->validateGateZones($validator, is_array($entryPoints) ? $entryPoints : []);
+
                 if (is_array($incidentCategories) && $hasDuplicateNames($incidentCategories)) {
                     $validator->errors()->add('incident_categories', 'Incident categories must have unique names.');
                 }
             },
         ];
+    }
+
+    /**
+     * Gate name => zone id (or "all"), only for gates that exist. Sent as a list of pairs so gate names with dots stay safe.
+     *
+     * @return array<string, int|string>
+     */
+    public function gateZones(): array
+    {
+        $gates = (array) $this->input('entry_points', []);
+        $map = [];
+
+        foreach ((array) $this->input('entry_point_zones', []) as $pair) {
+            $gate = (string) ($pair['gate'] ?? '');
+            $zone = $pair['zone'] ?? null;
+
+            if (! in_array($gate, $gates, true) || $zone === null || $zone === '') {
+                continue;
+            }
+
+            $map[$gate] = $zone === 'all' ? 'all' : (int) $zone;
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated();
+
+        if (array_key_exists('entry_point_zones', $data) || array_key_exists('entry_points', $data)) {
+            $data['entry_point_zones'] = $this->gateZones();
+        }
+
+        return $key === null ? $data : data_get($data, $key, $default);
+    }
+
+    /**
+     * Zone-locked passes need at least two zones, and every gate must say which zone it serves (or "all").
+     *
+     * @param  array<int, mixed>  $gates
+     */
+    private function validateGateZones(Validator $validator, array $gates): void
+    {
+        if (! $this->boolean('zone_locked_passes')) {
+            return;
+        }
+
+        $zoneIds = Zone::query()
+            ->where('estate_id', resolve(EstateContextService::class)->getEstateId())
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count($zoneIds) < 2) {
+            $validator->errors()->add('zone_locked_passes', 'Zone-locked passes need at least two zones. Add zones first.');
+
+            return;
+        }
+
+        $gates = array_values(array_filter(array_map('trim', array_map('strval', $gates))));
+
+        if ($gates === []) {
+            $validator->errors()->add('entry_points', 'Add your gates and choose a zone for each when zone-locked passes are on.');
+
+            return;
+        }
+
+        $chosen = $this->gateZones();
+
+        foreach ($gates as $gate) {
+            $zone = $chosen[$gate] ?? null;
+
+            if ($zone === null || ($zone !== 'all' && ! in_array($zone, $zoneIds, true))) {
+                $validator->errors()->add('entry_point_zones', "Choose a zone for \"{$gate}\", or All zones if it serves every zone.");
+            }
+        }
     }
 }
