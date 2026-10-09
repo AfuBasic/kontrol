@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Cache;
  * @property int|null $access_code_daily_limit_per_resident
  * @property bool $access_code_require_confirmation
  * @property bool $zone_locked_passes
+ * @property array<string, int|string>|null $entry_point_zones
  * @property string $charge_type
  * @property array<array-key, mixed>|null $contacts
  * @property CarbonImmutable|null $created_at
@@ -65,6 +66,7 @@ class EstateSettings extends Model
         'entry_point_checkout_enforced',
         'zone_locked_passes',
         'entry_points',
+        'entry_point_zones',
         'charge_type',
         'contacts',
         'free_trial_enabled',
@@ -105,6 +107,7 @@ class EstateSettings extends Model
             'entry_point_checkout_enforced' => 'boolean',
             'zone_locked_passes' => 'boolean',
             'entry_points' => 'array',
+            'entry_point_zones' => 'array',
             'require_vehicle_information' => 'boolean',
             'allow_residents_to_extend_visitor_passes' => 'boolean',
             'incident_categories' => 'array',
