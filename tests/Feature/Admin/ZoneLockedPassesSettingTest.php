@@ -101,14 +101,16 @@ it('refuses the lock when the estate has fewer than two zones', function () {
     expect(($this->stored)()->zone_locked_passes)->toBeFalse();
 });
 
-it('refuses the lock when a gate has no zone chosen', function () {
+it('refuses the lock when a gate has no zone chosen, naming every gate that is missing one', function () {
     [$a] = Zone::factory()->count(2)->create(['estate_id' => $this->estate->id]);
 
-    ($this->save)([
+    $errors = ($this->save)([
         'zone_locked_passes' => true,
-        'entry_points' => ['Gate A', 'Gate B'],
+        'entry_points' => ['Gate A', 'Gate B', 'Gate C'],
         'entry_point_zones' => [['gate' => 'Gate A', 'zone' => (string) $a->id]],
-    ])->assertSessionHasErrors('entry_point_zones');
+    ])->assertSessionHasErrors('entry_point_zones')->baseResponse->getSession()->get('errors')->get('entry_point_zones');
+
+    expect($errors[0])->toContain('"Gate B"')->toContain('"Gate C"')->not->toContain('"Gate A"');
 });
 
 it('refuses the lock when there are no gates at all', function () {
