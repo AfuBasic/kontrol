@@ -363,15 +363,14 @@ class VerifyController extends Controller
                         ->where('code', $code)
                         ->first();
 
-                    if ($accessCode && ! app(ZonePassGuard::class)->allows($accessCode, $user, $estate->id)) {
-                        // Refused, not failed: retrying would never succeed, so record it and move on.
+                    // The visitor was already let in at the gate, so a zone mismatch found now is recorded and flagged
+                    // for the admin, not retried (it would never succeed) and not dropped.
+                    $wrongZone = $accessCode && ! app(ZonePassGuard::class)->allows($accessCode, $user, $estate->id);
+                    if ($wrongZone) {
                         app(ZonePassGuard::class)->recordRefusal($accessCode, $user, $estate->id);
-                        $syncedCount++;
-
-                        continue;
                     }
 
-                    if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
+                    if ($accessCode && ! $wrongZone && $accessCode->status === AccessCodeStatus::Active) {
                         app(RecordCheckInAction::class)->execute(
                             code: $code,
                             estateId: $estate->id,
@@ -398,7 +397,11 @@ class VerifyController extends Controller
                                 'host_id' => $accessCode?->user_id,
                                 'offline_code' => $code,
                                 'offline_override' => true,
-                                'sync_status' => $accessCode ? 'code_exists_but_'.$accessCode->status->value : 'code_not_found',
+                                'sync_status' => match (true) {
+                                    $wrongZone => 'wrong_zone',
+                                    (bool) $accessCode => 'code_exists_but_'.$accessCode->status->value,
+                                    default => 'code_not_found',
+                                },
                             ],
                         ]);
                     }
