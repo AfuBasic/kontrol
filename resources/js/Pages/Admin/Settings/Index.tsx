@@ -458,7 +458,7 @@ function GateEditor({ gates, zones, zoneValues, showZones, emptyHint, error, onA
                                         onChange={(value) => onZoneChange(gate, String(value))}
                                         options={zoneOptions}
                                         placeholder="Choose a zone"
-                                        buttonClassName={chosen === '' ? 'border-amber-300 bg-amber-50/50' : ''}
+                                        buttonClassName={chosen === '' ? '!border-amber-300 !bg-amber-50' : ''}
                                     />
                                 </div>
                             )}
