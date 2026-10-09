@@ -19,6 +19,7 @@ type SettingsProps = {
         quick_entry_enabled: boolean;
         entry_point_checkout_enforced: boolean;
         zone_locked_passes: boolean;
+        entry_point_zones: Record<string, number | 'all'>;
         entry_points: string[];
 
         // 2. Security Operations
@@ -37,7 +38,7 @@ type SettingsProps = {
         collection_maximum_reminder_attempts: number;
         send_reminder_before_due_date_days: number;
     };
-    zoneCount: number;
+    zones: Array<{ id: number; name: string }>;
 };
 
 function formatDuration(minutes: number): string {
@@ -395,8 +396,104 @@ function IncidentCategoryManager({ categories, error, onChange }: IncidentCatego
     );
 }
 
-export default function Settings({ settings, zoneCount }: SettingsProps) {
-    const { data, setData, put, processing, errors } = useForm({
+type GateEditorProps = {
+    gates: string[];
+    zones: Array<{ id: number; name: string }>;
+    zoneValues: Record<string, string>;
+    showZones: boolean;
+    emptyHint: string;
+    error?: string;
+    onAdd: (gate: string) => boolean;
+    onRemove: (gate: string) => void;
+    onZoneChange: (gate: string, zone: string) => void;
+};
+
+/** The estate's gates, each optionally tied to a zone ("All zones" for a gate that serves everyone). */
+function GateEditor({ gates, zones, zoneValues, showZones, emptyHint, error, onAdd, onRemove, onZoneChange }: GateEditorProps) {
+    const [draft, setDraft] = useState('');
+    const zoneOptions = [{ value: 'all', label: 'All zones' }, ...zones.map((zone) => ({ value: String(zone.id), label: zone.name }))];
+
+    function add(e: React.KeyboardEvent | React.MouseEvent) {
+        if ('key' in e && e.key !== 'Enter') return;
+        e.preventDefault();
+        const gate = draft.trim();
+        if (gate && onAdd(gate)) setDraft('');
+    }
+
+    return (
+        <div className="border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/20">
+            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                {showZones ? 'Gates and their zones' : 'Configured Entry Points'}
+            </label>
+
+            {gates.length === 0 && (
+                <div className="mt-2 mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                    <strong>Add your gates:</strong> {emptyHint}
+                </div>
+            )}
+
+            <div className="mt-3 space-y-2">
+                {gates.map((gate) => {
+                    const chosen = zoneValues[gate] ?? '';
+                    return (
+                        <div
+                            key={gate}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+                        >
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{gate}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => onRemove(gate)}
+                                    className="text-xs font-medium text-slate-400 transition-colors hover:text-red-600 dark:hover:text-red-400"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                            {showZones && (
+                                <div className="mt-2">
+                                    <CustomSelect
+                                        size="sm"
+                                        value={chosen}
+                                        onChange={(value) => onZoneChange(gate, String(value))}
+                                        options={zoneOptions}
+                                        placeholder="Choose a zone"
+                                        buttonClassName={chosen === '' ? 'border-amber-300 bg-amber-50/50' : ''}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+
+            <div className="mt-3 flex items-center gap-2">
+                <input
+                    type="text"
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={add}
+                    placeholder="e.g. Main Gate"
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+                <button
+                    type="button"
+                    onClick={add}
+                    disabled={!draft.trim()}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
+                >
+                    <Plus className="h-4 w-4" />
+                    Add
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default function Settings({ settings, zones }: SettingsProps) {
+    const { data, setData, put, processing, errors, transform } = useForm({
         // Visitor Access
         access_codes_enabled: settings.access_codes_enabled,
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
@@ -409,6 +506,10 @@ export default function Settings({ settings, zoneCount }: SettingsProps) {
         quick_entry_enabled: settings.quick_entry_enabled ?? false,
         entry_point_checkout_enforced: settings.entry_point_checkout_enforced,
         zone_locked_passes: settings.zone_locked_passes ?? false,
+        entry_point_zones: Object.fromEntries(Object.entries(settings.entry_point_zones ?? {}).map(([gate, zone]) => [gate, String(zone)])) as Record<
+            string,
+            string
+        >,
         entry_points: settings.entry_points || [],
 
         // Security Operations
@@ -427,27 +528,34 @@ export default function Settings({ settings, zoneCount }: SettingsProps) {
         send_reminder_before_due_date_days: settings.send_reminder_before_due_date_days || 1,
     });
 
-    const [newEntryPointInput, setNewEntryPointInput] = useState('');
+    const canLockToZones = zones.length >= 2;
+    const gatesShownUnderCheckout = data.visitor_checkout_enabled && data.entry_point_checkout_enforced;
 
-    function handleAddEntryPoint(e: React.KeyboardEvent | React.MouseEvent) {
-        if ('key' in e && e.key !== 'Enter') return;
-        e.preventDefault();
-        const trimmed = newEntryPointInput.trim();
-        if (trimmed && !data.entry_points.some((ep) => ep.toLowerCase() === trimmed.toLowerCase())) {
-            setData('entry_points', [...data.entry_points, trimmed]);
-            setNewEntryPointInput('');
-        }
+    /** Returns false when the gate already exists, so the editor can keep the draft. */
+    function handleAddEntryPoint(gate: string): boolean {
+        if (data.entry_points.some((ep) => ep.toLowerCase() === gate.toLowerCase())) return false;
+        setData('entry_points', [...data.entry_points, gate]);
+        return true;
     }
 
-    function handleRemoveEntryPoint(pointToRemove: string) {
-        setData(
-            'entry_points',
-            data.entry_points.filter((ep) => ep !== pointToRemove),
-        );
+    function handleRemoveEntryPoint(gate: string) {
+        setData((current) => {
+            const { [gate]: _removed, ...zonesKept } = current.entry_point_zones;
+            return { ...current, entry_points: current.entry_points.filter((ep) => ep !== gate), entry_point_zones: zonesKept };
+        });
+    }
+
+    function handleGateZone(gate: string, zone: string) {
+        setData('entry_point_zones', { ...data.entry_point_zones, [gate]: zone });
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        // Sent as a list of pairs so gate names containing dots stay intact.
+        transform((current) => ({
+            ...current,
+            entry_point_zones: Object.entries(current.entry_point_zones).map(([gate, zone]) => ({ gate, zone })),
+        }));
         put(update.url());
     }
 
@@ -715,57 +823,18 @@ export default function Settings({ settings, zoneCount }: SettingsProps) {
                                     </div>
 
                                     {/* Entry Points List */}
-                                    {data.visitor_checkout_enabled && data.entry_point_checkout_enforced && (
-                                        <div className="border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/20">
-                                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                                Configured Entry Points
-                                            </label>
-
-                                            {data.entry_points.length === 0 && (
-                                                <div className="mt-2 mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                                                    <strong>Add your entry points:</strong> To enforce entry point checkout, tell Kontrol which
-                                                    gates/checkpoints visitors can use to enter and leave the estate.
-                                                </div>
-                                            )}
-
-                                            <div className="mt-3 space-y-2">
-                                                {data.entry_points.map((ep, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800"
-                                                    >
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{ep}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveEntryPoint(ep)}
-                                                            className="text-xs font-medium text-slate-400 transition-colors hover:text-red-600 dark:hover:text-red-400"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={newEntryPointInput}
-                                                    onChange={(e) => setNewEntryPointInput(e.target.value)}
-                                                    onKeyDown={handleAddEntryPoint}
-                                                    placeholder="e.g. Main Gate"
-                                                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAddEntryPoint}
-                                                    disabled={!newEntryPointInput.trim()}
-                                                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    Add
-                                                </button>
-                                            </div>
-                                        </div>
+                                    {gatesShownUnderCheckout && (
+                                        <GateEditor
+                                            gates={data.entry_points}
+                                            zones={zones}
+                                            zoneValues={data.entry_point_zones}
+                                            showZones={data.zone_locked_passes && canLockToZones}
+                                            emptyHint="To enforce entry point checkout, tell Kontrol which gates/checkpoints visitors can use to enter and leave the estate."
+                                            error={errors.entry_points}
+                                            onAdd={handleAddEntryPoint}
+                                            onRemove={handleRemoveEntryPoint}
+                                            onZoneChange={handleGateZone}
+                                        />
                                     )}
 
                                     {/* Grace Period (Minutes) - Only shown if Checkout Tracking is enabled */}
@@ -810,32 +879,57 @@ export default function Settings({ settings, zoneCount }: SettingsProps) {
                                     )}
 
                                     {/* Zone-locked passes */}
-                                    <div className="mt-4 rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <span className="block text-sm font-medium text-slate-900 dark:text-white">Zone-Locked Passes</span>
-                                                <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                                                    A visitor pass only works at gates staffed by security assigned to the same zone as the resident
-                                                    who issued it. Security with no zone, and residents with no zone, are not restricted.
-                                                </span>
-                                                {zoneCount === 0 && (
-                                                    <span className="mt-1 block text-xs font-medium text-amber-600 dark:text-amber-500">
-                                                        Create zones and assign residents and security to them first, or this has no effect.
+                                    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-800/40">
+                                        <div className="p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                                                        Zone-Locked Passes
                                                     </span>
-                                                )}
+                                                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                        A visitor pass only works at gates that serve the zone of the resident who issued it. A guard
+                                                        takes the zone of the gate they sign on to, so rotating guards need no changes.
+                                                    </span>
+                                                    {!canLockToZones && (
+                                                        <span className="mt-1 block text-xs font-medium text-amber-600 dark:text-amber-500">
+                                                            Add at least two zones before turning this on.
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        aria-label="Zone-locked passes"
+                                                        disabled={!canLockToZones && !data.zone_locked_passes}
+                                                        checked={data.zone_locked_passes}
+                                                        onChange={(e) => setData('zone_locked_passes', e.target.checked)}
+                                                        className="peer sr-only"
+                                                    />
+                                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                                </label>
                                             </div>
-                                            <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    aria-label="Zone-locked passes"
-                                                    checked={data.zone_locked_passes}
-                                                    onChange={(e) => setData('zone_locked_passes', e.target.checked)}
-                                                    className="peer sr-only"
-                                                />
-                                                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
-                                            </label>
+                                            {errors.zone_locked_passes && <p className="mt-2 text-xs text-red-500">{errors.zone_locked_passes}</p>}
+                                            {errors.entry_point_zones && <p className="mt-2 text-xs text-red-500">{errors.entry_point_zones}</p>}
+                                            {data.zone_locked_passes && gatesShownUnderCheckout && (
+                                                <p className="mt-3 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                    Choose a zone for each gate in the Configured Entry Points list above.
+                                                </p>
+                                            )}
                                         </div>
-                                        {errors.zone_locked_passes && <p className="mt-2 text-xs text-red-500">{errors.zone_locked_passes}</p>}
+
+                                        {data.zone_locked_passes && canLockToZones && !gatesShownUnderCheckout && (
+                                            <GateEditor
+                                                gates={data.entry_points}
+                                                zones={zones}
+                                                zoneValues={data.entry_point_zones}
+                                                showZones
+                                                emptyHint="Tell Kontrol which gates your guards sign on to, then choose the zone each one serves."
+                                                error={errors.entry_points}
+                                                onAdd={handleAddEntryPoint}
+                                                onRemove={handleRemoveEntryPoint}
+                                                onZoneChange={handleGateZone}
+                                            />
+                                        )}
                                     </div>
 
                                     {/* Quick Entry & Operating Hours Enforcement Card */}
