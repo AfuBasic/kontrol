@@ -4,6 +4,7 @@ namespace App\Services\Zeus;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,8 +29,9 @@ class ExpenseService
             ->when($month, fn (Builder $q) => $q->whereBetween('incurred_on', [$month->startOfMonth()->toDateString(), $month->endOfMonth()->toDateString()]))
             ->when($filters['category_id'] ?? null, fn (Builder $q, $id) => $q->where('expense_category_id', $id))
             ->when($filters['search'] ?? null, function (Builder $q, string $search) {
-                $like = '%'.addcslashes($search, '%_\\').'%';
-                $q->where(fn (Builder $w) => $w->where('payee', 'like', $like)->orWhere('note', 'like', $like));
+                // "!" is the escape character (the same on every database), so a typed % or _ is just text.
+                $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+                $q->where(fn (Builder $w) => $w->whereRaw("payee LIKE ? ESCAPE '!'", [$like])->orWhereRaw("note LIKE ? ESCAPE '!'", [$like]));
             })
             ->orderByDesc('incurred_on')
             ->orderByDesc('id');
@@ -77,8 +79,8 @@ class ExpenseService
         $month = $this->month($filters['month'] ?? null);
         $revenue = $month
             ? $this->analytics->recurringRevenueForPeriod(
-                \Carbon\Carbon::instance($month->startOfMonth()),
-                \Carbon\Carbon::instance($month->endOfMonth()),
+                Carbon::instance($month->startOfMonth()),
+                Carbon::instance($month->endOfMonth()),
             )
             : null;
 
