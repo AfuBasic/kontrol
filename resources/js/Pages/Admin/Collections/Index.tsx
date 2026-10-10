@@ -533,12 +533,8 @@ export default function CollectionsIndex({
                                 <motion.div
                                     initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="relative overflow-hidden rounded-3xl bg-[#0A0F1C] p-7 text-white shadow-2xl ring-1 ring-white/5 sm:p-9"
+                                    className="brand-card !rounded-3xl p-6 text-white shadow-xl sm:p-9"
                                 >
-                                    {/* Background glows */}
-                                    <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/20 blur-[80px]" />
-                                    <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
-
                                     <div className="relative z-10">
                                         {/* Top row */}
                                         <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -604,30 +600,40 @@ export default function CollectionsIndex({
                                                 </div>
                                             </div>
 
-                                            {/* Right: Revenue pillars */}
-                                            <div className="grid grid-cols-3 gap-4 lg:gap-6">
-                                                <div className="text-center lg:text-right">
-                                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-white/30 uppercase">Expected</p>
-                                                    <p className="text-xl font-black tracking-tight text-white sm:text-2xl">
-                                                        <AnimatedNumber value={expected} />
-                                                    </p>
-                                                </div>
-                                                <div className="text-center lg:text-right">
-                                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-emerald-400/60 uppercase">
-                                                        Collected
-                                                    </p>
-                                                    <p className="text-xl font-black tracking-tight text-emerald-400 sm:text-2xl">
-                                                        <AnimatedNumber value={realised} />
-                                                    </p>
-                                                </div>
-                                                <div className="text-center lg:text-right">
-                                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-rose-400/60 uppercase">
-                                                        Outstanding
-                                                    </p>
-                                                    <p className="text-xl font-black tracking-tight text-rose-400 sm:text-2xl">
-                                                        <AnimatedNumber value={outstanding} />
-                                                    </p>
-                                                </div>
+                                            {/* Right: Revenue pillars. Stacked rows on a phone, three columns on large screens. */}
+                                            <div className="flex flex-col gap-2 lg:grid lg:grid-cols-3 lg:gap-6">
+                                                {[
+                                                    { label: 'Expected', value: expected, labelClass: 'text-white/60', valueClass: 'text-white' },
+                                                    {
+                                                        label: 'Collected',
+                                                        value: realised,
+                                                        labelClass: 'text-emerald-300',
+                                                        valueClass: 'text-emerald-300',
+                                                    },
+                                                    {
+                                                        label: 'Outstanding',
+                                                        value: outstanding,
+                                                        labelClass: 'text-rose-300',
+                                                        valueClass: 'text-rose-300',
+                                                    },
+                                                ].map((pillar) => (
+                                                    <div
+                                                        key={pillar.label}
+                                                        className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.07] px-4 py-3 ring-1 ring-white/10 lg:block lg:bg-transparent lg:p-0 lg:text-right lg:ring-0"
+                                                    >
+                                                        <p
+                                                            className={cn(
+                                                                'text-[10px] font-bold tracking-widest uppercase lg:mb-1',
+                                                                pillar.labelClass,
+                                                            )}
+                                                        >
+                                                            {pillar.label}
+                                                        </p>
+                                                        <p className={cn('text-xl font-black tracking-tight sm:text-2xl', pillar.valueClass)}>
+                                                            <AnimatedNumber value={pillar.value} />
+                                                        </p>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
 
@@ -685,7 +691,7 @@ export default function CollectionsIndex({
                                             <Zap className="h-3.5 w-3.5 text-slate-400" />
                                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Smart Insights</p>
                                         </div>
-                                        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+                                        <div className="flex flex-wrap gap-2">
                                             {smartInsights.map((chip, i) => (
                                                 <motion.div
                                                     key={i}
@@ -693,7 +699,7 @@ export default function CollectionsIndex({
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     transition={{ delay: 0.05 + i * 0.05 }}
                                                     className={cn(
-                                                        'flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold',
+                                                        'flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] leading-snug font-bold',
                                                         chipColorMap[chip.color],
                                                     )}
                                                 >
