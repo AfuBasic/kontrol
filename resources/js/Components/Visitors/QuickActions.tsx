@@ -14,9 +14,11 @@ type Props = {
     onInvite: () => void;
     onInviteAgain: (visitor: RecentVisitor) => void;
     onOpenSearch?: () => void;
+    /** Hide the Invite button when something else on the screen already offers it. */
+    showInvite?: boolean;
 };
 
-export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, onOpenSearch }: Props) {
+export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, onOpenSearch, showInvite = true }: Props) {
     return (
         <div className="space-y-3 py-2">
             <div className="flex items-center justify-between">
@@ -25,18 +27,20 @@ export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, 
 
             {/* Main Action Buttons */}
             <div className="flex items-center gap-2">
-                <button
-                    onClick={onInvite}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-primary-700 active:scale-98"
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Invite Visitor</span>
-                </button>
+                {showInvite && (
+                    <button
+                        onClick={onInvite}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-primary-700 active:scale-98"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>Invite Visitor</span>
+                    </button>
+                )}
 
                 {onOpenSearch && (
                     <button
                         onClick={onOpenSearch}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 ${showInvite ? '' : 'flex-1'}`}
                     >
                         <Search className="h-3.5 w-3.5" />
                         <span>Search</span>

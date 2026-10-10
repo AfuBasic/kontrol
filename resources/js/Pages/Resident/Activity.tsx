@@ -43,7 +43,7 @@ function getActivityIcon(type: ActivityItem['type']) {
     switch (type) {
         case 'created':
             return (
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 ring-1 ring-indigo-500/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600 ring-1 ring-primary-500/20">
                     <PlusIcon className="h-6 w-6" strokeWidth={2.5} />
                 </div>
             );
@@ -76,7 +76,7 @@ function getActivityIcon(type: ActivityItem['type']) {
             );
         case 'logged_in':
             return (
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600 ring-1 ring-primary-500/20">
                     <LogIn className="h-6 w-6" strokeWidth={2.5} />
                 </div>
             );
@@ -152,7 +152,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                 <div className="mt-3 flex flex-wrap items-center gap-2">
                                     <span className="text-[10px] font-black tracking-tighter text-slate-300 uppercase">{activity.time}</span>
                                     {activity.code && (
-                                        <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-indigo-600 ring-1 ring-indigo-500/10">
+                                        <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-primary-600 ring-1 ring-primary-500/10">
                                             {activity.code}
                                         </span>
                                     )}
@@ -229,7 +229,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
             {/* Premium Header Section */}
             <div className="relative overflow-hidden pt-4 pb-8">
                 {/* Background Decor */}
-                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
+                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary-500/10 blur-[80px]" />
                 <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-blue-500/5 blur-[60px]" />
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="relative z-10">
@@ -312,7 +312,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                         placeholder="Search activities, codes, or visitors..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="block w-full rounded-2xl border border-slate-100 bg-white py-3.5 pr-12 pl-12 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                        className="block w-full rounded-2xl border border-slate-100 bg-white py-3.5 pr-12 pl-12 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                     />
                                     {search && (
                                         <button
@@ -331,7 +331,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                     className="space-y-10"
                                     loading={
                                         <div className="flex justify-center py-8">
-                                            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                                            <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
                                         </div>
                                     }
                                 >
@@ -361,7 +361,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                                     {activity.time}
                                                                 </span>
                                                                 {activity.code && (
-                                                                    <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-indigo-600 ring-1 ring-indigo-500/10">
+                                                                    <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-primary-600 ring-1 ring-primary-500/10">
                                                                         {activity.code}
                                                                     </span>
                                                                 )}
@@ -451,9 +451,9 @@ export default function Activity({ activities, notifications = [], unreadCount =
 
                                         let icon = <Bell className="h-6 w-6" />;
                                         let themeClass = isUnread
-                                            ? 'from-indigo-500/10 to-transparent ring-indigo-500/20'
+                                            ? 'from-primary-500/10 to-transparent ring-primary-500/20'
                                             : 'bg-slate-50 ring-slate-200';
-                                        let iconColor = isUnread ? 'text-indigo-600' : 'text-slate-400';
+                                        let iconColor = isUnread ? 'text-primary-600' : 'text-slate-400';
 
                                         if (notificationType?.includes('VisitorArrived') || notification.data?.visitor_name) {
                                             icon = <User className="h-6 w-6" />;
@@ -471,14 +471,14 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.4, delay: index * 0.05 }}
                                                 className={`group relative cursor-pointer overflow-hidden rounded-[32px] border p-5 transition-all active:scale-[0.98] ${
-                                                    isUnread ? 'border-indigo-100 bg-white shadow-md' : 'border-slate-100 bg-white shadow-sm'
+                                                    isUnread ? 'border-primary-100 bg-white shadow-md' : 'border-slate-100 bg-white shadow-sm'
                                                 }`}
                                                 onClick={() => {
                                                     window.dispatchEvent(new CustomEvent('show-notification-detail', { detail: notification }));
                                                 }}
                                             >
                                                 {isUnread && (
-                                                    <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-linear-to-b from-indigo-500 to-indigo-600" />
+                                                    <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-linear-to-b from-primary-500 to-primary-600" />
                                                 )}
 
                                                 <div className="flex gap-5">
@@ -496,7 +496,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                                 {title}
                                                             </h3>
                                                             {isUnread && (
-                                                                <span className="shrink-0 rounded-full bg-indigo-500 px-2 py-0.5 text-[8px] font-black tracking-tighter text-white uppercase">
+                                                                <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-[8px] font-black tracking-tighter text-white uppercase">
                                                                     New
                                                                 </span>
                                                             )}

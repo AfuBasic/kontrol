@@ -94,9 +94,9 @@ export default function Show({ collection, assignments, collected, outstanding }
             </div>
 
             {/* Unified Premium Financial Overview Card */}
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20">
+            <div className="brand-card !rounded-[2.5rem] p-6 text-white">
                 {/* Background glow effects */}
-                <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-indigo-600/20 blur-3xl" />
+                <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-primary-600/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
 
                 <div className="relative z-10">
@@ -117,7 +117,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                             </h2>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-1.5 text-[10px] font-bold text-slate-400">
-                            <CalendarIcon className="h-4 w-4 text-indigo-400" />
+                            <CalendarIcon className="h-4 w-4 text-primary-400" />
                             <span>Due by {new Date(collection.due_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
                         </div>
                     </div>
@@ -126,7 +126,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                     <div className="mt-6">
                         <div className="h-2.5 w-full overflow-hidden rounded-full border border-slate-800 bg-slate-900">
                             <motion.div
-                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500"
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-primary-500"
                                 initial={{ width: '0%' }}
                                 animate={{ width: `${collectedPct}%` }}
                                 transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
@@ -147,7 +147,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                         </div>
                         <div className="border-l border-slate-900/60 pl-4">
                             <div className="flex items-center gap-1.5">
-                                <div className="h-2 w-2 rounded-full bg-indigo-400" />
+                                <div className="h-2 w-2 rounded-full bg-primary-400" />
                                 <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">Outstanding</span>
                             </div>
                             <p className="mt-1 text-base font-black text-white">
@@ -187,7 +187,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                     className="flex flex-col justify-between gap-4 rounded-[2rem] bg-white p-5 shadow-xs ring-1 ring-slate-200/60 transition-all hover:shadow-md hover:ring-slate-300/80 sm:flex-row sm:items-center"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-sm font-black tracking-wider text-indigo-600">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-sm font-black tracking-wider text-primary-600">
                                             {initials}
                                         </div>
                                         <div>
@@ -244,7 +244,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                                             reference: '',
                                                         });
                                                     }}
-                                                    className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-600 transition-all hover:bg-indigo-100 active:scale-95"
+                                                    className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-primary-50 px-3 py-1.5 text-xs font-black text-primary-600 transition-all hover:bg-primary-100 active:scale-95"
                                                 >
                                                     Record
                                                 </button>
@@ -313,7 +313,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         max={recordingAssignment.amount_due - recordingAssignment.amount_paid}
                                         value={paymentForm.data.amount}
                                         onChange={(e) => paymentForm.setData('amount', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         placeholder="Amount"
                                     />
                                     {paymentForm.errors.amount && <p className="mt-1 text-xs font-bold text-rose-600">{paymentForm.errors.amount}</p>}
@@ -328,7 +328,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         id="payment-reference"
                                         value={paymentForm.data.reference}
                                         onChange={(e) => paymentForm.setData('reference', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         placeholder="e.g. Cash, Bank Transfer reference"
                                     />
                                     {paymentForm.errors.reference && (
@@ -347,7 +347,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                     <button
                                         type="submit"
                                         disabled={paymentForm.processing}
-                                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                                        className="rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/10 transition-all hover:bg-primary-700 active:scale-98 disabled:opacity-50"
                                     >
                                         {paymentForm.processing ? 'Recording...' : 'Record Payment'}
                                     </button>

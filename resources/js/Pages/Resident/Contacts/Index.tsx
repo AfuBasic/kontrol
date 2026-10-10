@@ -51,8 +51,8 @@ function ContactGroup({
 
     const gradients = {
         phone: 'from-emerald-400 to-teal-500',
-        email: 'from-blue-400 to-indigo-500',
-        other: 'from-purple-400 to-pink-500',
+        email: 'from-blue-400 to-primary-500',
+        other: 'from-primary-400 to-pink-500',
     };
 
     const gradient = gradients[type] || gradients.other;
@@ -135,7 +135,7 @@ export default function Contacts({ contacts, estateName }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="relative mb-8 overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 to-purple-700 px-6 py-10 shadow-xl sm:px-10"
+                className="brand-card mb-8 !rounded-3xl px-6 py-10 sm:px-10"
             >
                 {/* Decorative circles */}
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
@@ -150,7 +150,7 @@ export default function Contacts({ contacts, estateName }: Props) {
                         Back to Home
                     </Link>
                     <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Contacts</h1>
-                    <p className="mt-2 text-lg text-indigo-100">
+                    <p className="mt-2 text-lg text-primary-100">
                         {estateName
                             ? `${estateName} - Quick access to emergency hotlines and estate contacts.`
                             : 'Quick access to emergency hotlines and estate contacts.'}

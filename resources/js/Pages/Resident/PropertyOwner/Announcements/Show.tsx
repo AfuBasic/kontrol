@@ -43,7 +43,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     meeting: 'bg-blue-100 text-blue-700 ring-blue-200',
     maintenance: 'bg-orange-100 text-orange-700 ring-orange-200',
     security: 'bg-rose-100 text-rose-700 ring-rose-200',
-    event: 'bg-purple-100 text-purple-700 ring-purple-200',
+    event: 'bg-primary-100 text-primary-700 ring-primary-200',
 };
 
 const PRIORITY_STYLES: Record<string, { badge: string; border: string; bg: string }> = {
@@ -160,9 +160,9 @@ export default function Show({ announcement, metrics, targets }: Props) {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl"
+                        className="brand-card !rounded-3xl p-6 text-white"
                     >
-                        <div className="mb-6 flex items-center gap-2 text-indigo-200">
+                        <div className="mb-6 flex items-center gap-2 text-primary-200">
                             <ChartBarIcon className="h-5 w-5 opacity-70" />
                             <h3 className="text-xs font-black tracking-wider uppercase">Delivery Insights</h3>
                         </div>
@@ -171,14 +171,14 @@ export default function Show({ announcement, metrics, targets }: Props) {
                             <div>
                                 <div className="mb-2 flex items-end justify-between">
                                     <span className="text-3xl font-black">{metrics.read_rate}%</span>
-                                    <span className="pb-1 text-sm font-semibold text-indigo-200">Read Rate</span>
+                                    <span className="pb-1 text-sm font-semibold text-primary-200">Read Rate</span>
                                 </div>
                                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${metrics.read_rate}%` }}
                                         transition={{ duration: 1, ease: 'easeOut' }}
-                                        className="h-full rounded-full bg-indigo-500"
+                                        className="h-full rounded-full bg-primary-500"
                                     />
                                 </div>
                             </div>
@@ -187,7 +187,7 @@ export default function Show({ announcement, metrics, targets }: Props) {
                                 <div>
                                     <p className="mb-1 text-xs font-bold tracking-wider text-slate-400 uppercase">Delivered</p>
                                     <p className="flex items-center gap-2 text-lg font-bold">
-                                        <CheckCircleIcon className="h-4 w-4 text-indigo-400" />
+                                        <CheckCircleIcon className="h-4 w-4 text-primary-400" />
                                         {metrics.targets_count}
                                     </p>
                                 </div>

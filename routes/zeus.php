@@ -7,6 +7,9 @@ use App\Http\Controllers\Zeus\CouponController;
 use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\ErrorLogController;
 use App\Http\Controllers\Zeus\EstateController;
+use App\Http\Controllers\Zeus\ExpenseCategoryController;
+use App\Http\Controllers\Zeus\ExpenseController;
+use App\Http\Controllers\Zeus\ExpenseReceiptController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\FeedbackController;
 use App\Http\Controllers\Zeus\ImpersonationController;
@@ -113,6 +116,19 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
             ->withTrashed()
             ->name('applications.destroy');
+
+        // Expenses (business ledger). Archived, never deleted; receipts live on the private disk.
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('/expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+        Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::post('/expenses/{expense}/restore', [ExpenseController::class, 'restore'])->withTrashed()->name('expenses.restore');
+        Route::get('/expense-receipts/{receipt}', [ExpenseReceiptController::class, 'show'])->name('expenses.receipts.show');
+        Route::delete('/expense-receipts/{receipt}', [ExpenseReceiptController::class, 'destroy'])->name('expenses.receipts.destroy');
+        Route::post('/expense-categories', [ExpenseCategoryController::class, 'store'])->name('expenses.categories.store');
+        Route::put('/expense-categories/{category}', [ExpenseCategoryController::class, 'update'])->name('expenses.categories.update');
+        Route::delete('/expense-categories/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expenses.categories.destroy');
 
         // Error Logs
         Route::get('/error-logs', [ErrorLogController::class, 'index'])->name('error-logs.index');

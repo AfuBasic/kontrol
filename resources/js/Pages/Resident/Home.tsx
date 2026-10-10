@@ -26,6 +26,7 @@ type UnpaidDue = {
 };
 
 type Props = SharedData & {
+    profileNudge?: { missing: Array<'name' | 'unit' | 'address'>; show: boolean } | null;
     stats: HomeStats;
     activeCodes?: AccessCode[] | null;
     recentActivity?: ActivityItem[] | null;
@@ -83,6 +84,7 @@ export default function Home({
     unpaidDuesCount,
     totalUnpaidDuesAmount,
     billingPrompt,
+    profileNudge,
 }: Props) {
     const { openExternalBilling } = useExternalBilling();
     // Lapsed subscription: only dues and the profile stay available, so nothing here may point at locked pages.
@@ -191,7 +193,7 @@ export default function Home({
             title: 'Visitors Expected Today',
             desc,
             href: '/resident/visitors',
-            color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',
+            color: 'border-primary-100 bg-primary-50/20 text-primary-700',
         });
     }
 
@@ -233,13 +235,35 @@ export default function Home({
             title: 'Make renewals automatic',
             desc: `Your ${cardBrand}${cardLast4} is ready. Turn on automatic renewal to pay future subscriptions seamlessly.`,
             href: '/resident/billing?section=renewal',
-            color: 'border-indigo-100 bg-indigo-50/30 text-indigo-900',
+            color: 'border-primary-100 bg-primary-50/30 text-primary-900',
             isDismissible: true,
         });
     }
 
+    // Lowest priority and easy to wave away: "Not now" hides it for a week, and it keeps coming back until the details are in.
+    if (profileNudge?.show) {
+        const missing = profileNudge.missing;
+        const onlyName = missing.length === 1 && missing[0] === 'name';
+        const labels = missing.map((m) => (m === 'unit' ? 'unit number' : m));
+        const list = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}` : labels[0];
+        attentionItems.push({
+            type: 'profile_details',
+            title: `Add your ${list}`,
+            desc: onlyName ? 'So the gate and your visitors know who invited them.' : 'So guards can tell which house your visitors are for.',
+            href: '/resident/profile',
+            color: 'border-primary-100 bg-primary-50/40 text-primary-700',
+            isDismissible: true,
+            dismissLabel: 'Not now',
+            onDismiss: (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.post('/resident/profile/nudge/dismiss', {}, { preserveScroll: true, only: ['profileNudge'] });
+            },
+        });
+    }
+
     const visibleAttentionItems = accessRestricted
-        ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues')
+        ? attentionItems.filter((item) => item.type === 'active_sos' || item.type === 'dues' || item.type === 'profile_details')
         : attentionItems;
 
     const handleDismissBillingPrompt = (e: React.MouseEvent) => {
@@ -259,7 +283,7 @@ export default function Home({
     const getActivityIcon = (type: string) => {
         switch (type) {
             case 'created':
-                return <PlusCircle className="h-4 w-4 text-indigo-500" />;
+                return <PlusCircle className="h-4 w-4 text-primary-500" />;
             case 'used':
                 return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
             case 'expired':
@@ -314,16 +338,26 @@ export default function Home({
                                             <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
                                         </div>
                                         <div className="flex shrink-0 items-center gap-1.5">
-                                            {item.isDismissible && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleDismissBillingPrompt}
-                                                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
-                                                    title="Dismiss for this billing period"
-                                                >
-                                                    <X className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
+                                            {item.isDismissible &&
+                                                (item.dismissLabel ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={item.onDismiss}
+                                                        className="rounded-lg px-2 py-1 text-[11px] font-bold text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+                                                        title="Hide this for a week"
+                                                    >
+                                                        {item.dismissLabel}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={item.onDismiss ?? handleDismissBillingPrompt}
+                                                        className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
+                                                        title="Dismiss for this billing period"
+                                                    >
+                                                        <X className="h-3.5 w-3.5" />
+                                                    </button>
+                                                ))}
                                             {item.href && <ChevronRight className="h-4 w-4 text-slate-400" />}
                                         </div>
                                     </div>
@@ -364,20 +398,13 @@ export default function Home({
                                 Visitor passes, estate updates, incidents and your family list unlock once your subscription is settled. Dues and your
                                 profile stay available.
                             </p>
-                            <div className="mt-3 flex flex-wrap items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => openExternalBilling({ destination: 'subscription' })}
-                                    className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white transition active:scale-95"
-                                >
-                                    Settle now
-                                </button>
-                                {hasPaymentCollection && (
-                                    <Link href="/resident/dues" className="rounded-xl px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
-                                        View dues
-                                    </Link>
-                                )}
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => openExternalBilling({ destination: 'subscription' })}
+                                className="mt-4 w-full rounded-2xl bg-primary-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700 active:scale-[0.98]"
+                            >
+                                Settle now
+                            </button>
                         </div>
                     )}
                 </section>
@@ -392,7 +419,7 @@ export default function Home({
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Visitors</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{totalExpectedToday}</span>
                             </div>
-                            <div className="text-indigo-650 flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+                            <div className="text-primary-650 flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                                 <Users className="h-4 w-4" />
                             </div>
                         </SnapshotCard>
@@ -414,7 +441,7 @@ export default function Home({
                         {/* Announcements Card */}
                         <SnapshotCard href="/resident/estate-board" locked={accessRestricted}>
                             <div className="min-w-0">
-                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Updates</span>
+                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Estate Board</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{announcements.length}</span>
                             </div>
                             <div className="text-amber-650 flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
@@ -441,10 +468,10 @@ export default function Home({
                         {announcements.length > 0 && (
                             <section className="space-y-2">
                                 <div className="flex items-center justify-between px-1">
-                                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Updates</h3>
+                                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Board</h3>
                                     <Link
                                         href="/resident/estate-board"
-                                        className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                        className="text-[10px] font-bold tracking-wide text-primary-600 uppercase hover:text-primary-700"
                                     >
                                         View All
                                     </Link>
@@ -460,7 +487,7 @@ export default function Home({
                                                 <Megaphone className="h-4 w-4" />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h4 className="group-hover:text-indigo-650 truncate text-xs font-semibold text-slate-800 transition-colors">
+                                                <h4 className="group-hover:text-primary-650 truncate text-xs font-semibold text-slate-800 transition-colors">
                                                     {post.title}
                                                 </h4>
                                                 <p className="mt-0.5 text-[9px] font-medium text-slate-400">
@@ -499,7 +526,7 @@ export default function Home({
                                         <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Activity</h3>
                                         <Link
                                             href="/resident/activity"
-                                            className="text-[10px] font-bold tracking-wide text-indigo-600 uppercase hover:text-indigo-700"
+                                            className="text-[10px] font-bold tracking-wide text-primary-600 uppercase hover:text-primary-700"
                                         >
                                             View All
                                         </Link>

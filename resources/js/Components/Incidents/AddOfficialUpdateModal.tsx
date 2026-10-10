@@ -35,7 +35,7 @@ export default function AddOfficialUpdateModal({ isOpen, onClose, onSubmitUpdate
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 p-5 dark:border-slate-800">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600 text-white shadow-xs">
                             <Megaphone className="h-5 w-5" />
                         </div>
                         <div>
@@ -56,8 +56,8 @@ export default function AddOfficialUpdateModal({ isOpen, onClose, onSubmitUpdate
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4 p-5">
-                    <div className="flex items-start gap-3 rounded-xl border border-indigo-200/60 bg-indigo-50/70 p-3.5 text-xs text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-200">
-                        <Shield className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                    <div className="flex items-start gap-3 rounded-xl border border-primary-200/60 bg-primary-50/70 p-3.5 text-xs text-primary-900 dark:border-primary-900/50 dark:bg-primary-950/40 dark:text-primary-200">
+                        <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary-600 dark:text-primary-400" />
                         <p className="leading-relaxed">
                             Official updates are highlighted with an authoritative badge on both the resident case view and community notice feed.
                         </p>
@@ -81,7 +81,7 @@ export default function AddOfficialUpdateModal({ isOpen, onClose, onSubmitUpdate
                             placeholder="e.g. 'Technicians have arrived on site and isolated the water pipe leak. Estimated completion time is 2:00 PM.'..."
                             rows={4}
                             disabled={isSubmitting}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none sm:text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none sm:text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                         />
                         {error && <p className="mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">{error}</p>}
                     </div>
@@ -99,7 +99,7 @@ export default function AddOfficialUpdateModal({ isOpen, onClose, onSubmitUpdate
                         <button
                             type="submit"
                             disabled={isSubmitting || !body.trim()}
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50"
                         >
                             <Send className="h-3.5 w-3.5" />
                             <span>{isSubmitting ? 'Posting...' : 'Broadcast Update'}</span>

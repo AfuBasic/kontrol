@@ -224,19 +224,19 @@ export default function CodeShow({ accessCode, availableReminderOptions = [], us
                 <div className="mx-auto w-full max-w-sm space-y-3 px-1">
                     {/* Active Reminder Badge / Card */}
                     {activeReminder && isPassValid && (
-                        <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3.5 shadow-xs">
+                        <div className="flex items-center justify-between rounded-2xl border border-primary-100 bg-primary-50/60 p-3.5 shadow-xs">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white shadow-sm">
                                     <BellRing className="h-4 w-4 animate-pulse" />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-xs font-black tracking-tight text-indigo-950">Visit Reminder</span>
-                                        <span className="inline-flex items-center rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
+                                        <span className="text-xs font-black tracking-tight text-primary-950">Visit Reminder</span>
+                                        <span className="inline-flex items-center rounded-md bg-primary-100 px-1.5 py-0.5 text-[10px] font-bold text-primary-700">
                                             Active
                                         </span>
                                     </div>
-                                    <p className="truncate text-[11px] font-medium text-indigo-700/80">
+                                    <p className="truncate text-[11px] font-medium text-primary-700/80">
                                         {activeReminder.formatted_date ? `${activeReminder.formatted_date} at ` : ''}
                                         {activeReminder.formatted_time || 'Scheduled'}
                                     </p>
@@ -249,14 +249,14 @@ export default function CodeShow({ accessCode, availableReminderOptions = [], us
                                         setIsPostCreationPrompt(false);
                                         setIsReminderModalOpen(true);
                                     }}
-                                    className="rounded-lg px-2 py-1 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100/80 active:scale-95"
+                                    className="rounded-lg px-2 py-1 text-xs font-bold text-primary-700 transition hover:bg-primary-100/80 active:scale-95"
                                 >
                                     Change
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleRemoveReminder}
-                                    className="rounded-lg p-1 text-indigo-400 transition hover:bg-indigo-100 hover:text-rose-600 active:scale-95"
+                                    className="rounded-lg p-1 text-primary-400 transition hover:bg-primary-100 hover:text-rose-600 active:scale-95"
                                     title="Remove reminder"
                                 >
                                     <BellOff className="h-4 w-4" />
@@ -303,9 +303,9 @@ export default function CodeShow({ accessCode, availableReminderOptions = [], us
                                         setIsPostCreationPrompt(false);
                                         setIsReminderModalOpen(true);
                                     }}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2.5 text-xs font-bold text-indigo-700 transition-all hover:bg-indigo-100/70 active:scale-98"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50/50 py-2.5 text-xs font-bold text-primary-700 transition-all hover:bg-primary-100/70 active:scale-98"
                                 >
-                                    <Bell className="h-3.5 w-3.5 text-indigo-600" />
+                                    <Bell className="h-3.5 w-3.5 text-primary-600" />
                                     <span>Set Visit Reminder</span>
                                 </button>
                             )}

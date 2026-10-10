@@ -16,8 +16,8 @@ const actions = [
         description: 'Share access with your household',
         icon: UserPlus,
         href: '/resident/household',
-        color: 'text-indigo-600',
-        bg: 'bg-indigo-50/70 border border-indigo-100/50',
+        color: 'text-primary-600',
+        bg: 'bg-primary-50/70 border border-primary-100/50',
     },
     {
         name: 'View History',

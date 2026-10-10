@@ -11,7 +11,7 @@ interface Props {
 export default function Invalid({ type = 'default', estateName }: Props) {
     return (
         <>
-            <Head title="Invalid Invitation - Kontrol" />
+            <Head title="Invalid Invitation" />
 
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] px-4 py-12">
                 {/* Ambient logic background */}

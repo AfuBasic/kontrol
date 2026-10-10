@@ -412,7 +412,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
             <section className="space-y-5 px-1">
                 <div className="flex flex-wrap items-center gap-2">
                     {assignment.billing_source === 'property_owner' ? (
-                        <span className="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-[10px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/60">
+                        <span className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-[10px] font-black tracking-widest text-primary-700 uppercase ring-1 ring-primary-100/60">
                             Property Owner Bill
                         </span>
                     ) : (

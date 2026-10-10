@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\VerifyLoginOtpRequest;
 use App\Models\User;
 use App\Support\DeviceMetadata;
+use App\Support\MaskedEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -42,7 +43,7 @@ class LoginOtpController extends Controller
         }
 
         return Inertia::render('Auth/VerifyOtp', [
-            'email' => $this->maskEmail($user->email),
+            'email' => MaskedEmail::mask($user->email),
         ]);
     }
 
@@ -107,18 +108,6 @@ class LoginOtpController extends Controller
         $generateOtp->execute($user, $request);
 
         return back()->with('status', 'A new verification code has been sent to your email.');
-    }
-
-    /*
-     * Mask an email address for display (e.g. "a***@gmail.com").
-     */
-    private function maskEmail(string $email): string
-    {
-        [$local, $domain] = explode('@', $email);
-
-        $masked = $local[0].str_repeat('*', max(strlen($local) - 1, 2));
-
-        return $masked.'@'.$domain;
     }
 
     private function recordFailedAttempt(User $user, Request $request, RecordSecurityEvent $recordSecurityEvent): void

@@ -9,11 +9,11 @@ use App\Actions\Auth\StartDeviceAuthorization;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceAuthorizationRequest;
 use App\Services\Security\PendingDeviceAuthorizationCookie;
+use App\Support\MaskedEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -34,7 +34,7 @@ class DeviceAuthorizationController extends Controller
 
         if ($authorization->isApproved()) {
             return Inertia::render('Auth/VerifyDevice', [
-                'email' => $this->maskEmail($authorization->user->email),
+                'email' => MaskedEmail::mask($authorization->user->email),
                 'status' => 'approved',
                 'displayName' => $authorization->display_name,
             ]);
@@ -49,7 +49,7 @@ class DeviceAuthorizationController extends Controller
         }
 
         return Inertia::render('Auth/VerifyDevice', [
-            'email' => $this->maskEmail($authorization->user->email),
+            'email' => MaskedEmail::mask($authorization->user->email),
             'status' => $authorization->status->value,
             'displayName' => $authorization->display_name,
         ]);
@@ -209,15 +209,6 @@ class DeviceAuthorizationController extends Controller
         $request->session()->put('device_authorization_id', $authorization->id);
 
         return $authorization;
-    }
-
-    private function maskEmail(string $email): string
-    {
-        [$local, $domain] = explode('@', $email);
-        $visible = Str::substr($local, 0, 2);
-        $masked = $visible.str_repeat('•', max(mb_strlen($local) - 2, 2));
-
-        return $masked.'@'.$domain;
     }
 
     private function renderLinkOutcome(string $code): Response

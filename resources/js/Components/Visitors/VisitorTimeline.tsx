@@ -30,7 +30,7 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
             <div className="flex items-baseline gap-2">
                 <span
                     className={`text-[11px] font-bold tracking-wider uppercase ${
-                        isToday ? 'text-indigo-600' : isPast ? 'font-medium text-slate-400' : 'font-bold text-slate-700'
+                        isToday ? 'text-primary-600' : isPast ? 'font-medium text-slate-400' : 'font-bold text-slate-700'
                     }`}
                 >
                     {group.label}

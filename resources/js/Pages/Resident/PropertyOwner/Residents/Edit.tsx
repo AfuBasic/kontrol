@@ -73,7 +73,7 @@ export default function Edit({ resident, properties }: Props) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            className="mt-1 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="mt-1 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             required
                         />
                         <p className="mt-1 text-[10px] font-bold text-slate-400">
@@ -94,7 +94,7 @@ export default function Edit({ resident, properties }: Props) {
                             id="name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            className="focus:ring-indigo-550 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                            className="focus:ring-primary-550 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-primary-500"
                             placeholder="Enter full name"
                         />
                         {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
@@ -112,7 +112,7 @@ export default function Edit({ resident, properties }: Props) {
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
-                            className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                            className="focus:ring-primary-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-primary-500"
                             placeholder="+234..."
                         />
                         {errors.phone && <p className="mt-1 text-xs font-bold text-rose-600">{errors.phone}</p>}
@@ -129,7 +129,7 @@ export default function Edit({ resident, properties }: Props) {
                                 id="unit_number"
                                 value={data.unit_number}
                                 onChange={(e) => setData('unit_number', e.target.value)}
-                                className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                                className="focus:ring-primary-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-primary-500"
                                 placeholder="e.g. Block 4, Apt A2"
                             />
                             {errors.unit_number && <p className="mt-1 text-xs font-bold text-rose-600">{errors.unit_number}</p>}
@@ -165,7 +165,7 @@ export default function Edit({ resident, properties }: Props) {
                             value={data.address}
                             onChange={(e) => setData('address', e.target.value)}
                             rows={3}
-                            className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                            className="focus:ring-primary-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-primary-500"
                             placeholder="Enter full street address"
                         />
                         {errors.address && <p className="mt-1 text-xs font-bold text-rose-600">{errors.address}</p>}
@@ -182,7 +182,7 @@ export default function Edit({ resident, properties }: Props) {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="to-indigo-750 rounded-2xl bg-gradient-to-r from-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
+                        className="to-primary-750 rounded-2xl bg-gradient-to-r from-primary-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/10 transition-all hover:-translate-y-0.5 hover:from-primary-500 hover:to-primary-600 hover:shadow-lg hover:shadow-primary-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
                     >
                         {processing ? 'Saving...' : 'Save Changes'}
                     </button>

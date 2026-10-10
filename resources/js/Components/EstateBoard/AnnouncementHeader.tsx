@@ -8,7 +8,7 @@ const CATEGORY_CONFIG: Record<PostCategory, { label: string; badge: string; icon
     meeting: { label: 'Meeting', badge: 'bg-blue-50 text-blue-700 ring-blue-200/60', icon: CalendarDays },
     maintenance: { label: 'Maintenance', badge: 'bg-orange-50 text-orange-700 ring-orange-200/60', icon: Wrench },
     security: { label: 'Security', badge: 'bg-rose-50 text-rose-700 ring-rose-200/60', icon: Shield },
-    event: { label: 'Event', badge: 'bg-purple-50 text-purple-700 ring-purple-200/60', icon: PartyPopper },
+    event: { label: 'Event', badge: 'bg-primary-50 text-primary-700 ring-primary-200/60', icon: PartyPopper },
 };
 
 const PRIORITY_CALLOUTS: Record<PostPriority, { banner: string; text: string; icon: React.ElementType; title: string } | null> = {
@@ -76,7 +76,7 @@ export default function AnnouncementHeader({ post, showStatusBadge = false, isAd
                     </span>
 
                     {post.property_owner_id ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary-700 uppercase ring-1 ring-primary-100">
                             <Home className="h-2.5 w-2.5" /> Landlord Bulletin
                         </span>
                     ) : null}
@@ -125,8 +125,8 @@ export default function AnnouncementHeader({ post, showStatusBadge = false, isAd
                                 <span>Read</span>
                             </span>
                         ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
-                                <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-600" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-bold text-primary-700">
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-primary-600" />
                                 <span>Unread</span>
                             </span>
                         )}

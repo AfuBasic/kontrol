@@ -97,7 +97,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] border shadow-xl transition-all duration-300 ${
                 isEvent
-                    ? 'border-violet-500/30 bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#1e112f] text-slate-100'
+                    ? 'border-primary-500/30 bg-gradient-to-br from-[#041533] via-[#082a61] to-[#104e9a] text-slate-100'
                     : 'border-blue-100 bg-white text-slate-900'
             }`}
         >
@@ -127,7 +127,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
                     <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">VALIDITY WINDOW</span>
-                    <span className={`text-right font-bold ${isEvent ? 'text-violet-300' : 'text-[#1a5dbf]'}`}>{formatValidityRange()}</span>
+                    <span className={`text-right font-bold ${isEvent ? 'text-sky-300' : 'text-[#1a5dbf]'}`}>{formatValidityRange()}</span>
                 </div>
             </div>
 
@@ -178,7 +178,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 <p className="mb-0.5 text-[9px] font-black tracking-widest text-[#1a5dbf]/70 uppercase">FALLBACK ACCESS CODE</p>
                 <div
                     data-selectable="true"
-                    className={`selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text ${isEvent ? 'text-violet-300' : 'text-[#1a5dbf]'}`}
+                    className={`selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text ${isEvent ? 'text-sky-300' : 'text-[#1a5dbf]'}`}
                 >
                     {pass.code}
                 </div>

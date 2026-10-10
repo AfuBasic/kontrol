@@ -122,7 +122,7 @@ export default function EditCaseDetailsModal({ isOpen, onClose, onSave, incident
                                 type="checkbox"
                                 checked={isPrivate}
                                 onChange={(e) => setIsPrivate(e.target.checked)}
-                                className="h-4 w-4 rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                className="h-4 w-4 rounded-sm border-slate-300 text-primary-600 focus:ring-primary-500"
                             />
                             <div>
                                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Private Case</span>

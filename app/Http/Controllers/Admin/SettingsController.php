@@ -45,6 +45,8 @@ class SettingsController extends Controller
                 'visitor_checkout_enabled' => (bool) $settings->visitor_checkout_enabled,
                 'quick_entry_enabled' => (bool) $settings->quick_entry_enabled,
                 'entry_point_checkout_enforced' => (bool) $settings->entry_point_checkout_enforced,
+                'zone_locked_passes' => (bool) $settings->zone_locked_passes,
+                'entry_point_zones' => (object) ($settings->entry_point_zones ?: []),
                 'entry_points' => $settings->entry_points ?: [],
 
                 // 2. Security Operations
@@ -69,6 +71,7 @@ class SettingsController extends Controller
                 'collection_maximum_reminder_attempts' => (int) ($settings->collection_maximum_reminder_attempts ?: 3),
                 'send_reminder_before_due_date_days' => (int) ($settings->send_reminder_before_due_date_days ?: 1),
             ],
+            'zones' => $estate->zones()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

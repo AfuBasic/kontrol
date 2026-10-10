@@ -11,7 +11,7 @@ function getActivityConfig(type: ActivityItem['type']) {
         case 'created':
             return {
                 icon: <Plus className="h-5 w-5" />,
-                color: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
+                color: 'bg-primary-50 text-primary-600 ring-primary-100',
                 label: 'Code Generated',
             };
         case 'used':
@@ -35,7 +35,7 @@ function getActivityConfig(type: ActivityItem['type']) {
         default:
             return {
                 icon: <Info className="h-5 w-5" />,
-                color: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
+                color: 'bg-primary-50 text-primary-600 ring-primary-100',
                 label: 'Event',
             };
     }
@@ -60,10 +60,10 @@ export default function LiveFeed({ activities }: Props) {
                                         delay: index * 0.05,
                                         ease: [0.23, 1, 0.32, 1],
                                     }}
-                                    className="group relative flex items-center justify-between overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-100 transition-all hover:shadow-lg hover:ring-indigo-100"
+                                    className="group relative flex items-center justify-between overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-100 transition-all hover:shadow-lg hover:ring-primary-100"
                                 >
                                     {/* Glass Accents */}
-                                    <div className="absolute top-0 right-0 h-24 w-24 translate-x-12 -translate-y-12 rounded-full bg-slate-50/50 blur-2xl transition-colors group-hover:bg-indigo-50/50" />
+                                    <div className="absolute top-0 right-0 h-24 w-24 translate-x-12 -translate-y-12 rounded-full bg-slate-50/50 blur-2xl transition-colors group-hover:bg-primary-50/50" />
 
                                     <div className="relative flex items-center gap-4">
                                         <div className={`flex h-12 w-12 items-center justify-center rounded-[20px] shadow-sm ring-1 ${config.color}`}>
@@ -82,7 +82,7 @@ export default function LiveFeed({ activities }: Props) {
                                     </div>
 
                                     <div className="relative flex shrink-0 flex-col items-end">
-                                        <div className="rounded-xl bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-tighter text-slate-400 ring-1 ring-slate-100 transition-all group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
+                                        <div className="rounded-xl bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-tighter text-slate-400 ring-1 ring-slate-100 transition-all group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:ring-primary-100">
                                             #{activity.code}
                                         </div>
                                     </div>

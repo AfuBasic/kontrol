@@ -15,6 +15,7 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Security\ZonePassGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -83,6 +84,7 @@ class VerifyController extends Controller
         $result = app(ValidateAccessCodeAction::class)->execute(
             code: $request->input('code'),
             estateId: $estate->id,
+            guard: $user,
         );
 
         if ($result['valid']) {
@@ -282,6 +284,9 @@ class VerifyController extends Controller
                 ->withCount('accessLogs')
                 ->get();
 
+            // Offline scans are decided on the device, so a zone-locked guard's cache holds only the passes they may admit.
+            $activeCodes = app(ZonePassGuard::class)->filterFor($activeCodes, $user, $estate->id);
+
             $cachedCodes = $activeCodes->map(function (AccessCode $code) {
                 return [
                     'hash' => hash('sha256', strtoupper(trim($code->code))),
@@ -358,7 +363,14 @@ class VerifyController extends Controller
                         ->where('code', $code)
                         ->first();
 
-                    if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
+                    // The visitor was already let in at the gate, so a zone mismatch found now is recorded and flagged
+                    // for the admin, not retried (it would never succeed) and not dropped.
+                    $wrongZone = $accessCode && ! app(ZonePassGuard::class)->allows($accessCode, $user, $estate->id);
+                    if ($wrongZone) {
+                        app(ZonePassGuard::class)->recordRefusal($accessCode, $user, $estate->id);
+                    }
+
+                    if ($accessCode && ! $wrongZone && $accessCode->status === AccessCodeStatus::Active) {
                         app(RecordCheckInAction::class)->execute(
                             code: $code,
                             estateId: $estate->id,
@@ -385,7 +397,11 @@ class VerifyController extends Controller
                                 'host_id' => $accessCode?->user_id,
                                 'offline_code' => $code,
                                 'offline_override' => true,
-                                'sync_status' => $accessCode ? 'code_exists_but_'.$accessCode->status->value : 'code_not_found',
+                                'sync_status' => match (true) {
+                                    $wrongZone => 'wrong_zone',
+                                    (bool) $accessCode => 'code_exists_but_'.$accessCode->status->value,
+                                    default => 'code_not_found',
+                                },
                             ],
                         ]);
                     }

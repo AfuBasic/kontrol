@@ -168,7 +168,7 @@ export default function CodeSuccess({ accessCode }: Props) {
                 >
                     <Link
                         href="/resident/home"
-                        className="block w-full rounded-xl bg-indigo-600 py-4 text-center text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-700 active:scale-[0.98]"
+                        className="block w-full rounded-xl bg-primary-600 py-4 text-center text-base font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-700 active:scale-[0.98]"
                     >
                         Done
                     </Link>
@@ -176,7 +176,7 @@ export default function CodeSuccess({ accessCode }: Props) {
 
                 {/* Create Another Link */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.5 }} className="mt-4">
-                    <Link href="/resident/visitors/create" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                    <Link href="/resident/visitors/create" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                         Create another code
                     </Link>
                 </motion.div>

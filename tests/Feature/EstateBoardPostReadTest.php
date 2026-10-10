@@ -176,3 +176,89 @@ it('exposes resident-specific is_read and unread_count on the resident feed', fu
             ->where('posts.data.0.is_read', false)
         );
 });
+
+it('sends the estate name and filter state to the estate board page', function () {
+    $this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/EstateBoard/Index')
+            ->where('estateName', $this->estate->name)
+            ->where('search', null)
+            ->where('priority', null)
+        );
+});
+
+it('searches announcements by title and text', function () {
+    EstateBoardPost::create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->adminUser->id,
+        'title' => 'Gate hours change',
+        'body' => 'The main gate now closes at 11 pm.',
+        'category' => 'general',
+        'priority' => 'normal',
+        'audience' => 'all',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index', ['search' => 'gate']))
+        ->assertInertia(fn ($page) => $page
+            ->has('posts.data', 1)
+            ->where('posts.data.0.title', 'Gate hours change')
+            ->where('search', 'gate')
+        );
+});
+
+it('lists important and critical announcements together when filtering by important', function () {
+    foreach ([['Critical alert', 'critical'], ['Everyday notice', 'normal']] as [$title, $priority]) {
+        EstateBoardPost::create([
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->adminUser->id,
+            'title' => $title,
+            'body' => 'Body text.',
+            'category' => 'general',
+            'priority' => $priority,
+            'audience' => 'all',
+            'status' => EstateBoardPostStatus::Published,
+            'published_at' => now(),
+        ]);
+    }
+
+    $titles = collect($this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index', ['priority' => 'important']))
+        ->viewData('page')['props']['posts']['data'])->pluck('title');
+
+    // The existing "Water Maintenance Notice" is important; the critical alert joins it; the normal one is excluded.
+    expect($titles->all())->toContain('Water Maintenance Notice', 'Critical alert')
+        ->and($titles->all())->not->toContain('Everyday notice');
+});
+
+it('lists residents the most recently published announcements first', function () {
+    foreach ([['Published long ago', 20], ['Published yesterday', 1]] as [$title, $daysAgo]) {
+        $post = EstateBoardPost::create([
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->adminUser->id,
+            'title' => $title,
+            'body' => 'Body text.',
+            'category' => 'general',
+            'priority' => 'normal',
+            'audience' => 'all',
+            'status' => EstateBoardPostStatus::Published,
+            'published_at' => now()->subDays($daysAgo),
+        ]);
+        // Created in the opposite order to being published, as happens when a draft is published later.
+        $post->forceFill(['created_at' => $daysAgo === 1 ? now()->subDays(30) : now()->subDay()])->saveQuietly();
+    }
+
+    $titles = collect($this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'))
+        ->viewData('page')['props']['posts']['data'])->pluck('title')->values();
+
+    expect($titles->search('Published yesterday'))->toBeLessThan($titles->search('Published long ago'));
+});

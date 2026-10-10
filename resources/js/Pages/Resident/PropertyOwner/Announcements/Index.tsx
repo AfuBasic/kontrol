@@ -55,7 +55,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     meeting: 'bg-blue-100 text-blue-700 ring-blue-200',
     maintenance: 'bg-orange-100 text-orange-700 ring-orange-200',
     security: 'bg-rose-100 text-rose-700 ring-rose-200',
-    event: 'bg-purple-100 text-purple-700 ring-purple-200',
+    event: 'bg-primary-100 text-primary-700 ring-primary-200',
 };
 
 const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
@@ -113,7 +113,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
                 </div>
                 <Link
                     href={create.url()}
-                    className="shadow-indigo-650/20 inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-indigo-600/30 active:scale-95"
+                    className="shadow-primary-650/20 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-primary-600/30 active:scale-95"
                 >
                     <PlusIcon className="h-5 w-5" />
                     New Broadcast
@@ -121,28 +121,28 @@ export default function Index({ announcements, metrics, filters }: Props) {
             </div>
 
             {/* Communication Summary Hero */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 shadow-2xl sm:p-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent"></div>
-                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
+            <div className="brand-card !rounded-[2rem] p-8 sm:p-10">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-primary-500/10 to-transparent"></div>
+                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl"></div>
                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
 
                 <div className="relative grid grid-cols-1 gap-8 divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                     <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-indigo-200">
+                        <div className="flex items-center gap-2 text-primary-200">
                             <ChartBarIcon className="h-5 w-5 opacity-70" />
                             <span className="text-xs font-bold tracking-wider uppercase">Total Broadcasts</span>
                         </div>
                         <span className="text-4xl font-black text-white">{metrics.total}</span>
                     </div>
                     <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
-                        <div className="flex items-center gap-2 text-indigo-200">
+                        <div className="flex items-center gap-2 text-primary-200">
                             <CalendarIcon className="h-5 w-5 opacity-70" />
                             <span className="text-xs font-bold tracking-wider uppercase">This Month</span>
                         </div>
                         <span className="text-4xl font-black text-white">{metrics.this_month}</span>
                     </div>
                     <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
-                        <div className="flex items-center gap-2 text-indigo-200">
+                        <div className="flex items-center gap-2 text-primary-200">
                             <ClockIcon className="h-5 w-5 opacity-70" />
                             <span className="text-xs font-bold tracking-wider uppercase">Latest Update</span>
                         </div>
@@ -162,7 +162,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border-0 bg-white py-3.5 pr-4 pl-11 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:leading-6"
+                            className="block w-full rounded-2xl border-0 bg-white py-3.5 pr-4 pl-11 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-primary-600 focus:ring-inset sm:leading-6"
                             placeholder="Search broadcasts..."
                         />
                     </div>
@@ -257,7 +257,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
 
                                     <div className="mt-5">
                                         <Link href={show.url(ann.hashid as any)} className="absolute inset-0 z-0" />
-                                        <h3 className="text-lg leading-tight font-black text-slate-900 transition-colors group-hover:text-indigo-600">
+                                        <h3 className="text-lg leading-tight font-black text-slate-900 transition-colors group-hover:text-primary-600">
                                             {ann.title}
                                         </h3>
                                         <p className="mt-3 line-clamp-3 text-sm leading-relaxed font-medium text-slate-500">{ann.body}</p>
@@ -288,7 +288,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
                             className="col-span-full flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-24 text-center"
                         >
                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
-                                <MegaphoneIcon className="h-10 w-10 text-indigo-500" />
+                                <MegaphoneIcon className="h-10 w-10 text-primary-500" />
                             </div>
                             <h3 className="mt-6 text-xl font-black text-slate-900">No broadcasts yet</h3>
                             <p className="mt-2 max-w-md text-sm leading-relaxed font-medium text-slate-500">
@@ -296,7 +296,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
                             </p>
                             <Link
                                 href={create.url()}
-                                className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 active:translate-y-0"
+                                className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:-translate-y-0.5 hover:bg-primary-700 active:translate-y-0"
                             >
                                 <PlusIcon className="h-5 w-5" />
                                 Create First Broadcast
@@ -324,7 +324,7 @@ export default function Index({ announcements, metrics, filters }: Props) {
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                             link.active
-                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                                                ? 'bg-primary-600 text-white shadow-md shadow-primary-600/20'
                                                 : 'bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 hover:ring-slate-300'
                                         }`}
                                     />

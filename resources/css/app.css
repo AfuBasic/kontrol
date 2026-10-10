@@ -203,6 +203,7 @@ html.dark .kontrol-form-validation-error {
     --color-primary-900: #061f4a;
     --color-primary-950: #041230;
 
+
     /* === NEUTRALS === */
     --color-gray-50: #f9fafb; /* Cloud White */
     --color-gray-100: #f3f4f6;
@@ -1034,6 +1035,7 @@ input::-webkit-calendar-picker-indicator {
   position: relative;
   overflow: hidden;
   background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0) 0 0 / 24px 24px,
     linear-gradient(
       135deg,
       #041533 0%,
@@ -1066,6 +1068,7 @@ input::-webkit-calendar-picker-indicator {
 
 .brand-card--upcoming {
   background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0) 0 0 / 24px 24px,
     radial-gradient(120% 90% at 0% 0%, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 60%),
     linear-gradient(135deg, #0b1f4f 0%, #1b3f8f 55%, #3a63c9 100%);
 }

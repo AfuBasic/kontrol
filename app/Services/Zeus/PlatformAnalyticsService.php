@@ -241,6 +241,34 @@ class PlatformAnalyticsService
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
+    /**
+     * Monthly recurring revenue (naira) for a period: active subscriptions that existed by the period end and
+     * were still running at its start, with each plan price normalised to a month. This is the one place that
+     * figure is computed; the dashboard chart and the expenses page both read it.
+     */
+    public function recurringRevenueForPeriod(Carbon $periodStart, Carbon $periodEnd): float
+    {
+        $mrrKobo = DB::table('resident_subscriptions')
+            ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
+            ->where('resident_subscriptions.created_at', '<=', $periodEnd)
+            ->where(function ($query) use ($periodStart) {
+                $query->where('resident_subscriptions.current_period_end', '>=', $periodStart)
+                    ->orWhereNull('resident_subscriptions.current_period_end');
+            })
+            ->where('resident_subscriptions.status', 'active')
+            ->selectRaw('SUM(
+                CASE
+                    WHEN plans.billing_interval = "annually" THEN plans.price / 12
+                    WHEN plans.billing_interval = "semi-annually" THEN plans.price / 6
+                    WHEN plans.billing_interval = "quarterly" THEN plans.price / 3
+                    ELSE plans.price
+                END
+            ) as total_mrr')
+            ->value('total_mrr') ?? 0;
+
+        return (float) $mrrKobo / 100;
+    }
+
     public function getPlatformGrowthChart(string $startDate, string $endDate): array
     {
         $data = [];
@@ -283,23 +311,7 @@ class PlatformAnalyticsService
             $estatesCount = Estate::where('created_at', '<=', $periodEnd)->count();
 
             // Real historical MRR calculation for that period
-            $historicalMrrKobo = DB::table('resident_subscriptions')
-                ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
-                ->where('resident_subscriptions.created_at', '<=', $periodEnd)
-                ->where(function ($query) use ($periodStart) {
-                    $query->where('resident_subscriptions.current_period_end', '>=', $periodStart)
-                        ->orWhereNull('resident_subscriptions.current_period_end');
-                })
-                ->where('resident_subscriptions.status', 'active')
-                ->selectRaw('SUM(
-                    CASE 
-                        WHEN plans.billing_interval = "annually" THEN plans.price / 12
-                        WHEN plans.billing_interval = "semi-annually" THEN plans.price / 6
-                        WHEN plans.billing_interval = "quarterly" THEN plans.price / 3
-                        ELSE plans.price
-                    END
-                ) as total_mrr')
-                ->value('total_mrr') ?? 0;
+            $mrr = $this->recurringRevenueForPeriod($periodStart, $periodEnd);
 
             $label = $current->format($format);
             if ($interval === 'week') {
@@ -309,7 +321,7 @@ class PlatformAnalyticsService
             $data[] = [
                 'period' => $label,
                 'estates' => $estatesCount,
-                'mrr' => (float) $historicalMrrKobo / 100,
+                'mrr' => $mrr,
             ];
 
             $current = $next;

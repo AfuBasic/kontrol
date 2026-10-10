@@ -2,7 +2,6 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import {
     ArrowLeftIcon,
-    ArrowPathIcon,
     ArrowTopRightOnSquareIcon,
     ChevronRightIcon,
     CreditCardIcon,
@@ -100,7 +99,7 @@ const STATUS_MAP: Record<
 
 const TONE_STYLES = {
     success: { dot: 'bg-emerald-500', pill: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-    info: { dot: 'bg-indigo-500', pill: 'bg-indigo-50 text-indigo-700 ring-indigo-200' },
+    info: { dot: 'bg-primary-500', pill: 'bg-primary-50 text-primary-700 ring-primary-200' },
     warning: { dot: 'bg-amber-500', pill: 'bg-amber-50 text-amber-800 ring-amber-200' },
     danger: { dot: 'bg-rose-500', pill: 'bg-rose-50 text-rose-700 ring-rose-200' },
 };
@@ -263,11 +262,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                 )}
 
                 {/* Hero Summary Card */}
-                <motion.section
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-900 bg-slate-950 text-white shadow-[0_24px_70px_-42px_rgba(15,23,42,0.75)]"
-                >
+                <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="brand-card !rounded-3xl text-white">
                     <div className="p-5 sm:p-7">
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -338,11 +333,11 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                             className="group flex items-center justify-between gap-3 p-4 transition hover:bg-slate-50/80 active:bg-slate-100/70 sm:p-5 sm:px-6"
                         >
                             <div className="flex min-w-0 flex-1 items-center gap-3.5">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 transition-transform group-hover:scale-105">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 ring-1 ring-primary-100 transition-transform group-hover:scale-105">
                                     <SparklesIcon className="h-5 w-5" strokeWidth={1.9} />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="text-sm font-black text-slate-950 transition-colors group-hover:text-indigo-600 sm:text-base">
+                                    <h3 className="text-sm font-black text-slate-950 transition-colors group-hover:text-primary-600 sm:text-base">
                                         Subscription & Plans
                                     </h3>
                                     <p className="mt-0.5 truncate text-xs font-medium text-slate-500">{subscriptionSummary}</p>

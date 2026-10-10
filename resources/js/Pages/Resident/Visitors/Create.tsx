@@ -62,6 +62,7 @@ const CreateAccessCode = () => {
         isSubscriptionActive,
         accessCodesEnabled: _accessCodesEnabled = true,
         requireVehicleInfo = false,
+        residentDetailsMissing = [],
     } = usePage<
         SharedData & {
             durationOptions: { minutes: number; label: string }[];
@@ -69,6 +70,7 @@ const CreateAccessCode = () => {
             isSubscriptionActive: boolean;
             accessCodesEnabled?: boolean;
             requireVehicleInfo?: boolean;
+            residentDetailsMissing?: Array<'unit' | 'address'>;
         }
     >().props;
     const { isOnline, isServerReachable } = useNetworkQuality();
@@ -101,6 +103,38 @@ const CreateAccessCode = () => {
     };
 
     const [step, setStep] = useState<Step>(getInitialStep());
+
+    // The resident's own address is printed on the pass for the guard. If it is missing, offer to add it right here.
+    const [unitInput, setUnitInput] = useState('');
+    const [addressInput, setAddressInput] = useState('');
+    const [addressError, setAddressError] = useState<string | null>(null);
+    const [savingAddress, setSavingAddress] = useState(false);
+    const [addressSaved, setAddressSaved] = useState(false);
+
+    const needsUnit = residentDetailsMissing.includes('unit');
+    const needsAddress = residentDetailsMissing.includes('address');
+    const canSaveDetails = (!needsUnit || unitInput.trim() !== '') && (!needsAddress || addressInput.trim() !== '');
+
+    const saveAddress = () => {
+        if (savingAddress) return;
+        setSavingAddress(true);
+        setAddressError(null);
+
+        router.patch(
+            '/resident/profile/address',
+            {
+                ...(needsUnit ? { unit_number: unitInput.trim() } : {}),
+                ...(needsAddress ? { address: addressInput.trim() } : {}),
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => setAddressSaved(true),
+                onError: (errors) => setAddressError(errors.address || errors.unit_number || 'Could not save your details.'),
+                onFinish: () => setSavingAddress(false),
+            },
+        );
+    };
 
     const form = useForm<FormState>({
         type: getInitialType(),
@@ -1028,11 +1062,7 @@ const CreateAccessCode = () => {
                                 </div>
 
                                 <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] ring-1 ring-slate-100">
-                                    <div className="relative overflow-hidden bg-slate-900 p-6 text-white">
-                                        {/* Decorative background elements */}
-                                        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
-                                        <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl" />
-
+                                    <div className="brand-card !rounded-none p-6 text-white">
                                         <div className="relative z-10 flex items-center gap-3">
                                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
                                                 {isSingleUse && <Zap className="h-6 w-6" />}
@@ -1078,6 +1108,51 @@ const CreateAccessCode = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {residentDetailsMissing.length > 0 && !addressSaved && (
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                        <p className="text-[13px] leading-relaxed font-semibold text-slate-700">
+                                            Guards won't see which house this visit is for. Add your {needsUnit && needsAddress ? 'unit and address' : needsUnit ? 'unit number' : 'address'} so they can tell. You can skip this.
+                                        </p>
+                                        <div className="mt-3 space-y-2">
+                                            {needsUnit && (
+                                                <input
+                                                    type="text"
+                                                    value={unitInput}
+                                                    onChange={(e) => setUnitInput(e.target.value)}
+                                                    placeholder="Unit / house number, e.g. Block C, Flat 4"
+                                                    aria-label="Your unit or house number"
+                                                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
+                                                />
+                                            )}
+                                            {needsAddress && (
+                                                <input
+                                                    type="text"
+                                                    value={addressInput}
+                                                    onChange={(e) => setAddressInput(e.target.value)}
+                                                    placeholder="Full address"
+                                                    aria-label="Your address"
+                                                    autoComplete="street-address"
+                                                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
+                                                />
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={saveAddress}
+                                                disabled={savingAddress || !canSaveDetails}
+                                                className="w-full rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700 active:scale-95 disabled:opacity-50"
+                                            >
+                                                {savingAddress ? 'Saving...' : 'Save'}
+                                            </button>
+                                        </div>
+                                        {addressError && <p className="mt-2 text-xs font-semibold text-rose-600">{addressError}</p>}
+                                    </div>
+                                )}
+                                {addressSaved && (
+                                    <p className="text-center text-xs font-semibold text-emerald-700">
+                                        Address saved. Guards will see it on your passes.
+                                    </p>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

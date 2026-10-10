@@ -274,7 +274,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     required
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                     placeholder="Enter resident's full name"
                                 />
                                 {errors.name && <p className="mt-1 text-sm text-rose-600">{errors.name}</p>}
@@ -291,7 +291,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     required
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                     placeholder="resident@example.com"
                                 />
                                 <p className="mt-1 text-xs text-slate-400">An invitation email will be sent to setup their password.</p>
@@ -308,7 +308,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="phone"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                     placeholder="+234..."
                                 />
                                 {errors.phone && <p className="mt-1 text-sm text-rose-600">{errors.phone}</p>}
@@ -343,7 +343,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="unit_number"
                                     value={data.unit_number}
                                     onChange={(e) => setData('unit_number', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                     placeholder="e.g., Flat 4, Block B"
                                 />
                                 {errors.unit_number && <p className="mt-1 text-sm text-rose-600">{errors.unit_number}</p>}
@@ -359,7 +359,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
                                     rows={3}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                     placeholder="Enter resident's full address"
                                 />
                                 {errors.address && <p className="mt-1 text-sm text-rose-600">{errors.address}</p>}
@@ -376,7 +376,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="rounded-2xl bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
+                                className="rounded-2xl bg-primary-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/10 transition-all hover:-translate-y-0.5 hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
                             >
                                 {processing ? 'Sending Invite...' : 'Invite Resident'}
                             </button>
@@ -395,7 +395,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                     >
                         <div className="space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
                                     <LinkIcon className="h-6 w-6" />
                                 </div>
                                 <div>
@@ -452,7 +452,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                                 onClick={() => setShowQrCode(!showQrCode)}
                                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
                                                     showQrCode
-                                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                                                        ? 'bg-primary-600 text-white shadow-md shadow-primary-500/10'
                                                         : 'bg-white text-slate-500 shadow-xs ring-1 ring-slate-200 hover:text-slate-900'
                                                 }`}
                                                 title="Show QR Code"
@@ -518,12 +518,12 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="rounded-[2rem] bg-indigo-50/50 p-6 text-center ring-1 ring-indigo-100/50">
+                                <div className="rounded-[2rem] bg-primary-50/50 p-6 text-center ring-1 ring-primary-100/50">
                                     <p className="text-sm font-medium text-slate-600">No active invitation link generated yet.</p>
                                     <button
                                         type="button"
                                         onClick={handleGenerateLink}
-                                        className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98"
+                                        className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/10 transition-all hover:-translate-y-0.5 hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-500/25 active:translate-y-0 active:scale-98"
                                     >
                                         Generate Invite Link
                                     </button>
@@ -546,7 +546,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                                 value={inviteSettings.max_usages}
                                                 onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
                                                 placeholder="Unlimited"
-                                                className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pr-12 pl-4 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                                className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pr-12 pl-4 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                             />
                                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                                 <span className="text-xs font-semibold text-slate-400">uses</span>
@@ -563,7 +563,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                             value={inviteSettings.expires_at}
                                             onChange={(e) => setInviteSettings((prev) => ({ ...prev, expires_at: e.target.value }))}
-                                            className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                            className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-50 focus:outline-none"
                                         />
                                         <p className="text-[10px] text-slate-400">Link will automatically expire after this date.</p>
                                     </div>

@@ -25,6 +25,8 @@ class EnsureResidentSubscriptionActive
         'resident.profile',
         'resident.profile.update',
         'resident.password.update',
+        'resident.profile.nudge.*',
+        'resident.profile.address.*',
         'resident.collections.*',
         'resident.coupons.index',
         'resident.notifications.*',

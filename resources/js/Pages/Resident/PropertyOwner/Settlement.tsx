@@ -94,7 +94,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                 <div className="mb-8 flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
                         <Landmark className="h-7 w-7" />
                     </div>
                     <div>
@@ -127,7 +127,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                             }}
                         >
                             <div className="relative mt-2">
-                                <div className="relative w-full cursor-default overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-left transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
+                                <div className="relative w-full cursor-default overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-left transition-all focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10">
                                     <ComboboxInput
                                         className="w-full border-none py-3.5 pr-10 pl-12 text-sm font-bold text-slate-900 focus:ring-0 focus:outline-none"
                                         displayValue={(bank: any) => bank?.name || ''}
@@ -160,7 +160,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                                                     className={({ active }) =>
                                                         cn(
                                                             'relative cursor-default py-3 pr-4 pl-12 transition-colors select-none',
-                                                            active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-900',
+                                                            active ? 'bg-primary-50 text-primary-700' : 'text-slate-900',
                                                         )
                                                     }
                                                     value={bank}
@@ -170,13 +170,13 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                                                             <span
                                                                 className={cn(
                                                                     'block truncate font-bold',
-                                                                    selected ? 'text-indigo-700' : 'text-slate-900',
+                                                                    selected ? 'text-primary-700' : 'text-slate-900',
                                                                 )}
                                                             >
                                                                 {bank.name}
                                                             </span>
                                                             {selected ? (
-                                                                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-indigo-600">
+                                                                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-primary-600">
                                                                     <Check className="h-4 w-4" aria-hidden="true" />
                                                                 </span>
                                                             ) : null}
@@ -205,11 +205,11 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                                         setIsVerified(false);
                                     }}
                                     placeholder="10-digit number"
-                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                 />
                                 {resolvingBank && (
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                                        <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                        <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
                                     </div>
                                 )}
                             </div>
@@ -238,13 +238,13 @@ export default function Settlement({ settlement, banks = [] }: Props) {
 
                     {/* Verified Account Name */}
                     {data.account_name && (
-                        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+                        <div className="rounded-2xl border border-primary-100 bg-primary-50 p-5">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm">
                                     <CheckCircle2 className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black tracking-widest text-indigo-600/60 uppercase">Verified Account Name</p>
+                                    <p className="text-[10px] font-black tracking-widest text-primary-600/60 uppercase">Verified Account Name</p>
                                     <p className="text-sm font-black text-slate-900">{data.account_name}</p>
                                 </div>
                             </div>
@@ -269,7 +269,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                         <button
                             type="submit"
                             disabled={processing || !isVerified}
-                            className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
+                            className="w-full rounded-2xl bg-primary-600 py-4 text-sm font-black text-white shadow-xl shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50"
                         >
                             {processing ? 'Saving details...' : 'Confirm & Save Account'}
                         </button>

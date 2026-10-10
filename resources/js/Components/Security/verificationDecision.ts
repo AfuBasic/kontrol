@@ -199,6 +199,25 @@ export function resolveVerificationDecision(result: ValidationResult): ResolvedD
         };
     }
 
+    // 3b. Valid pass, wrong gate: the estate locks passes to the issuing resident's zone. Must come before
+    // "not recognized", which would otherwise swallow it because identity is withheld for passes from another zone.
+    if (result.status === 'wrong_zone') {
+        return {
+            tone: 'warning',
+            statusLabel: 'WRONG ZONE',
+            statusSubtitle: result.message || 'This pass belongs to a different zone. Send the visitor to the correct gate.',
+            Icon: ShieldAlert,
+            showIdentity: false,
+            visitorName: null,
+            hostName: null,
+            purpose: null,
+            facts: [],
+            primaryActionLabel: 'Verify Another Pass',
+            actionType: 'scan_next',
+            allowAutoReturn: false,
+        };
+    }
+
     // 4. Pass Not Recognized (404 / Invalid Code)
     if (result.status === 'not_found' || (!valid && !result.visitor_name && result.status !== 'disabled')) {
         return {

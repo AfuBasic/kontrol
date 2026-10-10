@@ -257,7 +257,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
 
     return (
         <>
-            <Head title="Report an Incident - Kontrol" />
+            <Head title="Report an Incident" />
 
             <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
                 {/* Header with Navigation */}
@@ -274,7 +274,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                         <button
                             type="button"
                             onClick={() => setStep('category')}
-                            className="text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-400"
+                            className="text-xs font-bold text-primary-600 hover:underline dark:text-primary-400"
                         >
                             Change Category
                         </button>
@@ -328,9 +328,9 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                         key={cat.value}
                                         type="button"
                                         onClick={() => handleSelectCategory(cat.value)}
-                                        className={`group flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all hover:border-indigo-400 hover:shadow-md ${
+                                        className={`group flex items-center gap-3.5 rounded-2xl border p-4 text-left transition-all hover:border-primary-400 hover:shadow-md ${
                                             isSelected
-                                                ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 dark:border-indigo-500 dark:bg-indigo-950/40'
+                                                ? 'border-primary-600 bg-primary-50/70 ring-2 ring-primary-500/20 dark:border-primary-500 dark:bg-primary-950/40'
                                                 : 'border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900'
                                         }`}
                                     >
@@ -340,12 +340,12 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                             <Icon className="h-5 w-5" />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 dark:text-slate-100 dark:group-hover:text-indigo-400">
+                                            <p className="text-sm font-bold text-slate-900 group-hover:text-primary-600 dark:text-slate-100 dark:group-hover:text-primary-400">
                                                 {config.label}
                                             </p>
                                             <p className="text-[11px] text-slate-400 dark:text-slate-500">Tap to report</p>
                                         </div>
-                                        <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-indigo-600" />
+                                        <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-600" />
                                     </button>
                                 );
                             })}
@@ -355,7 +355,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                     /* STEP 2: Incident Form Details */
                     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                         {/* Selected Category Pill */}
-                        <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3.5 dark:border-indigo-950 dark:bg-indigo-950/30">
+                        <div className="flex items-center justify-between rounded-2xl border border-primary-100 bg-primary-50/60 p-3.5 dark:border-primary-950 dark:bg-primary-950/30">
                             <div className="flex items-center gap-2.5">
                                 <div
                                     className={`flex h-8 w-8 items-center justify-center rounded-lg ${selectedCategoryConfig.bg} ${selectedCategoryConfig.text}`}
@@ -363,7 +363,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     <selectedCategoryConfig.icon className="h-4 w-4" />
                                 </div>
                                 <div>
-                                    <span className="text-[10px] font-black tracking-wider text-indigo-700 uppercase dark:text-indigo-400">
+                                    <span className="text-[10px] font-black tracking-wider text-primary-700 uppercase dark:text-primary-400">
                                         Category Selected
                                     </span>
                                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{selectedCategoryConfig.label}</p>
@@ -372,7 +372,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                             <button
                                 type="button"
                                 onClick={() => setStep('category')}
-                                className="text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-400"
+                                className="text-xs font-bold text-primary-600 hover:underline dark:text-primary-400"
                             >
                                 Change
                             </button>
@@ -394,7 +394,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="e.g. Streetlight flickering at Gate 2 entrance"
                                     required
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                                 />
                                 {errors.title && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.title}</p>}
                             </div>
@@ -413,7 +413,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     placeholder="Please provide full details so estate personnel or security can address it quickly..."
                                     rows={4}
                                     required
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                                 />
                                 {errors.body && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.body}</p>}
                             </div>
@@ -434,7 +434,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                         value={data.location}
                                         onChange={(e) => setData('location', e.target.value)}
                                         placeholder="e.g. Block C near children playground"
-                                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pr-3.5 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pr-3.5 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                                     />
                                 </div>
                             </div>
@@ -459,7 +459,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                 ) : (
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 dark:border-slate-800 dark:bg-slate-950/40"
+                                        className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition-colors hover:border-primary-400 hover:bg-primary-50/30 dark:border-slate-800 dark:bg-slate-950/40"
                                     >
                                         <Camera className="mb-2 h-6 w-6 text-slate-400" />
                                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Tap to take a photo or choose an image</p>
@@ -493,7 +493,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     type="checkbox"
                                     checked={data.is_private}
                                     onChange={(e) => setData('is_private', e.target.checked)}
-                                    className="mt-1 h-4 w-4 cursor-pointer rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="mt-1 h-4 w-4 cursor-pointer rounded-md border-slate-300 text-primary-600 focus:ring-primary-500"
                                 />
                             </div>
 
@@ -509,7 +509,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                 <button
                                     type="submit"
                                     disabled={processing || uploadingMedia}
-                                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-7 py-3 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50"
+                                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-7 py-3 text-xs font-bold text-white shadow-md shadow-primary-600/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
                                 >
                                     <Send className="h-4 w-4" />
                                     <span>{uploadingMedia ? 'Uploading Evidence...' : processing ? 'Submitting...' : 'Submit Report'}</span>

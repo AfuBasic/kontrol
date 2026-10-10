@@ -114,12 +114,18 @@ class EstateBoardService
                 });
             })
             ->when($category, fn ($q) => $q->where('category', $category))
-            ->when($priority, fn ($q) => $q->where('priority', $priority))
+            // "Important" means pinned: important posts and critical alerts.
+            ->when($priority, fn ($q) => $priority === 'important'
+                ? $q->whereIn('priority', ['important', 'critical'])
+                : $q->where('priority', $priority))
             ->with([
                 'author:id,name,email',
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
             ])
             ->withCount(['comments', 'reads'])
+            // Residents only see published posts and the card shows the publish date, so order by that;
+            // admins also see drafts (no publish date yet), so they keep creation order.
+            ->when(! $isAdmin, fn ($q) => $q->orderByDesc('published_at'))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->cursorPaginate($perPage);

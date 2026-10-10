@@ -7,12 +7,15 @@ use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Models\Scopes\ZoneScope;
+use App\Models\User;
+use App\Services\Security\ZonePassGuard;
 
 class ValidateAccessCodeAction
 {
     /**
      * Validate an access code and return the result.
      *
+     * @param  User|null  $guard  The guard scanning the code; needed for zone-locked estates.
      * @return array{
      *     valid: bool,
      *     status: string,
@@ -26,7 +29,7 @@ class ValidateAccessCodeAction
      *     action: string
      * }
      */
-    public function execute(string $code, int $estateId): array
+    public function execute(string $code, int $estateId, ?User $guard = null): array
     {
         // Fetch Settings early to use for feature toggles & grace period
         $settings = EstateSettings::forEstate($estateId);
@@ -73,6 +76,17 @@ class ValidateAccessCodeAction
 
         if (! $accessCode) {
             return $this->denied('Code not found', 'not_found');
+        }
+
+        // Zone-locked passes: refuse before anything else, including check-out, so a wrong-zone pass reveals nothing.
+        if ($guard) {
+            $zoneGuard = app(ZonePassGuard::class);
+
+            if (! $zoneGuard->allows($accessCode, $guard, $estateId)) {
+                $zoneGuard->recordRefusal($accessCode, $guard, $estateId);
+
+                return $this->denied(ZonePassGuard::MESSAGE, ZonePassGuard::STATUS);
+            }
         }
 
         // If checkout tracking is enabled, check if they are checking out

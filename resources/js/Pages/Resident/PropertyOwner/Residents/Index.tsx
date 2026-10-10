@@ -109,9 +109,9 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                 </div>
                 <Link
                     href={create.url()}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/10 transition-all hover:-translate-y-0.5 hover:from-primary-500 hover:to-primary-600 hover:shadow-lg hover:shadow-primary-500/25 active:translate-y-0 active:scale-98"
                 >
-                    <UserPlusIcon className="h-5 w-5 text-indigo-100" />
+                    <UserPlusIcon className="h-5 w-5 text-primary-100" />
                     Invite Resident
                 </Link>
             </div>
@@ -127,7 +127,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                             placeholder="Search by name or email..."
                         />
                     </div>
@@ -170,7 +170,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <div
                                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black ${
-                                            resident.suspended_at ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'
+                                            resident.suspended_at ? 'bg-rose-100 text-rose-600' : 'bg-primary-50 text-primary-600'
                                         }`}
                                     >
                                         {resident.name.charAt(0).toUpperCase()}
@@ -338,7 +338,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
                                             link.active
-                                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/10'
+                                                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/10'
                                                 : 'bg-white text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-slate-50'
                                         }`}
                                     />

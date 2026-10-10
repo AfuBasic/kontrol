@@ -1,6 +1,6 @@
 import { Head, InfiniteScroll, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Mail, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
+import { Calendar, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
@@ -419,6 +419,7 @@ export default function Visitors({
                                     {/* Show Quick Contacts / Invite Again if available */}
                                     {recentVisitors && recentVisitors.length > 0 && (
                                         <QuickActions
+                                            showInvite={false}
                                             recentVisitors={recentVisitors}
                                             onInvite={() => setShowCreateSheet(true)}
                                             onInviteAgain={handleInviteAgain}
@@ -507,7 +508,7 @@ export default function Visitors({
                             onClick={() => setShowCreateSheet(false)}
                             className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                         >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                                 <Calendar className="h-4 w-4" />
                             </div>
                             <div>
@@ -524,7 +525,7 @@ export default function Visitors({
                         onClick={() => setShowCreateSheet(false)}
                         className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                     >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <Calendar className="h-4 w-4" />
                         </div>
                         <div>

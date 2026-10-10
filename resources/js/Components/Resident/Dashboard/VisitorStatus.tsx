@@ -52,7 +52,7 @@ export default function VisitorStatus({ activeCodes }: Props) {
                 <div>
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-bold tracking-tight text-slate-900">Upcoming Visitors</h3>
-                        <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">{upcoming.length} Pending</span>
+                        <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-bold text-primary-700">{upcoming.length} Pending</span>
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {upcoming.map((code) => (
@@ -72,7 +72,7 @@ function VisitorCard({ code, status: _status }: { code: AccessCode; status: stri
                 href={`/resident/visitors/${code.id}`}
                 className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-slate-200 hover:shadow-md"
             >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-600">
                     <User className="h-7 w-7" />
                 </div>
                 <div className="flex-1 overflow-hidden">
@@ -83,7 +83,7 @@ function VisitorCard({ code, status: _status }: { code: AccessCode; status: stri
                                 code.type === 'single_use'
                                     ? 'border-blue-100 bg-blue-50 text-blue-600'
                                     : code.type === 'event'
-                                      ? 'border-violet-100 bg-violet-50 text-violet-600'
+                                      ? 'border-primary-100 bg-primary-50 text-primary-600'
                                       : 'border-emerald-100 bg-emerald-50 text-emerald-600'
                             }`}
                         >
@@ -97,7 +97,7 @@ function VisitorCard({ code, status: _status }: { code: AccessCode; status: stri
                         )}
                     </div>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-primary-600 group-hover:text-white">
                     <ChevronRight className="h-5 w-5" />
                 </div>
             </Link>

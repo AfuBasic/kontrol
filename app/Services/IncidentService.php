@@ -146,6 +146,10 @@ class IncidentService
             $query->orderByDesc('created_at');
         }
 
+        // Incidents created in the same second (bulk imports, seeded data) tie on time. Without a final unique
+        // key the database may order ties differently on every page, so pages repeat some rows and skip others.
+        $query->orderByDesc('id');
+
         // If view is board, return all records (unpaginated) to prevent card truncation
         if (isset($filters['view']) && $filters['view'] === 'board') {
             return $query->get();

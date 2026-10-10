@@ -226,9 +226,9 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
 
             {/* Total Balance Card */}
             <section>
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl shadow-slate-900/20">
+                <div className="brand-card !rounded-[2.5rem] p-8 text-white">
                     <div className="relative z-10">
-                        <p className="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Total Outstanding</p>
+                        <p className="text-xs font-black tracking-[0.2em] text-blue-200/70 uppercase">Total Outstanding</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight">{formatCurrency(totalOutstanding)}</h2>
 
                         <div className="mt-8 flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                     </div>
                     {/* Decorative Blobs */}
                     <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
-                    <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
+                    <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-primary-600/10 blur-3xl" />
                 </div>
             </section>
 
@@ -290,7 +290,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                             <button
                                 onClick={handlePayAll}
                                 disabled={paymentsDisabled}
-                                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all hover:bg-indigo-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-primary-600 uppercase transition-all hover:bg-primary-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Pay All ({payAllCount})
                             </button>
@@ -332,7 +332,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                                             </p>
                                             <div className="mt-1.5 flex">
                                                 {assignment.billing_source === 'property_owner' ? (
-                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                    <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-primary-700 uppercase ring-1 ring-primary-100/50">
                                                         Property Owner
                                                     </span>
                                                 ) : (
@@ -381,7 +381,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                             placeholder="Search paid dues..."
                             value={searchPaid}
                             onChange={(e) => setSearchPaid(e.target.value)}
-                            className="w-full rounded-full bg-slate-100 py-1.5 pr-10 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-hidden"
+                            className="w-full rounded-full bg-slate-100 py-1.5 pr-10 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:outline-hidden"
                         />
                         {searchPaid && (
                             <button
@@ -412,7 +412,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                                             <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
                                             <div className="mt-1 flex">
                                                 {assignment.billing_source === 'property_owner' ? (
-                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                    <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-primary-700 uppercase ring-1 ring-primary-100/50">
                                                         Property Owner
                                                     </span>
                                                 ) : (
@@ -436,7 +436,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                             className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                             loading={
                                 <div className="col-span-full flex justify-center py-4">
-                                    <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                                    <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
                                 </div>
                             }
                         >
@@ -455,7 +455,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                                             <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
                                             <div className="mt-1 flex">
                                                 {assignment.billing_source === 'property_owner' ? (
-                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                    <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-primary-700 uppercase ring-1 ring-primary-100/50">
                                                         Property Owner
                                                     </span>
                                                 ) : (

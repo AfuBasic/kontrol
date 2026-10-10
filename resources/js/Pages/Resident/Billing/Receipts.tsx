@@ -328,7 +328,7 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 text-[11px] font-black tracking-[0.16em] text-slate-600 uppercase transition-all hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
                                     >
                                         {isLoadingMore ? (
-                                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                            <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
                                         ) : (
                                             <>
                                                 Load More Invoices

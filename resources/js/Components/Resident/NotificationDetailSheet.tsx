@@ -41,7 +41,7 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
         switch (data.type) {
             case 'new_invoice':
                 return (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 ring-1 ring-primary-100">
                         <CreditCard className="h-6 w-6" />
                     </div>
                 );
@@ -66,7 +66,7 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
             case 'new_collection':
             case 'collection_reminder':
                 return (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 ring-1 ring-primary-100">
                         <Wallet className="h-6 w-6" />
                     </div>
                 );
@@ -112,7 +112,7 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
                             {data.formatted_amount && (
                                 <div className="flex items-center justify-between p-4">
                                     <span className="text-sm font-medium text-slate-500">Amount</span>
-                                    <span className="text-sm font-black text-indigo-600">{data.formatted_amount}</span>
+                                    <span className="text-sm font-black text-primary-600">{data.formatted_amount}</span>
                                 </div>
                             )}
                             {data.type === 'payment_failed' && (

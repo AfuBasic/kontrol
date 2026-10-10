@@ -17,7 +17,7 @@ interface LoginFlash {
 export default function Login() {
     const page = usePage<{ flash: LoginFlash }>();
     const { flash } = page.props;
-    const { data, setData, post, processing, errors, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, clearErrors, setError } = useForm({
         email: '',
         remember: true, // Always remember the user by default
     });
@@ -336,6 +336,17 @@ export default function Login() {
         }
         setLoginError(null);
         clearErrors();
+
+        // A missing or malformed address is a typing slip, not a failed sign-in: say so beside the field
+        // and keep the person there, instead of sending a request and raising a blocking error sheet.
+        const email = data.email.trim();
+        if (email === '' || !/^\S+@\S+\.\S+$/.test(email)) {
+            setError('email', email === '' ? 'Enter your email address.' : 'Enter a valid email address, like you@example.com.');
+            document.getElementById('email')?.focus();
+
+            return;
+        }
+
         post('/login', {
             onError: (errs) => {
                 const extError = errs.email || null;
@@ -652,7 +663,7 @@ export default function Login() {
                             <motion.div
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6"
+                                className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6 lg:block"
                             >
                                 {loginError}
                             </motion.div>
@@ -690,11 +701,24 @@ export default function Login() {
                                         }
                                     }}
                                     enterKeyHint="go"
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
+                                    name="email"
+                                    inputMode="email"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
+                                    spellCheck={false}
+                                    aria-invalid={errors.email ? true : undefined}
+                                    aria-describedby={errors.email ? 'email-error' : undefined}
+                                    className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:ring-4 focus:outline-none ${
+                                        errors.email ? 'border-red-300 focus:border-red-400 focus:ring-red-500/10' : 'border-slate-200 focus:border-primary-500 focus:ring-primary-500/10'
+                                    }`}
                                     placeholder="you@example.com"
                                     autoComplete="email"
                                 />
-                                {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
+                                {errors.email && !loginError && (
+                                    <p id="email-error" role="alert" className="mt-1.5 text-sm text-red-600">
+                                        {errors.email}
+                                    </p>
+                                )}
                             </div>
 
                             <button
@@ -705,12 +729,13 @@ export default function Login() {
                                 {processing ? (
                                     <span className="flex items-center gap-2">
                                         <Spinner />
-                                        Signing in...
+                                        Sending code...
                                     </span>
                                 ) : (
-                                    'Sign in'
+                                    'Continue'
                                 )}
                             </button>
+                            <p className="-mt-2 text-center text-xs text-slate-400">No password needed. We'll email you a 6-digit code.</p>
 
                             <div className="relative py-1">
                                 <div className="absolute inset-0 flex items-center">

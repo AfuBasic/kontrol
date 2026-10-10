@@ -145,7 +145,7 @@ export default function Index({ incidents, filters, categories }: Props) {
 
     return (
         <>
-            <Head title="Security Incident Dispatch - Kontrol" />
+            <Head title="Security Incident Dispatch" />
 
             <div className="space-y-5 py-3 pb-4 sm:py-6">
                 <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/70">

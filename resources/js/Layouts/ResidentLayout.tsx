@@ -446,7 +446,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const residentMoreItems = [
         ...(hasHousehold && !isHouseholdMember ? [{ name: 'My Family', href: '/resident/household', icon: UserCheck }] : []),
         ...(!showDuesInNav && !isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
-        ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
+        ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Estate Board', href: '/resident/estate-board', icon: Megaphone }] : []),
         ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
         ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
@@ -476,7 +476,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             icon: (active: boolean) => <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
         },
         {
-            name: 'Announcements',
+            name: 'Estate Board',
             href: '/resident/estate-board',
             show: showAnnouncementsInNav,
             icon: (active: boolean) => <Megaphone className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
@@ -522,7 +522,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Incidents', href: '/resident/incidents', icon: ClipboardList },
         { name: 'Visitor Passes', href: '/resident/visitors', icon: Users },
         { name: 'Pay Estate Dues', href: '/resident/dues', icon: Wallet },
-        { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
+        { name: 'Estate Board', href: '/resident/estate-board', icon: Megaphone },
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
         ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
         { name: 'My Family', href: '/resident/household', icon: UserCheck },
@@ -575,7 +575,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         key={item.name}
                                         href={item.href}
                                         className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                                            isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                            isActive ? 'bg-primary-50 text-primary-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -584,8 +584,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         </div>
                                         {item.name === 'Offers & Coupons' && (
                                             <span className="relative flex h-2 w-2 shrink-0">
-                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
-                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
+                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
                                             </span>
                                         )}
                                     </Link>
@@ -596,7 +596,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     <div className="flex flex-col gap-1 border-t border-slate-100 pt-4">
                         <div className="flex items-center gap-3 px-2 py-2">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 font-bold text-indigo-600 ring-1 ring-indigo-100">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 font-bold text-primary-600 ring-1 ring-primary-100">
                                 {auth.user?.name?.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -661,7 +661,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     >
                                         <Bell className="h-6 w-6" />
                                         {unreadCount > 0 && (
-                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
+                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-black text-white ring-1 ring-white">
                                                 {unreadCount}
                                             </span>
                                         )}
@@ -738,8 +738,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                     {(item.icon as any)(false)}
                                                     {auth?.user?.has_active_coupons && (
                                                         <span className="absolute top-1 right-1 flex h-2 w-2">
-                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
-                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
+                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -771,14 +771,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     return (
                                         <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
                                             <div
-                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
+                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                                             >
                                                 {(item.icon as any)(isActive)}
                                             </div>
                                             {isActive && (
                                                 <motion.div
                                                     layoutId="navIndicator"
-                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-primary-600"
                                                 />
                                             )}
                                         </Link>
@@ -828,8 +828,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                     {(item.icon as any)(false)}
                                                     {auth?.user?.has_active_coupons && (
                                                         <span className="absolute top-1 right-1 flex h-2 w-2">
-                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
-                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
+                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -844,14 +844,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     return (
                                         <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
                                             <div
-                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
+                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                                             >
                                                 {(item.icon as any)(isActive)}
                                             </div>
                                             {isActive && (
                                                 <motion.div
                                                     layoutId="navIndicator"
-                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-primary-600"
                                                 />
                                             )}
                                         </Link>
@@ -932,14 +932,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         >
                                             <div
                                                 className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
-                                                    isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
+                                                    isActive ? 'bg-primary-50 text-primary-600' : 'bg-slate-50 text-slate-500'
                                                 }`}
                                             >
                                                 <item.icon className="h-6 w-6" />
                                                 {item.name === 'Offers & Coupons' && (
                                                     <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
-                                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-violet-500"></span>
+                                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary-500"></span>
                                                     </span>
                                                 )}
                                             </div>

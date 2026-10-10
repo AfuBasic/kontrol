@@ -87,7 +87,7 @@ const STATUS_MAP: Record<SubscriptionStatus, { label: string; tone: 'success' | 
 
 const TONE_STYLES = {
     success: { dot: 'bg-emerald-500', pill: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-    info: { dot: 'bg-indigo-500', pill: 'bg-indigo-50 text-indigo-700 ring-indigo-200' },
+    info: { dot: 'bg-primary-500', pill: 'bg-primary-50 text-primary-700 ring-primary-200' },
     warning: { dot: 'bg-amber-500', pill: 'bg-amber-50 text-amber-800 ring-amber-200' },
     danger: { dot: 'bg-rose-500', pill: 'bg-rose-50 text-rose-700 ring-rose-200' },
 };
@@ -371,12 +371,12 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                                         key={plan.id}
                                         className={`relative flex min-h-48 flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all ${
                                             isCurrent
-                                                ? 'border-indigo-300 bg-indigo-50/60 shadow-xs'
+                                                ? 'border-primary-300 bg-primary-50/60 shadow-xs'
                                                 : 'border-slate-200 bg-white hover:border-slate-300'
                                         }`}
                                     >
                                         {isCurrent && (
-                                            <span className="absolute top-0 right-0 rounded-tr-2xl rounded-bl-2xl bg-indigo-600 px-3 py-1 text-[9px] font-black tracking-[0.14em] text-white uppercase">
+                                            <span className="absolute top-0 right-0 rounded-tr-2xl rounded-bl-2xl bg-primary-600 px-3 py-1 text-[9px] font-black tracking-[0.14em] text-white uppercase">
                                                 Active Term
                                             </span>
                                         )}
@@ -387,7 +387,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                                                 {appliedCoupon ? (
                                                     <>
                                                         <span className="text-xs font-bold text-slate-400 line-through">{plan.formatted_price}</span>
-                                                        <p className="text-2xl font-black tracking-tight text-indigo-600">
+                                                        <p className="text-2xl font-black tracking-tight text-primary-600">
                                                             {appliedCoupon.formatted_final_amount}
                                                         </p>
                                                         <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">
@@ -442,7 +442,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                             type="checkbox"
                             checked={autoRenewConsent}
                             onChange={(event) => setAutoRenewConsent(event.target.checked)}
-                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
+                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
                         />
                         <span>
                             <span className="block text-sm font-black text-slate-950">Enable automatic renewal for future cycles</span>
@@ -465,7 +465,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                                 placeholder="Enter coupon code"
                                 disabled={Object.keys(appliedCoupons).length > 0 || isValidatingCoupon}
-                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs tracking-wider uppercase focus:border-indigo-500 focus:outline-none"
+                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs tracking-wider uppercase focus:border-primary-500 focus:outline-none"
                             />
                             {Object.keys(appliedCoupons).length > 0 ? (
                                 <button
