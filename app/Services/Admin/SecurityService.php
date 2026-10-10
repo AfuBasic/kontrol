@@ -43,10 +43,10 @@ class SecurityService
                     $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', false));
                 } elseif ($status === 'active') {
                     $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
-                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'accepted'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'pending') {
                     $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
-                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'pending'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
             ->latest()
