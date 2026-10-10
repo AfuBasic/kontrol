@@ -13,7 +13,6 @@ use App\Http\Requests\Zeus\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Services\Zeus\ExpenseService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -125,6 +124,7 @@ class ExpenseController extends Controller
                 'size' => $receipt->size,
                 'is_pdf' => $receipt->isPdf(),
                 'url' => route('zeus.expenses.receipts.show', $receipt),
+                'download_url' => route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]),
             ])->values()->all(),
         ];
     }
