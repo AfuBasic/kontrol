@@ -217,6 +217,41 @@ it('sums the month, breaks it down by category, and sets it against recurring re
         );
 });
 
+it('compares the month with the one before, names the biggest expense, and fills every day of the chart', function () {
+    $month = now()->startOfMonth();
+    ($this->makeExpense)(['payee' => 'Small', 'amount' => 100000, 'incurred_on' => $month->copy()->addDays(2)->toDateString()]);
+    ($this->makeExpense)(['payee' => 'Biggest', 'amount' => 700000, 'incurred_on' => $month->copy()->addDays(2)->toDateString()]);
+    ($this->makeExpense)(['payee' => 'Last month', 'amount' => 400000, 'incurred_on' => $month->copy()->subMonth()->addDays(4)->toDateString()]);
+    $archived = ($this->makeExpense)(['payee' => 'Archived', 'amount' => 999999999, 'incurred_on' => $month->copy()->addDays(5)->toDateString()]);
+    $archived->delete();
+
+    ($this->zeus)()->get(route('zeus.expenses.index', ['month' => $month->format('Y-m')]))
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.previous_spent', 400000)
+            ->where('summary.largest.payee', 'Biggest')
+            ->where('summary.largest.amount', 700000)
+            ->where('summary.series.unit', 'day')
+            ->has('summary.series.points', $month->daysInMonth)
+            ->where('summary.series.points.2.total', 800000)
+            ->where('summary.series.points.0.total', 0)
+        );
+});
+
+it('charts all time by month, with empty months in between as zero', function () {
+    ($this->makeExpense)(['amount' => 100000, 'incurred_on' => '2026-03-10']);
+    ($this->makeExpense)(['amount' => 250000, 'incurred_on' => '2026-03-20']);
+    ($this->makeExpense)(['amount' => 40000, 'incurred_on' => '2026-06-01']);
+
+    ($this->zeus)()->get(route('zeus.expenses.index', ['month' => 'all']))
+        ->assertInertia(fn ($page) => $page
+            ->where('summary.series.unit', 'month')
+            ->where('summary.series.points', fn ($points) => collect($points)->map(fn ($p) => [$p['key'], $p['total']])->all() === [
+                ['2026-03', 350000], ['2026-04', 0], ['2026-05', 0], ['2026-06', 40000],
+            ])
+            ->where('summary.previous_spent', fn ($v) => $v === null)
+        );
+});
+
 it('reports spend only, with no revenue or net, for all time', function () {
     ($this->makeExpense)(['amount' => 100000]);
     ($this->makeExpense)(['amount' => 250000, 'incurred_on' => now()->subYear()->toDateString()]);
