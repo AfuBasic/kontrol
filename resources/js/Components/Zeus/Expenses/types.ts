@@ -23,6 +23,9 @@ export type Summary = {
     revenue: number | null;
     net: number | null;
     by_category: Array<{ id: number; name: string; total: number; count: number }>;
+    previous_spent: number | null;
+    largest: { id: number; payee: string; amount: number } | null;
+    series: { unit: 'day' | 'month'; points: Array<{ key: string; label: string; total: number }> };
 };
 
 export type Filters = { month: string; category_id: number | null; search: string | null; archived: boolean };
