@@ -1,21 +1,22 @@
 import {
-    AdjustmentsHorizontalIcon,
     ArchiveBoxIcon,
     ArrowDownTrayIcon,
     ArrowUturnLeftIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    EyeIcon,
     MagnifyingGlassIcon,
     PaperClipIcon,
+    PencilSquareIcon,
     PlusIcon,
     TagIcon,
 } from '@heroicons/react/24/outline';
 import { Head, InfiniteScroll, router } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { exportMethod, index, restore, destroy as archiveExpense } from '@/actions/App/Http/Controllers/Zeus/ExpenseController';
-import CategorySheet from '@/Components/Zeus/Expenses/CategorySheet';
-import ExpenseSheet from '@/Components/Zeus/Expenses/ExpenseSheet';
-import FilterSheet from '@/Components/Zeus/Expenses/FilterSheet';
+import CategoryModal from '@/Components/Zeus/Expenses/CategoryModal';
+import ExpenseDetailModal from '@/Components/Zeus/Expenses/ExpenseDetailModal';
+import ExpenseFormModal from '@/Components/Zeus/Expenses/ExpenseFormModal';
 import ReceiptViewer from '@/Components/Zeus/Expenses/ReceiptViewer';
 import type { Category, ExpenseRow, Filters, Limits, Receipt, Summary } from '@/Components/Zeus/Expenses/types';
 import ZeusLayout from '@/Layouts/ZeusLayout';
@@ -29,18 +30,26 @@ type Props = {
     limits: Limits;
 };
 
+/** Date, paid to, category, receipts, amount, actions. */
+const COLUMNS = 'lg:grid-cols-[76px_minmax(0,1fr)_200px_84px_150px_92px]';
+
+const control =
+    'min-h-10 rounded-lg border border-slate-700 bg-slate-800/40 px-3.5 text-sm text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none';
+
 export default function ExpensesIndex({ filters, expenses, summary, categories, limits }: Props) {
-    const [editing, setEditing] = useState<{ id: number | null } | null>(null);
-    const [filtersOpen, setFiltersOpen] = useState(false);
+    // Which expense is open in which modal. Reading it from the live list keeps the modal in step with saves.
+    const [viewingId, setViewingId] = useState<number | null>(null);
+    const [form, setForm] = useState<{ id: number | null } | null>(null);
     const [categoriesOpen, setCategoriesOpen] = useState(false);
-    const [viewing, setViewing] = useState<Receipt | null>(null);
+    const [receipt, setReceipt] = useState<Receipt | null>(null);
     const [undo, setUndo] = useState<{ id: number; payee: string } | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
 
     const rows = expenses.data;
     const groups = useMemo(() => groupByMonth(rows), [rows]);
-    // Read the open expense from the live list so a removed receipt disappears from the sheet straight away.
-    const editingExpense = editing?.id ? (rows.find((row) => row.id === editing.id) ?? null) : null;
+    const byId = (id: number | null) => (id ? (rows.find((row) => row.id === id) ?? null) : null);
+    const viewing = byId(viewingId);
+    const editing = byId(form?.id ?? null);
     const allTime = filters.month === 'all';
     const isCurrentOrLater = !allTime && filters.month >= currentMonth();
     const hasNarrowing = Boolean(filters.category_id || filters.search || filters.archived);
@@ -88,7 +97,7 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
         });
     }
 
-    function undoArchive(id: number) {
+    function restoreExpense(id: number) {
         setUndo(null);
         router.post(restore.url(id), {}, { preserveScroll: true, preserveState: true });
     }
@@ -104,75 +113,77 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
         <ZeusLayout>
             <Head title="Expenses" />
 
-            <div className="mx-auto max-w-5xl pb-24">
+            <div className="mx-auto max-w-6xl pb-24">
                 {/* Header */}
-                <div className="pt-4">
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Expenses</h1>
-                    <p className="mt-2 text-base text-slate-500 dark:text-slate-400">Every cost of running Kontrol, set against what comes in.</p>
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setEditing({ id: null })}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-bold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500 active:scale-[0.98]"
-                    >
-                        <PlusIcon className="h-5 w-5" />
-                        Add expense
-                    </button>
-                    <a
-                        href={exportMethod.url({ query: exportQuery })}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
-                    >
-                        <ArrowDownTrayIcon className="h-5 w-5" />
-                        Export CSV
-                    </a>
-                    <button
-                        type="button"
-                        onClick={() => setCategoriesOpen(true)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
-                    >
-                        <TagIcon className="h-5 w-5" />
-                        Categories
-                    </button>
-                </div>
-
-                {/* Month, search, filters */}
-                <div className="mt-6 space-y-3">
-                    <div className="flex items-center gap-2">
-                        <div className="flex min-h-11 flex-1 items-center justify-between rounded-xl border border-slate-700 bg-slate-800/40 px-1">
-                            <button
-                                type="button"
-                                disabled={allTime}
-                                onClick={() => visit({ month: shiftMonth(filters.month, -1) })}
-                                aria-label="Previous month"
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:bg-white/5 disabled:opacity-30"
-                            >
-                                <ChevronLeftIcon className="h-5 w-5" />
-                            </button>
-                            <span className="text-sm font-bold text-white">{allTime ? 'All time' : monthLabel(filters.month)}</span>
-                            <button
-                                type="button"
-                                disabled={allTime || isCurrentOrLater}
-                                onClick={() => visit({ month: shiftMonth(filters.month, 1) })}
-                                aria-label="Next month"
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:bg-white/5 disabled:opacity-30"
-                            >
-                                <ChevronRightIcon className="h-5 w-5" />
-                            </button>
-                        </div>
+                <div className="flex flex-wrap items-end justify-between gap-4 pt-4">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Expenses</h1>
+                        <p className="mt-2 text-base text-slate-500 dark:text-slate-400">Every cost of running Kontrol, set against what comes in.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
                         <button
                             type="button"
-                            onClick={() => setFiltersOpen(true)}
-                            className={`relative inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition ${hasNarrowing || allTime ? 'border-primary-500/50 bg-primary-500/10 text-primary-200' : 'border-slate-700 text-slate-200 hover:bg-white/5'}`}
+                            onClick={() => setCategoriesOpen(true)}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
                         >
-                            <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                            Filters
+                            <TagIcon className="h-5 w-5" />
+                            Categories
+                        </button>
+                        <a
+                            href={exportMethod.url({ query: exportQuery })}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
+                        >
+                            <ArrowDownTrayIcon className="h-5 w-5" />
+                            Export CSV
+                        </a>
+                        <button
+                            type="button"
+                            onClick={() => setForm({ id: null })}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary-600 px-4 text-sm font-bold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500"
+                        >
+                            <PlusIcon className="h-5 w-5" />
+                            Add expense
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filters, all on one line */}
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <div className="flex min-h-10 items-center rounded-lg border border-slate-700 bg-slate-800/40">
+                        <button
+                            type="button"
+                            disabled={allTime}
+                            onClick={() => visit({ month: shiftMonth(filters.month, -1) })}
+                            aria-label="Previous month"
+                            className="flex h-10 w-10 items-center justify-center rounded-l-lg text-slate-300 hover:bg-white/5 disabled:opacity-30"
+                        >
+                            <ChevronLeftIcon className="h-5 w-5" />
+                        </button>
+                        <span className="min-w-36 px-2 text-center text-sm font-bold text-white">
+                            {allTime ? 'All time' : monthLabel(filters.month)}
+                        </span>
+                        <button
+                            type="button"
+                            disabled={allTime || isCurrentOrLater}
+                            onClick={() => visit({ month: shiftMonth(filters.month, 1) })}
+                            aria-label="Next month"
+                            className="flex h-10 w-10 items-center justify-center rounded-r-lg text-slate-300 hover:bg-white/5 disabled:opacity-30"
+                        >
+                            <ChevronRightIcon className="h-5 w-5" />
                         </button>
                     </div>
 
-                    <div className="relative">
-                        <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                    <button
+                        type="button"
+                        onClick={() => visit({ month: allTime ? currentMonth() : 'all' })}
+                        aria-pressed={allTime}
+                        className={`min-h-10 rounded-lg border px-3.5 text-sm font-semibold transition ${allTime ? 'border-primary-500/50 bg-primary-500/10 text-primary-200' : 'border-slate-700 text-slate-300 hover:bg-white/5'}`}
+                    >
+                        All time
+                    </button>
+
+                    <div className="relative min-w-60 flex-1 sm:max-w-sm">
+                        <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-500" />
                         <label htmlFor="expense-search" className="sr-only">
                             Search by payee or note
                         </label>
@@ -182,14 +193,41 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search payee or note"
-                            className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-800/40 py-2.5 pr-4 pl-11 text-base text-white placeholder:text-slate-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none"
+                            className={`${control} w-full pl-10 placeholder:text-slate-500`}
                         />
                     </div>
+
+                    <label htmlFor="expense-category-filter" className="sr-only">
+                        Category
+                    </label>
+                    <select
+                        id="expense-category-filter"
+                        value={filters.category_id ?? ''}
+                        onChange={(e) => visit({ category_id: e.target.value ? Number(e.target.value) : null })}
+                        className={`${control} min-w-48`}
+                    >
+                        <option value="">All categories</option>
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <button
+                        type="button"
+                        onClick={() => visit({ archived: !filters.archived })}
+                        aria-pressed={filters.archived}
+                        className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition ${filters.archived ? 'border-amber-500/50 bg-amber-500/10 text-amber-200' : 'border-slate-700 text-slate-300 hover:bg-white/5'}`}
+                    >
+                        <ArchiveBoxIcon className="h-5 w-5" />
+                        Archived
+                    </button>
                 </div>
 
                 {/* Headline */}
-                <section aria-label="Summary" className="mt-6 rounded-3xl border border-slate-800/50 bg-[#0f1423] p-5 sm:p-6">
-                    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-6">
+                <section aria-label="Summary" className="mt-6 rounded-2xl border border-slate-800/60 bg-[#0f1423] p-6">
+                    <div className="grid grid-cols-3 gap-8">
                         <Figure
                             label="Spent"
                             value={formatKobo(summary.spent)}
@@ -217,9 +255,9 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                     </div>
 
                     {summary.by_category.length > 0 && (
-                        <div className="mt-5 border-t border-slate-800 pt-4">
+                        <div className="mt-6 border-t border-slate-800 pt-5">
                             <p className="mb-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase">Where it went</p>
-                            <ul className="space-y-3">
+                            <ul className="grid grid-cols-2 gap-x-10 gap-y-4">
                                 {summary.by_category.slice(0, 6).map((row) => (
                                     <li key={row.id}>
                                         <div className="flex items-baseline justify-between gap-3">
@@ -236,19 +274,19 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                             </ul>
                         </div>
                     )}
-                    <p className="mt-4 text-xs text-slate-500">MRR is modelled from active subscriptions and plan prices. It is not cash received.</p>
+                    <p className="mt-5 text-xs text-slate-500">MRR is modelled from active subscriptions and plan prices. It is not cash received.</p>
                 </section>
 
                 {/* List */}
                 <section aria-label="Expenses" className="mt-6">
                     {filters.archived && (
-                        <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-100">
+                        <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-100">
                             Showing archived expenses only. They are not counted above.
                         </p>
                     )}
 
                     {rows.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-slate-700 px-6 py-14 text-center">
+                        <div className="rounded-2xl border border-dashed border-slate-700 px-6 py-16 text-center">
                             <p className="text-base font-semibold text-white">
                                 {hasNarrowing
                                     ? 'Nothing matches these filters'
@@ -262,8 +300,8 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                             {!hasNarrowing && (
                                 <button
                                     type="button"
-                                    onClick={() => setEditing({ id: null })}
-                                    className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary-600 px-5 text-sm font-bold text-white"
+                                    onClick={() => setForm({ id: null })}
+                                    className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary-600 px-5 text-sm font-bold text-white"
                                 >
                                     <PlusIcon className="h-5 w-5" />
                                     Add expense
@@ -271,58 +309,77 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                             )}
                         </div>
                     ) : (
-                        <InfiniteScroll
-                            data="expenses"
-                            loading={
-                                <div className="flex justify-center py-6" role="status" aria-label="Loading more expenses">
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-slate-300" />
-                                </div>
-                            }
-                        >
-                            <div className="space-y-6">
+                        <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-[#0f1423]">
+                            <div
+                                className={`hidden gap-4 border-b border-slate-800/70 bg-black/10 px-5 py-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase lg:grid ${COLUMNS}`}
+                            >
+                                <span>Date</span>
+                                <span>Paid to</span>
+                                <span>Category</span>
+                                <span>Receipts</span>
+                                <span className="text-right">Amount</span>
+                                <span className="text-right">Actions</span>
+                            </div>
+
+                            <InfiniteScroll
+                                data="expenses"
+                                loading={
+                                    <div className="flex justify-center py-6" role="status" aria-label="Loading more expenses">
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-slate-300" />
+                                    </div>
+                                }
+                            >
                                 {groups.map((group) => (
                                     <div key={group.month}>
-                                        <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
-                                            <h2 className="text-sm font-bold tracking-wide text-slate-300">{group.label}</h2>
+                                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-800/70 bg-slate-800/20 px-5 py-2">
+                                            <h2 className="text-xs font-bold tracking-wide text-slate-300">{group.label}</h2>
                                             <span className="text-xs font-semibold whitespace-nowrap text-slate-500 tabular-nums">
                                                 {formatKobo(group.total)}
                                             </span>
                                         </div>
-                                        <ul className="divide-y divide-slate-800/70 overflow-hidden rounded-2xl border border-slate-800/60 bg-[#0f1423]">
-                                            {group.items.map((expense) => (
-                                                <ExpenseItem
-                                                    key={expense.id}
-                                                    expense={expense}
-                                                    onOpen={() => setEditing({ id: expense.id })}
-                                                    onRestore={() => undoArchive(expense.id)}
-                                                />
-                                            ))}
-                                        </ul>
+                                        {group.items.map((expense) => (
+                                            <ExpenseRowItem
+                                                key={expense.id}
+                                                expense={expense}
+                                                onView={() => setViewingId(expense.id)}
+                                                onEdit={() => setForm({ id: expense.id })}
+                                                onRestore={() => restoreExpense(expense.id)}
+                                            />
+                                        ))}
                                     </div>
                                 ))}
-                            </div>
-                        </InfiniteScroll>
+                            </InfiniteScroll>
+                        </div>
                     )}
                 </section>
             </div>
 
-            <ExpenseSheet
-                isOpen={editing !== null}
-                onClose={() => setEditing(null)}
-                expense={editingExpense}
+            <ExpenseDetailModal
+                expense={viewing}
+                onClose={() => setViewingId(null)}
+                onEdit={(expense) => {
+                    setViewingId(null);
+                    setForm({ id: expense.id });
+                }}
+                onArchive={archive}
+                onRestore={(expense) => restoreExpense(expense.id)}
+                onViewReceipt={setReceipt}
+            />
+            <ExpenseFormModal
+                isOpen={form !== null}
+                onClose={() => setForm(null)}
+                expense={editing}
                 categories={categories}
                 limits={limits}
-                onArchive={archive}
-                onViewReceipt={setViewing}
+                onViewReceipt={setReceipt}
             />
-            <CategorySheet isOpen={categoriesOpen} onClose={() => setCategoriesOpen(false)} categories={categories} />
-            <FilterSheet isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} categories={categories} onApply={visit} />
-            <ReceiptViewer receipt={viewing} onClose={() => setViewing(null)} />
+            <CategoryModal isOpen={categoriesOpen} onClose={() => setCategoriesOpen(false)} categories={categories} />
+            <ReceiptViewer receipt={receipt} onClose={() => setReceipt(null)} />
 
             {undo && (
                 <div
                     role="status"
-                    className="fixed inset-x-4 bottom-4 z-[90] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 shadow-2xl"
+                    className="fixed bottom-6 left-1/2 z-[90] flex w-full max-w-md -translate-x-1/2 items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 shadow-2xl"
                 >
                     <span className="min-w-0 text-sm text-slate-200">
                         <ArchiveBoxIcon className="mr-1.5 inline h-4 w-4 align-text-bottom text-slate-400" />
@@ -330,8 +387,8 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                     </span>
                     <button
                         type="button"
-                        onClick={() => undoArchive(undo.id)}
-                        className="min-h-11 shrink-0 rounded-lg px-3 text-sm font-bold text-primary-300 hover:bg-white/5"
+                        onClick={() => restoreExpense(undo.id)}
+                        className="min-h-10 shrink-0 rounded-lg px-3 text-sm font-bold text-primary-300 hover:bg-white/5"
                     >
                         Undo
                     </button>
@@ -343,64 +400,96 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
 
 function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: string }) {
     return (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.04] px-4 py-3 sm:block sm:bg-transparent sm:p-0">
-            <div className="min-w-0">
-                <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
-                <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">{sub}</p>
-            </div>
-            <p className={`text-xl font-black tracking-tight whitespace-nowrap tabular-nums sm:mt-2 sm:text-2xl ${tone}`}>{value}</p>
+        <div className="min-w-0">
+            <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
+            <p className={`mt-2 text-2xl font-black tracking-tight whitespace-nowrap tabular-nums ${tone}`}>{value}</p>
+            <p className="mt-1 text-xs text-slate-500">{sub}</p>
         </div>
     );
 }
 
-function ExpenseItem({ expense, onOpen, onRestore }: { expense: ExpenseRow; onOpen: () => void; onRestore: () => void }) {
+const iconButton = 'flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white';
+
+function ExpenseRowItem({
+    expense,
+    onView,
+    onEdit,
+    onRestore,
+}: {
+    expense: ExpenseRow;
+    onView: () => void;
+    onEdit: () => void;
+    onRestore: () => void;
+}) {
     const { day, weekday } = dateParts(expense.incurred_on);
+    const stop = (handler: () => void) => (event: { stopPropagation: () => void }) => {
+        event.stopPropagation();
+        handler();
+    };
+    const openWithKey = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onView();
+        }
+    };
 
     return (
-        <li className={expense.archived ? 'opacity-70' : ''}>
-            <div className="flex items-stretch">
-                <button
-                    type="button"
-                    onClick={onOpen}
-                    className="flex min-h-[68px] min-w-0 flex-1 items-start gap-3 px-4 py-3 text-left transition hover:bg-white/[0.03] active:bg-white/[0.05]"
-                >
-                    <div className="flex w-10 shrink-0 flex-col items-center rounded-lg bg-slate-800/70 py-1.5">
-                        <span className="text-base leading-none font-black text-white">{day}</span>
-                        <span className="mt-0.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">{weekday}</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-[15px] leading-snug font-semibold break-words text-white">{expense.payee}</p>
-                        <p className="mt-0.5 text-xs break-words text-slate-400">
-                            {expense.category.name ?? 'Uncategorised'}
-                            {expense.category.archived ? ' (archived)' : ''}
-                            {expense.original_amount_note ? ` · ${expense.original_amount_note}` : ''}
-                        </p>
-                        {expense.note && <p className="mt-1 line-clamp-2 text-xs break-words text-slate-500">{expense.note}</p>}
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1 pl-2">
-                        <span className="text-[15px] font-bold whitespace-nowrap text-white tabular-nums">{formatKobo(expense.amount)}</span>
-                        {expense.receipts.length > 0 && (
-                            <span
-                                className="inline-flex items-center gap-1 text-xs text-slate-400"
-                                aria-label={`${expense.receipts.length} receipt${expense.receipts.length === 1 ? '' : 's'}`}
-                            >
-                                <PaperClipIcon className="h-3.5 w-3.5" />
-                                {expense.receipts.length}
-                            </span>
-                        )}
-                    </div>
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={onView}
+            onKeyDown={openWithKey}
+            aria-label={`View ${expense.payee}`}
+            className={`grid cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-slate-800/60 px-5 py-3.5 transition last:border-b-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.04] focus-visible:outline-none ${COLUMNS} ${expense.archived ? 'opacity-70' : ''}`}
+        >
+            <div className="flex w-12 flex-col items-center rounded-lg bg-slate-800/70 py-1.5">
+                <span className="text-base leading-none font-black text-white">{day}</span>
+                <span className="mt-0.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">{weekday}</span>
+            </div>
+
+            <div className="min-w-0">
+                <p className="text-sm leading-snug font-semibold break-words text-white">{expense.payee}</p>
+                {(expense.note || expense.original_amount_note) && (
+                    <p className="mt-0.5 line-clamp-1 text-xs break-words text-slate-500">
+                        {[expense.original_amount_note, expense.note].filter(Boolean).join(' · ')}
+                    </p>
+                )}
+            </div>
+
+            <p className="col-start-2 text-xs break-words text-slate-400 lg:col-start-auto lg:text-sm lg:text-slate-300">
+                {expense.category.name ?? 'Uncategorised'}
+                {expense.category.archived ? ' (archived)' : ''}
+            </p>
+
+            <div className="hidden items-center gap-1.5 text-sm text-slate-400 lg:flex">
+                {expense.receipts.length > 0 ? (
+                    <>
+                        <PaperClipIcon className="h-4 w-4" />
+                        {expense.receipts.length}
+                    </>
+                ) : (
+                    <span className="text-slate-600">—</span>
+                )}
+            </div>
+
+            <p className="col-start-3 row-start-1 text-right text-sm font-bold whitespace-nowrap text-white tabular-nums lg:col-start-auto lg:row-start-auto">
+                {formatKobo(expense.amount)}
+            </p>
+
+            <div className="col-start-3 flex justify-end gap-1 lg:col-start-auto">
+                <button type="button" onClick={stop(onView)} aria-label={`View ${expense.payee}`} title="View" className={iconButton}>
+                    <EyeIcon className="h-5 w-5" />
                 </button>
-                {expense.archived && (
-                    <button
-                        type="button"
-                        onClick={onRestore}
-                        aria-label={`Restore ${expense.payee}`}
-                        className="flex w-14 shrink-0 items-center justify-center border-l border-slate-800/70 text-slate-300 hover:bg-white/5"
-                    >
+                {expense.archived ? (
+                    <button type="button" onClick={stop(onRestore)} aria-label={`Restore ${expense.payee}`} title="Restore" className={iconButton}>
                         <ArrowUturnLeftIcon className="h-5 w-5" />
+                    </button>
+                ) : (
+                    <button type="button" onClick={stop(onEdit)} aria-label={`Edit ${expense.payee}`} title="Edit" className={iconButton}>
+                        <PencilSquareIcon className="h-5 w-5" />
                     </button>
                 )}
             </div>
-        </li>
+        </div>
     );
 }
