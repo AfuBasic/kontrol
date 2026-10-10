@@ -54,7 +54,7 @@ class ExpenseService
      * Archived expenses never count. Revenue is MRR, read from the one shared calculation.
      *
      * @param  array{month?: string|null, category_id?: int|null, search?: string|null}  $filters
-     * @return array{month: string|null, spent: int, count: int, revenue: float|null, net: float|null, by_category: array<int, array{id: int, name: string, total: int, count: int}>}
+     * @return array{month: string|null, spent: int, count: int, revenue: float|null, net: float|null, by_category: array<int, array{id: int, name: string, total: int, count: int}>, previous_spent: int|null, largest: array{id: int, payee: string, amount: int}|null, series: array{unit: string, points: array<int, array{key: string, label: string, total: int}>}}
      */
     public function summary(array $filters): array
     {
@@ -91,7 +91,78 @@ class ExpenseService
             'revenue' => $revenue,
             'net' => $revenue !== null ? round($revenue - $spent / 100, 2) : null,
             'by_category' => $byCategory,
+            'previous_spent' => $month ? $this->spentIn($filters, $month->subMonth()) : null,
+            'largest' => $this->largest($base),
+            'series' => $this->series($base, $month),
         ];
+    }
+
+    /**
+     * Spend in another month under the same category and search filters, for the "vs last month" comparison.
+     *
+     * @param  array{category_id?: int|null, search?: string|null}  $filters
+     */
+    private function spentIn(array $filters, CarbonImmutable $month): int
+    {
+        return (int) $this->query([...$filters, 'month' => $month->format('Y-m'), 'archived' => false])->toBase()->reorder()->sum('amount');
+    }
+
+    /**
+     * The single biggest expense in the current view.
+     *
+     * @param  Builder<Expense>  $base
+     * @return array{id: int, payee: string, amount: int}|null
+     */
+    private function largest(Builder $base): ?array
+    {
+        $row = (clone $base)->toBase()->reorder()->orderByDesc('amount')->orderByDesc('id')->first(['id', 'payee', 'amount']);
+
+        return $row ? ['id' => (int) $row->id, 'payee' => $row->payee, 'amount' => (int) $row->amount] : null;
+    }
+
+    /**
+     * Spend over time for the chart: one point per day of the chosen month, or one per month for all time.
+     * Days and months with nothing spent are included as zero so the chart has no gaps.
+     *
+     * @param  Builder<Expense>  $base
+     * @return array{unit: 'day'|'month', points: array<int, array{key: string, label: string, total: int}>}
+     */
+    private function series(Builder $base, ?CarbonImmutable $month): array
+    {
+        if ($month) {
+            $totals = (clone $base)->toBase()->reorder()
+                ->groupBy('incurred_on')
+                ->pluck(DB::raw('SUM(amount)'), 'incurred_on')
+                ->mapWithKeys(fn ($total, $date) => [substr((string) $date, 0, 10) => (int) $total]);
+
+            $points = [];
+            for ($day = $month->startOfMonth(); $day <= $month->endOfMonth(); $day = $day->addDay()) {
+                $key = $day->toDateString();
+                $points[] = ['key' => $key, 'label' => $day->format('j'), 'total' => $totals[$key] ?? 0];
+            }
+
+            return ['unit' => 'day', 'points' => $points];
+        }
+
+        $bucket = DB::getDriverName() === 'sqlite' ? "strftime('%Y-%m', incurred_on)" : "DATE_FORMAT(incurred_on, '%Y-%m')";
+        $totals = (clone $base)->toBase()->reorder()
+            ->groupBy(DB::raw($bucket))
+            ->pluck(DB::raw('SUM(amount)'), DB::raw($bucket))
+            ->map(fn ($total) => (int) $total);
+
+        if ($totals->isEmpty()) {
+            return ['unit' => 'month', 'points' => []];
+        }
+
+        $points = [];
+        $first = CarbonImmutable::createFromFormat('!Y-m', $totals->keys()->min());
+        $last = CarbonImmutable::createFromFormat('!Y-m', $totals->keys()->max());
+        for ($cursor = $first; $cursor <= $last; $cursor = $cursor->addMonth()) {
+            $key = $cursor->format('Y-m');
+            $points[] = ['key' => $key, 'label' => $cursor->format('M y'), 'total' => $totals[$key] ?? 0];
+        }
+
+        return ['unit' => 'month', 'points' => $points];
     }
 
     /**
