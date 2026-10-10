@@ -18,9 +18,11 @@ import CategoryModal from '@/Components/Zeus/Expenses/CategoryModal';
 import ExpenseDetailModal from '@/Components/Zeus/Expenses/ExpenseDetailModal';
 import ExpenseFormModal from '@/Components/Zeus/Expenses/ExpenseFormModal';
 import ReceiptViewer from '@/Components/Zeus/Expenses/ReceiptViewer';
+import SpendCharts from '@/Components/Zeus/Expenses/SpendCharts';
+import SpendHero from '@/Components/Zeus/Expenses/SpendHero';
 import type { Category, ExpenseRow, Filters, Limits, Receipt, Summary } from '@/Components/Zeus/Expenses/types';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { currentMonth, dateParts, formatKobo, formatNaira, groupByMonth, monthLabel, shiftMonth } from '@/Lib/expenses';
+import { categoryColor, currentMonth, dateParts, formatKobo, groupByMonth, monthLabel, shiftMonth } from '@/Lib/expenses';
 
 type Props = {
     filters: Filters;
@@ -107,7 +109,6 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
         ...(filters.category_id ? { category_id: filters.category_id } : {}),
         ...(filters.search ? { search: filters.search } : {}),
     };
-    const spentShare = (total: number) => (summary.spent > 0 ? Math.max(4, Math.round((total / summary.spent) * 100)) : 0);
 
     return (
         <ZeusLayout>
@@ -226,56 +227,10 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                 </div>
 
                 {/* Headline */}
-                <section aria-label="Summary" className="mt-6 rounded-2xl border border-slate-800/60 bg-[#0f1423] p-6">
-                    <div className="grid grid-cols-3 gap-8">
-                        <Figure
-                            label="Spent"
-                            value={formatKobo(summary.spent)}
-                            sub={`${summary.count} ${summary.count === 1 ? 'expense' : 'expenses'}`}
-                            tone="text-white"
-                        />
-                        <Figure
-                            label="Recurring revenue (MRR)"
-                            value={summary.revenue === null ? '—' : formatNaira(summary.revenue)}
-                            sub={summary.revenue === null ? 'Pick a month to compare' : 'Active subscriptions that month'}
-                            tone="text-emerald-300"
-                        />
-                        <Figure
-                            label="Net"
-                            value={summary.net === null ? '—' : formatNaira(summary.net)}
-                            sub={
-                                summary.net === null
-                                    ? 'Pick a month to compare'
-                                    : summary.net >= 0
-                                      ? 'Revenue left after spend'
-                                      : 'Spend is ahead of revenue'
-                            }
-                            tone={summary.net === null ? 'text-slate-400' : summary.net >= 0 ? 'text-emerald-300' : 'text-rose-300'}
-                        />
-                    </div>
-
-                    {summary.by_category.length > 0 && (
-                        <div className="mt-6 border-t border-slate-800 pt-5">
-                            <p className="mb-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase">Where it went</p>
-                            <ul className="grid grid-cols-2 gap-x-10 gap-y-4">
-                                {summary.by_category.slice(0, 6).map((row) => (
-                                    <li key={row.id}>
-                                        <div className="flex items-baseline justify-between gap-3">
-                                            <span className="min-w-0 text-sm font-medium break-words text-slate-200">{row.name}</span>
-                                            <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-white tabular-nums">
-                                                {formatKobo(row.total)}
-                                            </span>
-                                        </div>
-                                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                                            <div className="h-full rounded-full bg-primary-500" style={{ width: `${spentShare(row.total)}%` }} />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    <p className="mt-5 text-xs text-slate-500">MRR is modelled from active subscriptions and plan prices. It is not cash received.</p>
-                </section>
+                <div className="mt-6 space-y-4">
+                    <SpendHero summary={summary} onOpenExpense={(id) => setViewingId(id)} />
+                    <SpendCharts summary={summary} />
+                </div>
 
                 {/* List */}
                 <section aria-label="Expenses" className="mt-6">
@@ -398,16 +353,6 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
     );
 }
 
-function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: string }) {
-    return (
-        <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
-            <p className={`mt-2 text-2xl font-black tracking-tight whitespace-nowrap tabular-nums ${tone}`}>{value}</p>
-            <p className="mt-1 text-xs text-slate-500">{sub}</p>
-        </div>
-    );
-}
-
 const iconButton = 'flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white';
 
 function ExpenseRowItem({
@@ -440,7 +385,8 @@ function ExpenseRowItem({
             onClick={onView}
             onKeyDown={openWithKey}
             aria-label={`View ${expense.payee}`}
-            className={`grid cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-slate-800/60 px-5 py-3.5 transition last:border-b-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.04] focus-visible:outline-none ${COLUMNS} ${expense.archived ? 'opacity-70' : ''}`}
+            style={{ borderLeftColor: categoryColor(expense.category.id) }}
+            className={`grid cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-l-[3px] border-b-slate-800/60 px-5 py-3.5 transition last:border-b-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.04] focus-visible:outline-none ${COLUMNS} ${expense.archived ? 'opacity-70' : ''}`}
         >
             <div className="flex w-12 flex-col items-center rounded-lg bg-slate-800/70 py-1.5">
                 <span className="text-base leading-none font-black text-white">{day}</span>
@@ -456,10 +402,18 @@ function ExpenseRowItem({
                 )}
             </div>
 
-            <p className="col-start-2 text-xs break-words text-slate-400 lg:col-start-auto lg:text-sm lg:text-slate-300">
-                {expense.category.name ?? 'Uncategorised'}
-                {expense.category.archived ? ' (archived)' : ''}
-            </p>
+            <div className="col-start-2 lg:col-start-auto">
+                <span
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+                    style={{ backgroundColor: `${categoryColor(expense.category.id)}22`, color: categoryColor(expense.category.id) }}
+                >
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(expense.category.id) }} />
+                    <span className="truncate">
+                        {expense.category.name ?? 'Uncategorised'}
+                        {expense.category.archived ? ' (archived)' : ''}
+                    </span>
+                </span>
+            </div>
 
             <div className="hidden items-center gap-1.5 text-sm text-slate-400 lg:flex">
                 {expense.receipts.length > 0 ? (
@@ -472,7 +426,7 @@ function ExpenseRowItem({
                 )}
             </div>
 
-            <p className="col-start-3 row-start-1 text-right text-sm font-bold whitespace-nowrap text-white tabular-nums lg:col-start-auto lg:row-start-auto">
+            <p className="col-start-3 row-start-1 text-right text-base font-black whitespace-nowrap text-white tabular-nums lg:col-start-auto lg:row-start-auto">
                 {formatKobo(expense.amount)}
             </p>
 
