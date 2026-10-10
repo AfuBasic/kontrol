@@ -28,19 +28,24 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
 
     return (
         <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-                <div className="relative min-w-0 flex-1 sm:max-w-xs">
-                    <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+            <div className="flex flex-wrap items-center gap-2">
+                {/* Own full-width line on a phone so it can never be squeezed down to its icon. */}
+                <div className="relative w-full sm:w-auto sm:max-w-xs sm:min-w-[16rem] sm:flex-1">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                         type="search"
                         value={filters.search || ''}
                         onChange={(e) => onFilterChange({ search: e.target.value || undefined })}
                         placeholder="Search visitor, host, code, tag…"
-                        className="w-full rounded-lg border border-gray-200 bg-gray-50/80 py-1.5 pr-2.5 pl-8 text-xs font-medium text-gray-800 transition-[border-color,box-shadow,background-color] duration-150 ease-out placeholder:text-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-slate-900/15 focus:outline-hidden"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pr-3 pl-9 text-sm font-medium text-gray-800 transition-[border-color,box-shadow,background-color] duration-150 ease-out placeholder:text-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-slate-900/15 focus:outline-hidden"
                     />
                 </div>
 
-                <div role="group" aria-label="Entry type" className="inline-flex shrink-0 rounded-lg border border-gray-200 bg-gray-50/80 p-0.5">
+                <div
+                    role="group"
+                    aria-label="Entry type"
+                    className="flex w-full rounded-xl border border-gray-200 bg-gray-50/80 p-0.5 sm:inline-flex sm:w-auto sm:shrink-0"
+                >
                     {ENTRY_TYPE_OPTIONS.map((option) => {
                         const selected = (filters.entry_type || '') === option.value;
                         return (
@@ -49,7 +54,7 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
                                 type="button"
                                 aria-pressed={selected}
                                 onClick={() => onFilterChange({ entry_type: option.value || undefined })}
-                                className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors duration-150 ease-out ${
+                                className={`flex-1 cursor-pointer rounded-[10px] px-3 py-2 text-xs font-semibold transition-colors duration-150 ease-out sm:flex-none ${
                                     selected ? 'bg-white text-gray-900 shadow-xs ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'
                                 }`}
                             >
@@ -67,7 +72,7 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
                                 status: isInsideOnly ? undefined : 'inside',
                             })
                         }
-                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
+                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
                             isInsideOnly
                                 ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 : 'border-gray-200 bg-gray-50/80 text-gray-600 hover:bg-gray-100'
@@ -94,7 +99,7 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, ac
                 <button
                     type="button"
                     onClick={() => setFiltersOpen((open) => !open)}
-                    className={`inline-flex cursor-pointer items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
                         filtersOpen || active
                             ? 'border-primary-200 bg-primary-50 text-primary-700'
                             : 'border-gray-200 bg-gray-50/80 text-gray-600 hover:bg-gray-100'
