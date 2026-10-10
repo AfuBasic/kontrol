@@ -112,3 +112,38 @@ export function formatBytes(bytes: number): string {
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+const PALETTE = ['#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c', '#2dd4bf', '#f87171', '#a3e635', '#94a3b8'];
+
+/** A steady colour for a category, so it looks the same in the chart, the legend and the list. */
+export function categoryColor(id: number | null | undefined): string {
+    return id ? PALETTE[id % PALETTE.length] : '#94a3b8';
+}
+
+export type SpendDelta = { direction: 'up' | 'down' | 'flat' | 'new'; percent: number };
+
+/** How this month's spend compares with the previous month's. Null when there is nothing to compare with. */
+export function spendDelta(spent: number, previous: number | null): SpendDelta | null {
+    if (previous === null) return null;
+    if (previous === 0) return spent > 0 ? { direction: 'new', percent: 0 } : { direction: 'flat', percent: 0 };
+
+    const percent = Math.round(((spent - previous) / previous) * 100);
+    return { direction: percent > 0 ? 'up' : percent < 0 ? 'down' : 'flat', percent: Math.abs(percent) };
+}
+
+/** Spend as a percentage of recurring revenue (kobo against naira). Null when there is no revenue to measure against. */
+export function coverage(spentKobo: number, revenueNaira: number | null): number | null {
+    if (revenueNaira === null || revenueNaira <= 0) return null;
+    return Math.round((spentKobo / 100 / revenueNaira) * 100);
+}
+
+/** Short money for chart axes: 1250000 kobo-of-naira... as "₦12.5K", "₦3.2M". */
+export function compactKobo(kobo: number): string {
+    const naira = kobo / 100;
+    const trim = (n: number) => String(Math.round(n * 10) / 10).replace(/\.0$/, '');
+
+    if (naira >= 1_000_000_000) return `₦${trim(naira / 1_000_000_000)}B`;
+    if (naira >= 1_000_000) return `₦${trim(naira / 1_000_000)}M`;
+    if (naira >= 1_000) return `₦${trim(naira / 1_000)}K`;
+    return `₦${Math.round(naira)}`;
+}

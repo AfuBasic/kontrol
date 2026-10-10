@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+    categoryColor,
     cleanAmountInput,
+    compactKobo,
+    coverage,
+    spendDelta,
     currentMonth,
     dateParts,
     formatBytes,
@@ -106,5 +110,48 @@ describe('formatBytes', () => {
         expect(formatBytes(512)).toBe('512 B');
         expect(formatBytes(2048)).toBe('2 KB');
         expect(formatBytes(5 * 1024 * 1024)).toBe('5.0 MB');
+    });
+});
+
+describe('categoryColor', () => {
+    it('is steady for a category and has a fallback', () => {
+        expect(categoryColor(3)).toBe(categoryColor(3));
+        expect(categoryColor(3)).not.toBe(categoryColor(4));
+        expect(categoryColor(null)).toBe('#94a3b8');
+    });
+});
+
+describe('spendDelta', () => {
+    it('reads a rise, a fall, no change, and a first month of spending', () => {
+        expect(spendDelta(150, 100)).toEqual({ direction: 'up', percent: 50 });
+        expect(spendDelta(50, 100)).toEqual({ direction: 'down', percent: 50 });
+        expect(spendDelta(100, 100)).toEqual({ direction: 'flat', percent: 0 });
+        expect(spendDelta(500, 0)).toEqual({ direction: 'new', percent: 0 });
+        expect(spendDelta(0, 0)).toEqual({ direction: 'flat', percent: 0 });
+    });
+
+    it('has nothing to say without a previous month', () => {
+        expect(spendDelta(100, null)).toBeNull();
+    });
+});
+
+describe('coverage', () => {
+    it('measures kobo spend against naira revenue', () => {
+        expect(coverage(3000000, 15000)).toBe(200);
+        expect(coverage(750000, 15000)).toBe(50);
+    });
+
+    it('is null without revenue', () => {
+        expect(coverage(100, null)).toBeNull();
+        expect(coverage(100, 0)).toBeNull();
+    });
+});
+
+describe('compactKobo', () => {
+    it('shortens money for chart axes', () => {
+        expect(compactKobo(90000)).toBe('₦900');
+        expect(compactKobo(3500000)).toBe('₦35K');
+        expect(compactKobo(1250000000)).toBe('₦12.5M');
+        expect(compactKobo(300000000000)).toBe('₦3B');
     });
 });
