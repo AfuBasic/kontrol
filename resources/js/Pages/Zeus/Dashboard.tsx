@@ -112,6 +112,12 @@ interface Props {
     endDate: string;
 }
 
+/** Growth as a short badge: a huge swing off a tiny base reads as ">999%" instead of "103400%". */
+function formatGrowth(growth: number): string {
+    const value = Math.abs(growth);
+    return value > 999 ? '>999%' : `${Math.round(value * 10) / 10}%`;
+}
+
 export default function Dashboard({
     briefing,
     snapshot,
@@ -189,7 +195,7 @@ export default function Dashboard({
                         ) : data.trend === 'down' ? (
                             <ArrowTrendingDownIcon className="h-3 w-3" />
                         ) : null}
-                        {Math.abs(data.growth)}%
+                        {formatGrowth(data.growth)}
                     </span>
                 </div>
             </div>
@@ -266,10 +272,9 @@ export default function Dashboard({
                     <MetricCard title="Pending Applications" data={snapshot.pendingApps} />
                 </div>
 
-                {/* Main Command Center Grid */}
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    {/* Left Column (2/3 width) - Charts & Activity */}
-                    <div className="space-y-8 lg:col-span-2">
+                {/* Main Command Center Grid: every row is two cards of equal height, wide then narrow */}
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="flex min-w-0 lg:col-span-2 [&>*]:min-w-0 [&>*]:flex-1">
                         {/* Platform Trajectory Chart */}
                         <motion.div
                             variants={itemVariants}
@@ -375,110 +380,8 @@ export default function Dashboard({
                                 </ResponsiveContainer>
                             </div>
                         </motion.div>
-
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                            {/* Live Activity Stream */}
-                            <motion.div
-                                variants={itemVariants}
-                                className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
-                            >
-                                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
-                                    <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                                        <ClockIcon className="h-4 w-4 text-indigo-500" />
-                                        Platform Feed
-                                    </h2>
-                                </div>
-                                <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
-                                    {liveActivityStream.length === 0 ? (
-                                        <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">No recent activity.</div>
-                                    ) : (
-                                        liveActivityStream.slice(0, 4).map((activity) => (
-                                            <div
-                                                key={activity.id}
-                                                className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
-                                            >
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-                                                    {activity.event === 'created' ? (
-                                                        <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-                                                    ) : activity.event === 'updated' ? (
-                                                        <ClockIcon className="h-5 w-5 text-blue-500" />
-                                                    ) : (
-                                                        <ShieldExclamationIcon className="h-5 w-5 text-amber-500" />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.description}</p>
-                                                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                                        {activity.type} • {timeAgo(activity.created_at)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </motion.div>
-
-                            {/* Financial Pulse */}
-                            <motion.div
-                                variants={itemVariants}
-                                className="flex flex-col rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
-                            >
-                                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
-                                    <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                                        <BanknotesIcon className="h-4 w-4 text-emerald-500" />
-                                        Financial Pulse
-                                    </h2>
-                                </div>
-                                <div className="p-6">
-                                    <div className="mb-6 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                                        <h3 className="text-xs font-bold text-emerald-600 uppercase dark:text-emerald-400">Platform MRR</h3>
-                                        <div className="mt-2 flex items-end justify-between">
-                                            <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                                                {formatExactCurrency(financialPulse.mrr.current)}
-                                            </span>
-                                            <span
-                                                className={`flex items-center gap-1 text-xs font-bold ${financialPulse.mrr.trend === 'up' ? 'text-emerald-500' : financialPulse.mrr.trend === 'down' ? 'text-rose-500' : 'text-slate-500'}`}
-                                            >
-                                                {financialPulse.mrr.trend === 'up' ? (
-                                                    <ArrowTrendingUpIcon className="h-3 w-3" />
-                                                ) : financialPulse.mrr.trend === 'down' ? (
-                                                    <ArrowTrendingDownIcon className="h-3 w-3" />
-                                                ) : null}
-                                                {Math.abs(financialPulse.mrr.growth)}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <h3 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
-                                        Recent Collections
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {financialPulse.recentPayments.length === 0 ? (
-                                            <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No recent payments.</div>
-                                        ) : (
-                                            financialPulse.recentPayments.map((payment) => (
-                                                <div key={payment.id} className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                                                            <BanknotesIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                                                        </div>
-                                                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                            {timeAgo(payment.created_at)}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                        {formatCompactCurrency(payment.amount / 100)}
-                                                    </span>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
                     </div>
-
-                    {/* Right Column (1/3 width) - Tasks, Health, Leaderboard */}
-                    <div className="space-y-8">
+                    <div className="flex min-w-0 [&>*]:min-w-0 [&>*]:flex-1">
                         {/* System Health Widget */}
                         <motion.div
                             variants={itemVariants}
@@ -519,7 +422,8 @@ export default function Dashboard({
                                 </div>
                             </div>
                         </motion.div>
-
+                    </div>
+                    <div className="flex min-w-0 lg:col-span-2 [&>*]:min-w-0 [&>*]:flex-1">
                         {/* Operations Queue Widget */}
                         <motion.div
                             variants={itemVariants}
@@ -538,7 +442,7 @@ export default function Dashboard({
                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Zero pending items.</p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
+                                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                                         {combinedOperations.map((item) => (
                                             <div
                                                 key={`${item.type}-${item.id}`}
@@ -574,7 +478,8 @@ export default function Dashboard({
                                 )}
                             </div>
                         </motion.div>
-
+                    </div>
+                    <div className="flex min-w-0 [&>*]:min-w-0 [&>*]:flex-1">
                         {/* Partner & Estate Overview Widget */}
                         <motion.div
                             variants={itemVariants}
@@ -613,9 +518,111 @@ export default function Dashboard({
                                                 <span className="text-[10px] font-black text-slate-400">0{idx + 1}</span>
                                                 <span className="text-sm font-semibold text-slate-900 dark:text-white">{estate.name}</span>
                                             </div>
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{estate.users_count} users</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                                {estate.users_count} {estate.users_count === 1 ? 'user' : 'users'}
+                                            </span>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                    <div className="flex min-w-0 lg:col-span-2 [&>*]:min-w-0 [&>*]:flex-1">
+                        {/* Live Activity Stream */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
+                            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
+                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                                    <ClockIcon className="h-4 w-4 text-indigo-500" />
+                                    Platform Feed
+                                </h2>
+                            </div>
+                            <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
+                                {liveActivityStream.length === 0 ? (
+                                    <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">No recent activity.</div>
+                                ) : (
+                                    liveActivityStream.slice(0, 4).map((activity) => (
+                                        <div
+                                            key={activity.id}
+                                            className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                        >
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+                                                {activity.event === 'created' ? (
+                                                    <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
+                                                ) : activity.event === 'updated' ? (
+                                                    <ClockIcon className="h-5 w-5 text-blue-500" />
+                                                ) : (
+                                                    <ShieldExclamationIcon className="h-5 w-5 text-amber-500" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.description}</p>
+                                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                                    {activity.type} • {timeAgo(activity.created_at)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                    <div className="flex min-w-0 [&>*]:min-w-0 [&>*]:flex-1">
+                        {/* Financial Pulse */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="flex flex-col rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
+                            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
+                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                                    <BanknotesIcon className="h-4 w-4 text-emerald-500" />
+                                    Financial Pulse
+                                </h2>
+                            </div>
+                            <div className="p-6">
+                                <div className="mb-6 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                                    <h3 className="text-xs font-bold text-emerald-600 uppercase dark:text-emerald-400">Platform MRR</h3>
+                                    <div className="mt-2 flex items-end justify-between">
+                                        <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                                            {formatExactCurrency(financialPulse.mrr.current)}
+                                        </span>
+                                        <span
+                                            className={`flex items-center gap-1 text-xs font-bold ${financialPulse.mrr.trend === 'up' ? 'text-emerald-500' : financialPulse.mrr.trend === 'down' ? 'text-rose-500' : 'text-slate-500'}`}
+                                        >
+                                            {financialPulse.mrr.trend === 'up' ? (
+                                                <ArrowTrendingUpIcon className="h-3 w-3" />
+                                            ) : financialPulse.mrr.trend === 'down' ? (
+                                                <ArrowTrendingDownIcon className="h-3 w-3" />
+                                            ) : null}
+                                            {formatGrowth(financialPulse.mrr.growth)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <h3 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                                    Recent Collections
+                                </h3>
+                                <div className="space-y-3">
+                                    {financialPulse.recentPayments.length === 0 ? (
+                                        <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No recent payments.</div>
+                                    ) : (
+                                        financialPulse.recentPayments.map((payment) => (
+                                            <div key={payment.id} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                                                        <BanknotesIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                                                    </div>
+                                                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                        {timeAgo(payment.created_at)}
+                                                    </span>
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                                    {formatCompactCurrency(payment.amount / 100)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
