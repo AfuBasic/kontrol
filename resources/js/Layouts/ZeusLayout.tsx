@@ -114,7 +114,7 @@ export default function ZeusLayout({ children, backUrl: _backUrl }: Props) {
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                     className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} zeus-grain fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/5 bg-[#0A0B10] transition-all duration-300 lg:translate-x-0 ${
                         isCollapsed ? 'w-20' : 'w-64'
-                    } lg:relative`}
+                    } lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:self-start`}
                 >
                     {/* Subtle gradient overlay for depth */}
                     <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/2 to-transparent" />
