@@ -310,6 +310,33 @@ it('serves a receipt only to Zeus, inline and without sniffing', function () {
         ->assertHeader('Content-Type', 'application/pdf');
 });
 
+it('lets Zeus download a receipt as an attachment, and only Zeus', function () {
+    Storage::disk(ExpenseReceipt::DISK)->put('expenses/receipts/2026/10/c.pdf', '%PDF-1.4 download');
+    $receipt = ($this->makeExpense)()->receipts()->create([
+        'path' => 'expenses/receipts/2026/10/c.pdf', 'original_name' => 'october "fuel".pdf', 'mime' => 'application/pdf', 'size' => 17,
+    ]);
+
+    $this->get(route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]))->assertRedirect(route('zeus.login'));
+
+    $response = ($this->zeus)()->get(route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]))->assertOk();
+    expect($response->headers->get('Content-Disposition'))->toStartWith('attachment;')->toContain('october \\"fuel\\".pdf');
+
+    // Without the flag it is still shown inline.
+    expect(($this->zeus)()->get(route('zeus.expenses.receipts.show', $receipt))->headers->get('Content-Disposition'))->toStartWith('inline;');
+});
+
+it('gives every receipt a view link and a download link in the list', function () {
+    $receipt = ($this->makeExpense)()->receipts()->create([
+        'path' => 'expenses/receipts/2026/10/d.pdf', 'original_name' => 'd.pdf', 'mime' => 'application/pdf', 'size' => 1,
+    ]);
+
+    ($this->zeus)()->get(route('zeus.expenses.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('expenses.data.0.receipts.0.url', route('zeus.expenses.receipts.show', $receipt))
+            ->where('expenses.data.0.receipts.0.download_url', route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]))
+        );
+});
+
 it('removes a receipt from an expense without deleting its file', function () {
     Storage::disk(ExpenseReceipt::DISK)->put('expenses/receipts/2026/10/b.pdf', 'x');
     $receipt = ($this->makeExpense)()->receipts()->create([
