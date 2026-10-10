@@ -1,4 +1,4 @@
-export type Receipt = { id: number; name: string; mime: string; size: number; is_pdf: boolean; url: string };
+export type Receipt = { id: number; name: string; mime: string; size: number; is_pdf: boolean; url: string; download_url: string };
 
 export type Category = { id: number; name: string };
 
