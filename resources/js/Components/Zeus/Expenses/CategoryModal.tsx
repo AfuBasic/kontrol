@@ -2,15 +2,15 @@ import { ArchiveBoxIcon, CheckIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from
 import { router, useForm } from '@inertiajs/react';
 import { type FormEvent, useState } from 'react';
 import { destroy, store, update } from '@/actions/App/Http/Controllers/Zeus/ExpenseCategoryController';
-import MobileSheet from '@/Components/MobileSheet';
+import ZeusModal from '@/Components/Zeus/ZeusModal';
 import type { Category } from './types';
 
 type Props = { isOpen: boolean; onClose: () => void; categories: Category[] };
 
 const field =
-    'w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-base text-white placeholder:text-slate-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none';
+    'w-full rounded-lg border border-slate-700 bg-slate-800/60 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none';
 
-export default function CategorySheet({ isOpen, onClose, categories }: Props) {
+export default function CategoryModal({ isOpen, onClose, categories }: Props) {
     const add = useForm({ name: '' });
     const [editingId, setEditingId] = useState<number | null>(null);
     const [draft, setDraft] = useState('');
@@ -46,7 +46,13 @@ export default function CategorySheet({ isOpen, onClose, categories }: Props) {
     }
 
     return (
-        <MobileSheet isOpen={isOpen} onClose={onClose} title="Categories" theme="dark">
+        <ZeusModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Categories"
+            subtitle="Rename or archive them. Archived ones stay on the expenses already filed under them."
+            size="md"
+        >
             <div className="space-y-4">
                 <form onSubmit={submitNew} className="flex gap-2">
                     <div className="min-w-0 flex-1">
@@ -65,7 +71,7 @@ export default function CategorySheet({ isOpen, onClose, categories }: Props) {
                     <button
                         type="submit"
                         disabled={add.data.name.trim() === '' || add.processing}
-                        className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-xl bg-primary-600 px-4 text-sm font-bold text-white disabled:opacity-50"
+                        className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary-600 px-4 text-sm font-bold text-white disabled:opacity-50"
                     >
                         <PlusIcon className="h-5 w-5" />
                         Add
@@ -151,6 +157,6 @@ export default function CategorySheet({ isOpen, onClose, categories }: Props) {
                     ))}
                 </ul>
             </div>
-        </MobileSheet>
+        </ZeusModal>
     );
 }
