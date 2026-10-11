@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
     categoryColor,
-    cleanAmountInput,
     compactKobo,
+    formatOriginalAmount,
+    parseOriginalAmount,
     coverage,
     spendDelta,
     currentMonth,
@@ -23,13 +24,6 @@ describe('amount input', () => {
         expect(koboToInput(1250050)).toBe('12500.50');
         expect(koboToInput(1250000)).toBe('12500');
         expect(koboToInput(5)).toBe('0.05');
-    });
-
-    it('keeps digits and one dot, at most two decimals', () => {
-        expect(cleanAmountInput('12,500.555')).toBe('12500.55');
-        expect(cleanAmountInput('abc')).toBe('');
-        expect(cleanAmountInput('1.2.3')).toBe('1.23');
-        expect(cleanAmountInput('₦ 99')).toBe('99');
     });
 });
 
@@ -153,5 +147,22 @@ describe('compactKobo', () => {
         expect(compactKobo(3500000)).toBe('₦35K');
         expect(compactKobo(1250000000)).toBe('₦12.5M');
         expect(compactKobo(300000000000)).toBe('₦3B');
+    });
+});
+
+describe('original amount', () => {
+    it('reads and writes "CURRENCY amount"', () => {
+        expect(parseOriginalAmount('USD 20')).toEqual({ currency: 'USD', amount: '20' });
+        expect(parseOriginalAmount('eur 1,250.50')).toEqual({ currency: 'EUR', amount: '1250.50' });
+        expect(formatOriginalAmount('USD', '1250.5')).toBe('USD 1,250.5');
+        expect(formatOriginalAmount('GBP', '20')).toBe('GBP 20');
+    });
+
+    it('leaves free text alone and writes nothing for an empty amount', () => {
+        expect(parseOriginalAmount('about twenty dollars')).toBeNull();
+        expect(parseOriginalAmount('')).toBeNull();
+        expect(parseOriginalAmount(null)).toBeNull();
+        expect(formatOriginalAmount('USD', '')).toBe('');
+        expect(formatOriginalAmount('USD', '0')).toBe('');
     });
 });
