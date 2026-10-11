@@ -18,7 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $estate_id
  * @property string $name
  * @property string $id_photo_hash
- * @property string|null $id_photo_path
+ * @property string|null $id_photo_path A file on this server when the disk is local, otherwise a private Cloudinary public id
+ * @property string $id_photo_disk local or cloudinary
  * @property CarbonImmutable $first_seen_at
  * @property CarbonImmutable|null $last_seen_at
  * @property int $visit_count
@@ -40,6 +41,7 @@ class VisitorProfile extends Model
         'name',
         'id_photo_hash',
         'id_photo_path',
+        'id_photo_disk',
         'first_seen_at',
         'last_seen_at',
         'visit_count',
