@@ -271,7 +271,7 @@ test('delivery job retries instead of sending without the PDF when generation fa
     $recipient = $bulkInvite->recipients->first();
 
     $this->mock(BulkInvitePdfService::class)
-        ->shouldReceive('generatePassPdf')
+        ->shouldReceive('renderPassPdf')
         ->andThrow(new RuntimeException('QR library unavailable'));
 
     $job = (new DeliverBulkVisitorPassJob($recipient->last_access_code_id, $recipient->id))->withFakeQueueInteractions();
@@ -295,7 +295,7 @@ test('delivery job sends the link-only email on the final attempt if the PDF sti
     $recipient = $bulkInvite->recipients->first();
 
     $this->mock(BulkInvitePdfService::class)
-        ->shouldReceive('generatePassPdf')
+        ->shouldReceive('renderPassPdf')
         ->andThrow(new RuntimeException('QR library unavailable'));
 
     $job = (new DeliverBulkVisitorPassJob($recipient->last_access_code_id, $recipient->id))->withFakeQueueInteractions();
