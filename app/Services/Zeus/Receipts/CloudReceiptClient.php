@@ -15,6 +15,7 @@ interface CloudReceiptClient
      * The bytes of a private file.
      *
      * @param  'image'|'raw'  $resourceType
+     * @param  string  $format  The file extension, for example "pdf" or "png"
      */
-    public function fetch(string $publicId, string $resourceType): string;
+    public function fetch(string $publicId, string $resourceType, string $format): string;
 }
