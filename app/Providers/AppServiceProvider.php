@@ -28,8 +28,8 @@ use App\Services\SMS\SMSProvider;
 use App\Services\SMS\SmsService;
 use App\Services\SMS\TermiiProvider;
 use App\Services\Zeus\ImpersonationService;
-use App\Services\Zeus\Receipts\CloudinaryReceiptClient;
-use App\Services\Zeus\Receipts\CloudReceiptClient;
+use App\Services\Zeus\Receipts\CloudinaryPrivateClient;
+use App\Services\Zeus\Receipts\PrivateCloudClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(CloudReceiptClient::class, CloudinaryReceiptClient::class);
+        $this->app->bind(PrivateCloudClient::class, CloudinaryPrivateClient::class);
         $this->app->singleton(SMSProvider::class, TermiiProvider::class);
         $this->app->singleton(SmsService::class, function ($app) {
             return new SmsService($app->make(SMSProvider::class));
