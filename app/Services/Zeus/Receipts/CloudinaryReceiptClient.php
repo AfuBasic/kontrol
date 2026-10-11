@@ -8,7 +8,7 @@ use RuntimeException;
 
 /**
  * Receipts are financial documents, so they are stored as Cloudinary "authenticated" assets: nobody can open one
- * without a signed link, and the only place a signed link is made is here, on the server.
+ * without a signed, short-lived link, and the only place that link is made is here, on the server.
  */
 class CloudinaryReceiptClient implements CloudReceiptClient
 {
@@ -26,10 +26,17 @@ class CloudinaryReceiptClient implements CloudReceiptClient
         return (string) $response['public_id'];
     }
 
-    public function fetch(string $publicId, string $resourceType): string
+    /**
+     * Cloudinary refuses the signed CDN link for authenticated assets on this account, so the file is read through
+     * its signed download endpoint instead: a link that is made here, expires in five minutes, and is used straight away.
+     */
+    public function fetch(string $publicId, string $resourceType, string $format): string
     {
-        $asset = $resourceType === 'raw' ? Cloudinary::raw($publicId) : Cloudinary::image($publicId);
-        $url = (string) $asset->deliveryType('authenticated')->signUrl(true)->toUrl();
+        $url = Cloudinary::uploadApi()->privateDownloadUrl($publicId, $format, [
+            'type' => 'authenticated',
+            'resource_type' => $resourceType,
+            'expires_at' => time() + 300,
+        ]);
 
         $response = Http::timeout(30)->get($url);
 
