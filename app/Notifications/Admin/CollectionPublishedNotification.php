@@ -51,9 +51,9 @@ class CollectionPublishedNotification extends Notification implements ShouldQueu
         $url = route('admin.collections.show', $this->collection->ulid);
 
         return (new MailMessage)
-            ->subject("Collection Published: {$this->collection->title}")
+            ->subject("Collection Published: {$this->collection->name}")
             ->greeting("Hello {$notifiable->name},")
-            ->line("Your collection '{$this->collection->title}' has finished processing and is now active.")
+            ->line("Your collection '{$this->collection->name}' has finished processing and is now active.")
             ->line("It has been successfully distributed to {$this->targetCount} resident(s).")
             ->action('View Collection', $url)
             ->line('Thank you for using our application!');
@@ -72,9 +72,9 @@ class CollectionPublishedNotification extends Notification implements ShouldQueu
             'target_role' => 'admin',
             'collection_id' => $this->collection->id,
             'collection_ulid' => $this->collection->ulid,
-            'title' => $this->collection->title,
+            'title' => $this->collection->name,
             'target_count' => $this->targetCount,
-            'message' => "Collection '{$this->collection->title}' has been successfully published to {$this->targetCount} resident(s).",
+            'message' => "Collection '{$this->collection->name}' has been successfully published to {$this->targetCount} resident(s).",
             'action_url' => route('admin.collections.show', $this->collection->ulid, false),
         ];
     }
