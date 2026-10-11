@@ -7,7 +7,7 @@ use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\Zeus\ExpenseService;
 use App\Services\Zeus\PlatformAnalyticsService;
-use App\Services\Zeus\Receipts\CloudReceiptClient;
+use App\Services\Zeus\Receipts\PrivateCloudClient;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -423,7 +423,7 @@ it('starts with sensible default categories', function () {
 /** A stand-in for Cloudinary that records what was sent, so no test ever touches the real account. */
 function fakeCloudinary(): object
 {
-    $fake = new class implements CloudReceiptClient
+    $fake = new class implements PrivateCloudClient
     {
         /** @var array<int, array{path: string, publicId: string, resourceType: string}> */
         public array $uploads = [];
@@ -453,7 +453,7 @@ function fakeCloudinary(): object
         }
     };
 
-    app()->instance(CloudReceiptClient::class, $fake);
+    app()->instance(PrivateCloudClient::class, $fake);
 
     return $fake;
 }
