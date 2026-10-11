@@ -18,17 +18,6 @@ export function koboToInput(kobo: number): string {
     return naira.endsWith('.00') ? naira.slice(0, -3) : naira;
 }
 
-/**
- * Clean what was typed into the amount field: digits and at most one dot, at most two decimals.
- * "12,500.555" becomes "12500.55"; "abc" becomes "".
- */
-export function cleanAmountInput(raw: string): string {
-    const stripped = raw.replace(/[^0-9.]/g, '');
-    const [whole, ...rest] = stripped.split('.');
-    if (rest.length === 0) return whole;
-    return `${whole}.${rest.join('').slice(0, 2)}`;
-}
-
 /** "2026-10" as "October 2026". */
 export function monthLabel(month: string): string {
     const [year, mm] = month.split('-').map(Number);
@@ -146,4 +135,23 @@ export function compactKobo(kobo: number): string {
     if (naira >= 1_000_000) return `₦${trim(naira / 1_000_000)}M`;
     if (naira >= 1_000) return `₦${trim(naira / 1_000)}K`;
     return `₦${Math.round(naira)}`;
+}
+
+/** Currencies offered for the "original amount" of a foreign-currency cost. */
+export const ORIGINAL_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AED', 'CNY', 'GHS', 'ZAR'];
+
+export type OriginalAmount = { currency: string; amount: string };
+
+/** "USD 1,250.50" becomes { currency: "USD", amount: "1250.50" }. Anything that is not in that shape returns null. */
+export function parseOriginalAmount(note: string | null | undefined): OriginalAmount | null {
+    const match = (note ?? '').trim().match(/^([A-Za-z]{3})\s+([0-9][0-9,]*(?:\.[0-9]+)?)$/);
+    return match ? { currency: match[1].toUpperCase(), amount: match[2].replace(/,/g, '') } : null;
+}
+
+/** { currency: "USD", amount: "1250.5" } becomes "USD 1,250.5". An empty amount gives an empty string. */
+export function formatOriginalAmount(currency: string, amount: string): string {
+    if (amount.trim() === '' || Number(amount) === 0) return '';
+    const [whole, decimals] = amount.split('.');
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${currency} ${decimals !== undefined && decimals !== '' ? `${grouped}.${decimals}` : grouped}`;
 }
