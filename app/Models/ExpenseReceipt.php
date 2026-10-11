@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int $expense_id
- * @property string $path Path on the private disk
+ * @property string $path Where the file is on its disk (the public id for Cloudinary)
+ * @property string $disk The disk it was saved on
+ * @property string|null $resource_type Cloudinary only: image or raw
  * @property string $original_name
  * @property string $mime
  * @property int $size Bytes
@@ -18,9 +20,7 @@ class ExpenseReceipt extends Model
 {
     use SoftDeletes;
 
-    public const DISK = 'local';
-
-    protected $fillable = ['expense_id', 'path', 'original_name', 'mime', 'size'];
+    protected $fillable = ['expense_id', 'path', 'disk', 'resource_type', 'original_name', 'mime', 'size'];
 
     /**
      * @return BelongsTo<Expense, $this>
