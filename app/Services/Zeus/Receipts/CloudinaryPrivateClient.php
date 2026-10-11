@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * Receipts are financial documents, so they are stored as Cloudinary "authenticated" assets: nobody can open one
+ * Receipts and ID photos are sensitive documents, so they are stored as Cloudinary "authenticated" assets: nobody can open one
  * without a signed, short-lived link, and the only place that link is made is here, on the server.
  */
-class CloudinaryReceiptClient implements CloudReceiptClient
+class CloudinaryPrivateClient implements PrivateCloudClient
 {
     public function upload(string $localPath, string $publicId, string $resourceType): string
     {
