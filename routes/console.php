@@ -25,6 +25,9 @@ Schedule::command('model:prune', [
     '--model' => [DeviceAuthorizationRequest::class],
 ])->daily();
 
+// Failed queue jobs older than 30 days are history; keep the table from growing forever.
+Schedule::command('queue:prune-failed', ['--hours' => 24 * 30])->daily();
+
 // Billing scheduled commands
 Schedule::command('kontrol:process-auto-billing')->dailyAt('02:00');
 Schedule::command('kontrol:send-auto-renew-reminders')->dailyAt('09:00');
