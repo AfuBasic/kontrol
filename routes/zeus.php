@@ -10,6 +10,7 @@ use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\ExpenseCategoryController;
 use App\Http\Controllers\Zeus\ExpenseController;
 use App\Http\Controllers\Zeus\ExpenseReceiptController;
+use App\Http\Controllers\Zeus\FailedJobController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\FeedbackController;
 use App\Http\Controllers\Zeus\ImpersonationController;
@@ -116,6 +117,12 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
             ->withTrashed()
             ->name('applications.destroy');
+
+        // Failed queue jobs: review, retry (one or a few, never blindly all) or forget, without a shell.
+        Route::get('/failed-jobs', [FailedJobController::class, 'index'])->name('failed-jobs.index');
+        Route::get('/failed-jobs/{uuid}', [FailedJobController::class, 'show'])->whereUuid('uuid')->name('failed-jobs.show');
+        Route::post('/failed-jobs/retry', [FailedJobController::class, 'retry'])->name('failed-jobs.retry');
+        Route::post('/failed-jobs/forget', [FailedJobController::class, 'forget'])->name('failed-jobs.forget');
 
         // Expenses (business ledger). Archived, never deleted; receipts live on the private disk.
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');

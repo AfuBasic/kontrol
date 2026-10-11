@@ -13,6 +13,7 @@ import {
     Cog6ToothIcon,
     CurrencyDollarIcon,
     InboxStackIcon,
+    QueueListIcon,
     ReceiptPercentIcon,
     ScaleIcon,
     ShieldExclamationIcon,
@@ -58,6 +59,7 @@ const baseNavItems: NavItem[] = [
     { name: 'Risk Center', href: '/zeus/risk-center', icon: ShieldExclamationIcon },
     { name: 'Feedback', href: '/zeus/feedback', icon: ChatBubbleBottomCenterTextIcon },
     { name: 'Error Logs', href: '/zeus/error-logs', icon: BugAntIcon },
+    { name: 'Failed Jobs', href: '/zeus/failed-jobs', icon: QueueListIcon },
     { name: 'Settings', href: '/zeus/settings', icon: Cog6ToothIcon },
 ];
 
