@@ -11,7 +11,7 @@ import {
     PlusIcon,
     TagIcon,
 } from '@heroicons/react/24/outline';
-import { Head, InfiniteScroll, router } from '@inertiajs/react';
+import { Head, InfiniteScroll, router, usePage } from '@inertiajs/react';
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { exportMethod, index, restore, destroy as archiveExpense } from '@/actions/App/Http/Controllers/Zeus/ExpenseController';
 import CategoryModal from '@/Components/Zeus/Expenses/CategoryModal';
@@ -48,6 +48,9 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
     const [search, setSearch] = useState(filters.search ?? '');
 
     const rows = expenses.data;
+    // The server only sends a list's paging data when that list is part of the request. After a reload that leaves it out,
+    // the infinite-scroll component would throw while drawing, so it is only used while the paging data is there.
+    const canInfiniteScroll = Boolean(usePage().scrollProps?.expenses);
     const groups = useMemo(() => groupByMonth(rows), [rows]);
     const byId = (id: number | null) => (id ? (rows.find((row) => row.id === id) ?? null) : null);
     const viewing = byId(viewingId);
@@ -109,6 +112,29 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
         ...(filters.category_id ? { category_id: filters.category_id } : {}),
         ...(filters.search ? { search: filters.search } : {}),
     };
+
+    // The month groups and their rows, shared by the infinite-scroll and the plain version of the list.
+    const groupedList = (
+        <>
+            {groups.map((group) => (
+                <div key={group.month}>
+                    <div className="flex items-baseline justify-between gap-3 border-b border-slate-800/70 bg-slate-800/20 px-5 py-2">
+                        <h2 className="text-xs font-bold tracking-wide text-slate-300">{group.label}</h2>
+                        <span className="text-xs font-semibold whitespace-nowrap text-slate-500 tabular-nums">{formatKobo(group.total)}</span>
+                    </div>
+                    {group.items.map((expense) => (
+                        <ExpenseRowItem
+                            key={expense.id}
+                            expense={expense}
+                            onView={() => setViewingId(expense.id)}
+                            onEdit={() => setForm({ id: expense.id })}
+                            onRestore={() => restoreExpense(expense.id)}
+                        />
+                    ))}
+                </div>
+            ))}
+        </>
+    );
 
     return (
         <ZeusLayout>
@@ -276,34 +302,20 @@ export default function ExpensesIndex({ filters, expenses, summary, categories, 
                                 <span className="text-right">Actions</span>
                             </div>
 
-                            <InfiniteScroll
-                                data="expenses"
-                                loading={
-                                    <div className="flex justify-center py-6" role="status" aria-label="Loading more expenses">
-                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-slate-300" />
-                                    </div>
-                                }
-                            >
-                                {groups.map((group) => (
-                                    <div key={group.month}>
-                                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-800/70 bg-slate-800/20 px-5 py-2">
-                                            <h2 className="text-xs font-bold tracking-wide text-slate-300">{group.label}</h2>
-                                            <span className="text-xs font-semibold whitespace-nowrap text-slate-500 tabular-nums">
-                                                {formatKobo(group.total)}
-                                            </span>
+                            {canInfiniteScroll ? (
+                                <InfiniteScroll
+                                    data="expenses"
+                                    loading={
+                                        <div className="flex justify-center py-6" role="status" aria-label="Loading more expenses">
+                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-slate-300" />
                                         </div>
-                                        {group.items.map((expense) => (
-                                            <ExpenseRowItem
-                                                key={expense.id}
-                                                expense={expense}
-                                                onView={() => setViewingId(expense.id)}
-                                                onEdit={() => setForm({ id: expense.id })}
-                                                onRestore={() => restoreExpense(expense.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                ))}
-                            </InfiniteScroll>
+                                    }
+                                >
+                                    {groupedList}
+                                </InfiniteScroll>
+                            ) : (
+                                groupedList
+                            )}
                         </div>
                     )}
                 </section>

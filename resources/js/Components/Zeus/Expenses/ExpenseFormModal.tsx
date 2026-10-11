@@ -92,7 +92,7 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
     }
 
     function removeExisting(receipt: Receipt) {
-        router.delete(removeReceipt.url(receipt.id), { preserveScroll: true, preserveState: true, only: ['expenses', 'summary'] });
+        router.delete(removeReceipt.url(receipt.id), { preserveScroll: true, preserveState: true });
     }
 
     const receiptError = Object.entries(form.errors).find(([key]) => key === 'receipts' || key.startsWith('receipts.'))?.[1];
