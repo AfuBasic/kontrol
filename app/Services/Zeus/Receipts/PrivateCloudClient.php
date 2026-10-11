@@ -2,10 +2,10 @@
 
 namespace App\Services\Zeus\Receipts;
 
-interface CloudReceiptClient
+interface PrivateCloudClient
 {
     /**
-     * Upload a file privately and return the public id it was stored under.
+     * Upload a file privately and return the public id it was stored under. Used for receipts and visitor ID photos.
      *
      * @param  'image'|'raw'  $resourceType
      */
