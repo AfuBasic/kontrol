@@ -433,6 +433,9 @@ function fakeCloudinary(): object
 
         public int $fetches = 0;
 
+        /** @var array<int, string> */
+        public array $formats = [];
+
         public function upload(string $localPath, string $publicId, string $resourceType): string
         {
             $this->uploads[] = ['path' => $localPath, 'publicId' => $publicId, 'resourceType' => $resourceType];
@@ -441,9 +444,10 @@ function fakeCloudinary(): object
             return $publicId;
         }
 
-        public function fetch(string $publicId, string $resourceType): string
+        public function fetch(string $publicId, string $resourceType, string $format): string
         {
             $this->fetches++;
+            $this->formats[] = $format;
 
             return $this->files[$publicId] ?? throw new RuntimeException('missing');
         }
@@ -494,7 +498,8 @@ it('serves and downloads a Cloudinary receipt through Zeus only', function () {
         ->and($view->headers->get('Content-Type'))->toBe('application/pdf');
 
     $download = ($this->zeus)()->get(route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]))->assertOk();
-    expect($download->headers->get('Content-Disposition'))->toStartWith('attachment;');
+    expect($download->headers->get('Content-Disposition'))->toStartWith('attachment;')
+        ->and($cloud->formats)->toBe(['pdf', 'pdf']);
 });
 
 it('says so politely when Cloudinary cannot be reached, instead of crashing', function () {
