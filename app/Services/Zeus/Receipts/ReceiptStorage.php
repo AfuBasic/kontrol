@@ -18,7 +18,7 @@ class ReceiptStorage
 {
     public const CLOUDINARY = 'cloudinary';
 
-    public function __construct(private CloudReceiptClient $cloud) {}
+    public function __construct(private PrivateCloudClient $cloud) {}
 
     /**
      * @return array{disk: string, path: string, resource_type: string|null}
