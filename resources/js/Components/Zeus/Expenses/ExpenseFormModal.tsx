@@ -3,8 +3,9 @@ import { router, useForm } from '@inertiajs/react';
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react';
 import { store, update } from '@/actions/App/Http/Controllers/Zeus/ExpenseController';
 import { destroy as removeReceipt } from '@/actions/App/Http/Controllers/Zeus/ExpenseReceiptController';
+import MoneyInput from '@/Components/MoneyInput';
 import ZeusModal from '@/Components/Zeus/ZeusModal';
-import { cleanAmountInput, formatBytes, koboToInput, pickReceipts, today } from '@/Lib/expenses';
+import { formatBytes, formatOriginalAmount, koboToInput, ORIGINAL_CURRENCIES, parseOriginalAmount, pickReceipts, today } from '@/Lib/expenses';
 import ReceiptList from './ReceiptList';
 import type { Category, ExpenseRow, Limits, Receipt } from './types';
 
@@ -41,6 +42,10 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
         receipts: [],
     });
     const [pickProblems, setPickProblems] = useState<string[]>([]);
+    // The original amount is a currency plus a money amount. A note saved in some other shape is kept unless it is replaced.
+    const [originalCurrency, setOriginalCurrency] = useState('USD');
+    const [originalAmount, setOriginalAmount] = useState('');
+    const [legacyOriginal, setLegacyOriginal] = useState<string | null>(null);
     const fileInput = useRef<HTMLInputElement>(null);
 
     // Start fresh (or prefilled) every time the modal opens.
@@ -48,13 +53,17 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
         if (!isOpen) return;
         form.clearErrors();
         setPickProblems([]);
+        const parsed = parseOriginalAmount(expense?.original_amount_note);
+        setOriginalCurrency(parsed?.currency ?? 'USD');
+        setOriginalAmount(parsed?.amount ?? '');
+        setLegacyOriginal(!parsed && expense?.original_amount_note ? expense.original_amount_note : null);
         form.setData({
             incurred_on: expense?.incurred_on ?? today(),
             amount: expense ? koboToInput(expense.amount) : '',
             expense_category_id: expense?.category.id ? String(expense.category.id) : '',
             payee: expense?.payee ?? '',
             note: expense?.note ?? '',
-            original_amount_note: expense?.original_amount_note ?? '',
+            original_amount_note: '',
             receipts: [],
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,7 +86,8 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
         const options = { forceFormData: true, preserveScroll: true, onSuccess: onClose };
 
         // Files cannot travel in a PUT, so an edit is sent as a POST that the server treats as a PUT.
-        form.transform((data) => (expense ? { ...data, _method: 'put' } : data));
+        const original_amount_note = originalAmount.trim() !== '' ? formatOriginalAmount(originalCurrency, originalAmount) : (legacyOriginal ?? '');
+        form.transform((data) => ({ ...data, original_amount_note, ...(expense ? { _method: 'put' } : {}) }));
         form.post(expense ? update.url(expense.id) : store.url(), options);
     }
 
@@ -141,15 +151,13 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
                         <label htmlFor="expense-amount" className={label}>
                             Amount (₦)
                         </label>
-                        <input
+                        <MoneyInput
                             id="expense-amount"
-                            inputMode="decimal"
-                            autoComplete="off"
+                            tone="dark"
+                            maxDecimals={2}
                             autoFocus={!expense}
                             value={form.data.amount}
-                            onChange={(e) => form.setData('amount', cleanAmountInput(e.target.value))}
-                            placeholder="0.00"
-                            className={`${field} tabular-nums`}
+                            onChange={(value) => form.setData('amount', value)}
                         />
                         {form.errors.amount && <p className="mt-1 text-xs text-rose-400">{form.errors.amount}</p>}
                     </div>
@@ -230,15 +238,45 @@ export default function ExpenseFormModal({ isOpen, onClose, expense, categories,
 
                 <div>
                     <label htmlFor="expense-original" className={label}>
-                        Original amount <span className="font-medium tracking-normal text-slate-500 normal-case">(optional, for example USD 20)</span>
+                        Original amount{' '}
+                        <span className="font-medium tracking-normal text-slate-500 normal-case">(optional, if you paid in another currency)</span>
                     </label>
-                    <input
-                        id="expense-original"
-                        value={form.data.original_amount_note}
-                        maxLength={60}
-                        onChange={(e) => form.setData('original_amount_note', e.target.value)}
-                        className={field}
-                    />
+                    <div className="flex gap-3">
+                        <div className="w-28 shrink-0">
+                            <label htmlFor="expense-original-currency" className="sr-only">
+                                Currency
+                            </label>
+                            <select
+                                id="expense-original-currency"
+                                value={originalCurrency}
+                                onChange={(e) => setOriginalCurrency(e.target.value)}
+                                className={field}
+                            >
+                                {(ORIGINAL_CURRENCIES.includes(originalCurrency)
+                                    ? ORIGINAL_CURRENCIES
+                                    : [originalCurrency, ...ORIGINAL_CURRENCIES]
+                                ).map((code) => (
+                                    <option key={code} value={code}>
+                                        {code}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <MoneyInput
+                                id="expense-original"
+                                tone="dark"
+                                prefix=""
+                                maxDecimals={2}
+                                value={originalAmount}
+                                onChange={setOriginalAmount}
+                            />
+                        </div>
+                    </div>
+                    {legacyOriginal && originalAmount.trim() === '' && (
+                        <p className="mt-1.5 text-xs text-slate-500">Saved earlier as “{legacyOriginal}”. Enter an amount to replace it.</p>
+                    )}
+                    {form.errors.original_amount_note && <p className="mt-1 text-xs text-rose-400">{form.errors.original_amount_note}</p>}
                 </div>
 
                 <div>
