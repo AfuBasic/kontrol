@@ -65,7 +65,7 @@ class ReceiptStorage
 
         if ($receipt->disk === self::CLOUDINARY) {
             try {
-                $bytes = $this->cloud->fetch($receipt->path, $receipt->resource_type ?? 'image');
+                $bytes = $this->cloud->fetch($receipt->path, $receipt->resource_type ?? 'image', $this->formatFor($receipt->mime));
             } catch (RuntimeException) {
                 abort(502, 'The receipt could not be fetched right now. Try again in a moment.');
             }
@@ -77,5 +77,18 @@ class ReceiptStorage
         abort_unless($disk->exists($receipt->path), 404);
 
         return $disk->response($receipt->path, $receipt->original_name, $headers);
+    }
+
+    /**
+     * The file extension Cloudinary needs to deliver a stored receipt.
+     */
+    private function formatFor(string $mime): string
+    {
+        return match ($mime) {
+            'application/pdf' => 'pdf',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
     }
 }
