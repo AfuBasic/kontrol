@@ -10,6 +10,7 @@ use App\Services\Visitor\BulkInvitePdfService;
 use App\Support\BrandTheme;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Queue::fake();
@@ -180,22 +181,24 @@ it('uses only colours the app theme defines', function () {
         ->and(array_values($colors))->each->toMatch('/^#[0-9a-f]{6}$/');
 });
 
-it('renders a real one-page A4 PDF for a batch pass and for a lone pass', function () {
+it('renders a real one-page A4 PDF for a batch pass and for a lone pass, entirely in memory', function () {
+    Storage::fake('local');
     $batch = ($this->makeGroup)(['one@example.com', 'two@example.com', 'three@example.com']);
     $solo = ($this->makeGroup)(['solo@example.com'], null);
 
     foreach ([[$batch, 'two@example.com'], [$solo, 'solo@example.com']] as [$group, $email]) {
         [$recipient, $code] = ($this->passFor)($group, $email);
 
-        $path = ($this->service)()->generatePassPdf($recipient, $code);
-        $bytes = file_get_contents($path);
+        $bytes = ($this->service)()->renderPassPdf($recipient, $code);
 
         if ($dir = getenv('PASS_SAMPLE_DIR')) {
             @mkdir($dir, 0775, true);
-            copy($path, $dir.'/'.($group === $solo ? 'pass-single' : 'pass-bulk').'.pdf');
+            file_put_contents($dir.'/'.($group === $solo ? 'pass-single' : 'pass-bulk').'.pdf', $bytes);
         }
 
         expect($bytes)->toStartWith('%PDF')
             ->and(preg_match_all('/\/Type\s*\/Page[^s]/', $bytes))->toBe(1);
     }
+
+    expect(Storage::disk('local')->allFiles())->toBe([]);
 });

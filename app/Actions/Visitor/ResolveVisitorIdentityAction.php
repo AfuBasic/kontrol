@@ -2,6 +2,7 @@
 
 namespace App\Actions\Visitor;
 
+use App\Jobs\MoveVisitorIdPhotoToCloud;
 use App\Models\VisitorProfile;
 use App\Services\Visitor\VisitorProfileResolverService;
 use Illuminate\Http\UploadedFile;
@@ -33,6 +34,14 @@ class ResolveVisitorIdentityAction
 
         $absolutePath = Storage::disk('local')->path($storedPath);
 
-        return $this->resolver->resolve($estateId, $visitorName, $absolutePath);
+        $profile = $this->resolver->resolve($estateId, $visitorName, $absolutePath);
+
+        // A first-time visitor's photo moves to private Cloudinary storage in the background when that is the default
+        // disk. It runs after the admission commits, so the gate never waits on the upload.
+        if ($profile->wasRecentlyCreated && config('filesystems.default') === MoveVisitorIdPhotoToCloud::CLOUDINARY) {
+            MoveVisitorIdPhotoToCloud::dispatch($profile->id)->afterCommit();
+        }
+
+        return $profile;
     }
 }

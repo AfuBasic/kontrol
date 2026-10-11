@@ -8,7 +8,6 @@ use App\Models\OrganizationBulkInviteRecipient;
 use App\Services\Visitor\BulkInvitePdfService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -66,8 +65,6 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
             return;
         }
 
-        $pdfPath = null;
-
         try {
             $recipient->update([
                 'delivery_status' => 'queued',
@@ -77,8 +74,7 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
             $pdfContents = null;
 
             try {
-                $pdfPath = $pdfService->generatePassPdf($recipient, $accessCode);
-                $pdfContents = File::get($pdfPath);
+                $pdfContents = $pdfService->renderPassPdf($recipient, $accessCode);
             } catch (Throwable $e) {
                 // The PDF is the pass people bring to the gate, so retry rather than silently
                 // sending without it. Only the final attempt falls back to the link-only email.
@@ -108,10 +104,6 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
             Log::error("DeliverBulkVisitorPassJob failed for recipient {$recipient->email}: {$e->getMessage()}");
 
             throw $e;
-        } finally {
-            if ($pdfPath && File::exists($pdfPath)) {
-                File::delete($pdfPath);
-            }
         }
     }
 

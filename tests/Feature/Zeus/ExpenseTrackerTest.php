@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\Zeus\ExpenseService;
 use App\Services\Zeus\PlatformAnalyticsService;
+use App\Services\Zeus\Receipts\PrivateCloudClient;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -16,7 +17,7 @@ use Spatie\Activitylog\Models\Activity;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake(ExpenseReceipt::DISK);
+    Storage::fake('local');
 
     $this->zeus = fn () => $this->withSession([config('zeus.session_key') => true]);
     $this->category = ExpenseCategory::query()->where('name', 'Hosting and infrastructure')->first()
@@ -89,7 +90,7 @@ it('stores receipts privately under random names and trusts the file content, no
     expect($receipts)->toHaveCount(2);
 
     foreach ($receipts as $receipt) {
-        Storage::disk(ExpenseReceipt::DISK)->assertExists($receipt->path);
+        Storage::disk('local')->assertExists($receipt->path);
         expect($receipt->path)->toStartWith('expenses/receipts/')->not->toContain('invoice')->not->toContain('slip');
     }
 
@@ -162,7 +163,7 @@ it('archives instead of deleting, keeps the receipts, and can restore', function
     expect(Expense::count())->toBe(0)
         ->and(Expense::withTrashed()->count())->toBe(1)
         ->and(ExpenseReceipt::count())->toBe(1);
-    Storage::disk(ExpenseReceipt::DISK)->assertExists($path);
+    Storage::disk('local')->assertExists($path);
     expect(Activity::where('description', 'Expense archived')->exists())->toBeTrue();
 
     ($this->zeus)()->post(route('zeus.expenses.restore', $expense->id))->assertSessionHasNoErrors();
@@ -332,7 +333,7 @@ it('exports exactly what the filters show, in naira, and defuses spreadsheet for
 // ---------- Receipts ----------
 
 it('serves a receipt only to Zeus, inline and without sniffing', function () {
-    Storage::disk(ExpenseReceipt::DISK)->put('expenses/receipts/2026/10/a.pdf', '%PDF-1.4 test');
+    Storage::disk('local')->put('expenses/receipts/2026/10/a.pdf', '%PDF-1.4 test');
     $receipt = ($this->makeExpense)()->receipts()->create([
         'path' => 'expenses/receipts/2026/10/a.pdf', 'original_name' => 'slip.pdf', 'mime' => 'application/pdf', 'size' => 13,
     ]);
@@ -346,7 +347,7 @@ it('serves a receipt only to Zeus, inline and without sniffing', function () {
 });
 
 it('lets Zeus download a receipt as an attachment, and only Zeus', function () {
-    Storage::disk(ExpenseReceipt::DISK)->put('expenses/receipts/2026/10/c.pdf', '%PDF-1.4 download');
+    Storage::disk('local')->put('expenses/receipts/2026/10/c.pdf', '%PDF-1.4 download');
     $receipt = ($this->makeExpense)()->receipts()->create([
         'path' => 'expenses/receipts/2026/10/c.pdf', 'original_name' => 'october "fuel".pdf', 'mime' => 'application/pdf', 'size' => 17,
     ]);
@@ -373,7 +374,7 @@ it('gives every receipt a view link and a download link in the list', function (
 });
 
 it('removes a receipt from an expense without deleting its file', function () {
-    Storage::disk(ExpenseReceipt::DISK)->put('expenses/receipts/2026/10/b.pdf', 'x');
+    Storage::disk('local')->put('expenses/receipts/2026/10/b.pdf', 'x');
     $receipt = ($this->makeExpense)()->receipts()->create([
         'path' => 'expenses/receipts/2026/10/b.pdf', 'original_name' => 'b.pdf', 'mime' => 'application/pdf', 'size' => 1,
     ]);
@@ -381,7 +382,7 @@ it('removes a receipt from an expense without deleting its file', function () {
     ($this->zeus)()->delete(route('zeus.expenses.receipts.destroy', $receipt))->assertSessionHasNoErrors();
 
     expect(ExpenseReceipt::count())->toBe(0)->and(ExpenseReceipt::withTrashed()->count())->toBe(1);
-    Storage::disk(ExpenseReceipt::DISK)->assertExists('expenses/receipts/2026/10/b.pdf');
+    Storage::disk('local')->assertExists('expenses/receipts/2026/10/b.pdf');
     ($this->zeus)()->get(route('zeus.expenses.receipts.show', $receipt->id))->assertNotFound();
 });
 
@@ -415,4 +416,113 @@ it('refuses duplicate category names, including archived ones', function () {
 
 it('starts with sensible default categories', function () {
     expect(ExpenseCategory::query()->pluck('name')->all())->toContain('Hosting and infrastructure', 'SMS and email', 'Payment fees', 'Taxes', 'Other');
+});
+
+// ---------- Cloudinary: the default disk ----------
+
+/** A stand-in for Cloudinary that records what was sent, so no test ever touches the real account. */
+function fakeCloudinary(): object
+{
+    $fake = new class implements PrivateCloudClient
+    {
+        /** @var array<int, array{path: string, publicId: string, resourceType: string}> */
+        public array $uploads = [];
+
+        /** @var array<string, string> */
+        public array $files = [];
+
+        public int $fetches = 0;
+
+        /** @var array<int, string> */
+        public array $formats = [];
+
+        public function upload(string $localPath, string $publicId, string $resourceType): string
+        {
+            $this->uploads[] = ['path' => $localPath, 'publicId' => $publicId, 'resourceType' => $resourceType];
+            $this->files[$publicId] = (string) file_get_contents($localPath);
+
+            return $publicId;
+        }
+
+        public function fetch(string $publicId, string $resourceType, string $format): string
+        {
+            $this->fetches++;
+            $this->formats[] = $format;
+
+            return $this->files[$publicId] ?? throw new RuntimeException('missing');
+        }
+    };
+
+    app()->instance(PrivateCloudClient::class, $fake);
+
+    return $fake;
+}
+
+it('sends new receipts to Cloudinary when it is the default disk, PDFs as raw files, and writes nothing locally', function () {
+    config(['filesystems.default' => 'cloudinary']);
+    $cloud = fakeCloudinary();
+
+    ($this->zeus)()->post(route('zeus.expenses.store'), ($this->payload)(['receipts' => [
+        UploadedFile::fake()->create('invoice.pdf', 40, 'application/pdf'),
+        UploadedFile::fake()->image('slip.png', 100, 100),
+    ]]))->assertSessionHasNoErrors();
+
+    expect($cloud->uploads)->toHaveCount(2)
+        ->and($cloud->uploads[0]['resourceType'])->toBe('raw')
+        ->and($cloud->uploads[0]['publicId'])->toStartWith('kontrol/expenses/receipts/')->toEndWith('.pdf')->not->toContain('invoice')
+        ->and($cloud->uploads[1]['resourceType'])->toBe('image')
+        ->and($cloud->uploads[1]['publicId'])->not->toContain('slip');
+
+    $receipts = Expense::first()->receipts;
+    expect($receipts->pluck('disk')->unique()->all())->toBe(['cloudinary'])
+        ->and($receipts->pluck('resource_type')->all())->toBe(['raw', 'image'])
+        ->and(Storage::disk('local')->allFiles())->toBe([]);
+});
+
+it('serves and downloads a Cloudinary receipt through Zeus only', function () {
+    config(['filesystems.default' => 'cloudinary']);
+    $cloud = fakeCloudinary();
+    $cloud->files['kontrol/expenses/receipts/2026/10/x.pdf'] = '%PDF-1.4 from the cloud';
+    $receipt = ($this->makeExpense)()->receipts()->create([
+        'path' => 'kontrol/expenses/receipts/2026/10/x.pdf', 'disk' => 'cloudinary', 'resource_type' => 'raw',
+        'original_name' => 'x.pdf', 'mime' => 'application/pdf', 'size' => 23,
+    ]);
+
+    $this->get(route('zeus.expenses.receipts.show', $receipt))->assertRedirect(route('zeus.login'));
+    expect($cloud->fetches)->toBe(0);
+
+    $view = ($this->zeus)()->get(route('zeus.expenses.receipts.show', $receipt))->assertOk();
+    expect($view->getContent())->toBe('%PDF-1.4 from the cloud')
+        ->and($view->headers->get('Content-Disposition'))->toStartWith('inline;')
+        ->and($view->headers->get('X-Content-Type-Options'))->toBe('nosniff')
+        ->and($view->headers->get('Content-Type'))->toBe('application/pdf');
+
+    $download = ($this->zeus)()->get(route('zeus.expenses.receipts.show', ['receipt' => $receipt, 'download' => 1]))->assertOk();
+    expect($download->headers->get('Content-Disposition'))->toStartWith('attachment;')
+        ->and($cloud->formats)->toBe(['pdf', 'pdf']);
+});
+
+it('says so politely when Cloudinary cannot be reached, instead of crashing', function () {
+    config(['filesystems.default' => 'cloudinary']);
+    fakeCloudinary();
+    $receipt = ($this->makeExpense)()->receipts()->create([
+        'path' => 'kontrol/expenses/receipts/2026/10/gone.pdf', 'disk' => 'cloudinary', 'resource_type' => 'raw',
+        'original_name' => 'gone.pdf', 'mime' => 'application/pdf', 'size' => 1,
+    ]);
+
+    ($this->zeus)()->get(route('zeus.expenses.receipts.show', $receipt))->assertStatus(502);
+});
+
+it('keeps serving receipts saved on the local disk after the default moves to Cloudinary', function () {
+    Storage::disk('local')->put('expenses/receipts/2026/10/old.pdf', '%PDF-1.4 old local');
+    $receipt = ($this->makeExpense)()->receipts()->create([
+        'path' => 'expenses/receipts/2026/10/old.pdf', 'disk' => 'local',
+        'original_name' => 'old.pdf', 'mime' => 'application/pdf', 'size' => 18,
+    ]);
+
+    config(['filesystems.default' => 'cloudinary']);
+    $cloud = fakeCloudinary();
+
+    ($this->zeus)()->get(route('zeus.expenses.receipts.show', $receipt))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    expect($cloud->fetches)->toBe(0);
 });
