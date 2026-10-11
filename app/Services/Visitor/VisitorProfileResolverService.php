@@ -38,6 +38,8 @@ class VisitorProfileResolverService
             'name' => $visitorName ?: self::UNKNOWN_NAME,
             'id_photo_hash' => $hash,
             'id_photo_path' => $idPhotoPath,
+            // Always saved on this server first; a background job moves it to Cloudinary when that is the default disk.
+            'id_photo_disk' => 'local',
             'first_seen_at' => now(),
             'visit_count' => 1,
         ]);
