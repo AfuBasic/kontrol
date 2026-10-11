@@ -35,9 +35,9 @@ class CollectionPublished implements ShouldBroadcast
         return [
             'collection_id' => $this->collection->id,
             'collection_ulid' => $this->collection->ulid,
-            'title' => $this->collection->title,
+            'title' => $this->collection->name,
             'target_count' => $this->targetCount,
-            'message' => "Collection '{$this->collection->title}' has been successfully published to {$this->targetCount} resident(s).",
+            'message' => "Collection '{$this->collection->name}' has been successfully published to {$this->targetCount} resident(s).",
         ];
     }
 }
