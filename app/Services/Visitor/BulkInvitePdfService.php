@@ -11,33 +11,26 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Writer\Result\ResultInterface;
-use Illuminate\Support\Facades\Storage;
 use PdfStudio\Laravel\Facades\Pdf;
 
 class BulkInvitePdfService
 {
     /**
-     * Generate a branded visitor pass PDF with embedded QR code.
-     *
-     * @return string Absolute file path to the generated temporary PDF
+     * Render a branded visitor pass PDF with an embedded QR code, in memory. Nothing is written to disk: the bytes
+     * go straight into the email, so there is no temporary file to clean up or to leave behind.
      */
-    public function generatePassPdf(OrganizationBulkInviteRecipient $recipient, AccessCode $accessCode): string
+    public function renderPassPdf(OrganizationBulkInviteRecipient $recipient, AccessCode $accessCode): string
     {
-        $relativeDir = 'temp/bulk-passes';
-        $fileName = "pass-{$accessCode->code}-{$recipient->id}.pdf";
-        $relativePath = "{$relativeDir}/{$fileName}";
-
         // DomPDF keeps converted fonts here; it has to be somewhere the app can write.
         $fontDir = storage_path('fonts');
         if (! is_dir($fontDir)) {
             @mkdir($fontDir, 0775, true);
         }
 
-        Pdf::view('pdf.visitor.bulk-invite-pass')
+        return Pdf::view('pdf.visitor.bulk-invite-pass')
             ->data($this->passViewData($recipient, $accessCode))
-            ->save($relativePath);
-
-        return Storage::disk('local')->path($relativePath);
+            ->render()
+            ->content();
     }
 
     /**
