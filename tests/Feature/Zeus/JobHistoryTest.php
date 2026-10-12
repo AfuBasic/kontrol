@@ -209,16 +209,16 @@ it('lists runs newest first and tells a job still running from one whose worker 
     ($this->run_)(['job_name' => 'Busy', 'status' => 'running', 'finished_at' => null, 'duration_ms' => null, 'started_at' => now()->subMinutes(2)]);
     ($this->run_)(['job_name' => 'Abandoned', 'status' => 'running', 'finished_at' => null, 'duration_ms' => null, 'started_at' => now()->subMinutes(40)]);
 
-    ($this->zeus)()->get(route('zeus.job-history.index'))
+    ($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'runs']))
         ->assertInertia(fn ($page) => $page
             ->where('runs.data', fn ($rows) => collect($rows)->pluck('job')->all() === ['Newest', 'Busy', 'Abandoned', 'Older']
                 && collect($rows)->firstWhere('job', 'Busy')['status'] === 'running'
                 && collect($rows)->firstWhere('job', 'Abandoned')['status'] === 'lost')
         );
 
-    ($this->zeus)()->get(route('zeus.job-history.index', ['status' => 'lost']))
+    ($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'runs', 'status' => 'lost']))
         ->assertInertia(fn ($page) => $page->where('runs.data', fn ($rows) => collect($rows)->pluck('job')->all() === ['Abandoned']));
-    ($this->zeus)()->get(route('zeus.job-history.index', ['status' => 'running']))
+    ($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'runs', 'status' => 'running']))
         ->assertInertia(fn ($page) => $page->where('runs.data', fn ($rows) => collect($rows)->pluck('job')->all() === ['Busy']));
 });
 
@@ -227,7 +227,7 @@ it('filters by status and searches by job or error, treating wildcards as plain 
     ($this->run_)(['job_name' => 'Recalculate', 'status' => 'failed', 'error' => 'LogicException: 100% broken']);
     ($this->run_)(['job_name' => 'Fine', 'status' => 'succeeded']);
 
-    $count = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', $query))->viewData('page')['props']['runs']['total'];
+    $count = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', [...$query, 'tab' => 'runs']))->viewData('page')['props']['runs']['total'];
 
     expect($count([]))->toBe(3)
         ->and($count(['status' => 'failed']))->toBe(2)
@@ -246,7 +246,7 @@ it('pages through many runs without repeating one', function () {
         ($this->run_)(['job_name' => "Job{$i}", 'started_at' => now()->subSeconds(100 - $i)]);
     }
 
-    $page = fn (int $n) => collect(($this->zeus)()->get(route('zeus.job-history.index', ['page' => $n]))->viewData('page')['props']['runs']['data'])->pluck('id');
+    $page = fn (int $n) => collect(($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'runs', 'page' => $n]))->viewData('page')['props']['runs']['data'])->pluck('id');
 
     expect($page(1))->toHaveCount(25)->and($page(2))->toHaveCount(5)->and($page(1)->merge($page(2))->unique())->toHaveCount(30);
 });
@@ -254,7 +254,7 @@ it('pages through many runs without repeating one', function () {
 it('gives a failed run the job id so it can be found on the Failed Jobs page', function () {
     $run = ($this->run_)(['status' => 'failed', 'error' => 'RuntimeException: x']);
 
-    ($this->zeus)()->get(route('zeus.job-history.index'))
+    ($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'runs']))
         ->assertInertia(fn ($page) => $page->where('runs.data.0.uuid', $run->job_uuid)->where('runs.data.0.status', 'failed'));
 });
 
@@ -299,7 +299,7 @@ it('charts the chosen range in bars, empty ones included, oldest first', functio
 
     $series = fn (string $range) => ($this->zeus)()->get(route('zeus.job-history.index', ['range' => $range]))->viewData('page')['props']['overview']['series'];
 
-    expect($series('1h'))->toHaveCount(12)
+    expect($series('1h'))->toHaveCount(60)
         ->and(collect($series('1h'))->sum('succeeded'))->toBe(2)   // the 3-hour-old run is outside the hour
         ->and(collect($series('1h'))->sum('failed'))->toBe(1)
         ->and($series('24h'))->toHaveCount(24)
@@ -402,7 +402,7 @@ it('filters runs by queue and pages by 25, 50 or 100', function () {
         ($this->run_)(['started_at' => now()->subSeconds(500 + $i)]);
     }
 
-    $runs = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', $query))->viewData('page')['props']['runs'];
+    $runs = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', [...$query, 'tab' => 'runs']))->viewData('page')['props']['runs'];
 
     expect(collect($runs(['queue' => 'heavy'])['data'])->pluck('job')->all())->toBe(['OnHeavy'])
         ->and($runs([])['data'])->toHaveCount(25)
@@ -422,7 +422,7 @@ it('answers a live refresh of only the figures and the first page of runs', func
         'X-Inertia-Version' => $version,
         'X-Inertia-Partial-Component' => 'Zeus/JobHistory/Index',
         'X-Inertia-Partial-Data' => 'overview,runs',
-    ])->get(route('zeus.job-history.index'))
+    ])->get(route('zeus.job-history.index', ['tab' => 'runs']))
         ->assertOk()
         ->assertJsonPath('props.overview.summary.ran', 1)
         ->assertJsonMissingPath('props.recording');
@@ -525,4 +525,16 @@ it('shows a cleared history straight away even when figures are cached', functio
     ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'all']);
 
     expect($ran())->toBe(0);
+});
+
+it('opens on the overview without reading the list, and reads it only on the runs tab', function () {
+    ($this->run_)();
+
+    $props = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', $query))->viewData('page')['props'];
+
+    expect($props([])['runs'] ?? null)->toBeNull()
+        ->and($props([])['filters']['tab'])->toBe('overview')
+        ->and($props(['tab' => 'runs'])['runs']['total'])->toBe(1);
+
+    ($this->zeus)()->get(route('zeus.job-history.index', ['tab' => 'nonsense']))->assertSessionHasErrors('tab');
 });
