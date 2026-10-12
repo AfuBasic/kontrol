@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Prunable;
  * @property string $job_name
  * @property string|null $queue
  * @property string|null $connection
+ * @property string|null $worker
  * @property int $attempt
  * @property 'running'|'succeeded'|'retrying'|'failed' $status
  * @property CarbonImmutable $started_at
