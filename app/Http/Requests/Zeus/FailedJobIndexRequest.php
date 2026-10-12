@@ -24,12 +24,13 @@ class FailedJobIndexRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:100'],
             'queue' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9_.:-]+$/'],
             'range' => ['nullable', 'string', Rule::in(array_keys(FailedJobService::RANGES))],
+            'tab' => ['nullable', 'string', Rule::in(['overview', 'jobs'])],
             'per_page' => ['nullable', 'integer', Rule::in(FailedJobService::PER_PAGE)],
         ];
     }
 
     /**
-     * @return array{search: string|null, queue: string|null, range: string, per_page: int}
+     * @return array{search: string|null, queue: string|null, range: string, tab: string, per_page: int}
      */
     public function filters(): array
     {
@@ -39,6 +40,7 @@ class FailedJobIndexRequest extends FormRequest
             'search' => filled($data['search'] ?? null) ? trim($data['search']) : null,
             'queue' => $data['queue'] ?? null,
             'range' => $data['range'] ?? '7d',
+            'tab' => $data['tab'] ?? 'overview',
             'per_page' => (int) ($data['per_page'] ?? FailedJobService::PER_PAGE[0]),
         ];
     }
