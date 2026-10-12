@@ -3,6 +3,7 @@
 namespace App\Events\Incidents;
 
 use App\Models\Incident;
+use App\Support\Queues;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -20,6 +21,11 @@ class IncidentCreatedBroadcast implements ShouldBroadcast
     public function __construct(
         public Incident $incident
     ) {}
+
+    public function broadcastQueue(): string
+    {
+        return Queues::CRITICAL;
+    }
 
     /**
      * Get the channels the event should broadcast on.
