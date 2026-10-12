@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\VisitorProfile;
 use App\Services\Zeus\Receipts\PrivateCloudClient;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +31,10 @@ class MoveVisitorIdPhotoToCloud implements ShouldQueue
      */
     public array $backoff = [30, 120, 300, 900];
 
-    public function __construct(public int $visitorProfileId) {}
+    public function __construct(public int $visitorProfileId)
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(PrivateCloudClient $cloud): void
     {
