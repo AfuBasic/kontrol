@@ -4,6 +4,7 @@ namespace App\Events\Resident;
 
 use App\Models\Estate;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -19,6 +20,11 @@ class HouseholdMemberCreated implements ShouldBroadcast
         public Estate $estate,
         public User $primaryResident,
     ) {}
+
+    public function broadcastQueue(): string
+    {
+        return Queues::CRITICAL;
+    }
 
     public function broadcastOn(): array
     {
