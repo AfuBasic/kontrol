@@ -374,11 +374,10 @@ html.dark .kontrol-form-validation-error {
     }
 }
 
-/* Zeus Textures */
-.zeus-grain {
-    position: relative;
-}
-
+/* Zeus Textures.
+   The element wearing .zeus-grain must already be positioned (the Zeus sidebar is fixed/sticky, the invoice card is
+   relative). Do not set `position` here: unlayered CSS beats Tailwind's utilities, so it would silently turn the
+   sidebar back into a plain relative box that scrolls away with the page. */
 .zeus-grain::before {
     content: '';
     position: absolute;
