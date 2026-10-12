@@ -3,6 +3,7 @@
 namespace App\Mail\Resident;
 
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -18,7 +19,10 @@ class WelcomeMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(public User $user) {}
+    public function __construct(public User $user)
+    {
+        $this->onQueue(Queues::MAIL);
+    }
 
     /**
      * Get the message envelope.
