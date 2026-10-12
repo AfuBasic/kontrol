@@ -3,6 +3,7 @@
 namespace App\Mail\Auth;
 
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -17,7 +18,9 @@ class LoginOtpMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public string $code,
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     public function envelope(): Envelope
     {
