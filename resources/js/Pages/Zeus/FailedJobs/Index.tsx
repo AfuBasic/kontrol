@@ -13,6 +13,7 @@ import { forget, index, retry } from '@/actions/App/Http/Controllers/Zeus/Failed
 import ConfirmActionModal, { type PendingAction } from '@/Components/Zeus/FailedJobs/ConfirmActionModal';
 import FailedJobModal from '@/Components/Zeus/FailedJobs/FailedJobModal';
 import type { FailedJob, Paginated, Summary } from '@/Components/Zeus/FailedJobs/types';
+import StatTile from '@/Components/Zeus/StatTile';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 type Props = {
@@ -107,19 +108,19 @@ export default function FailedJobsIndex({ filters, jobs, summary }: Props) {
                 </div>
 
                 <div className="mt-6 grid grid-cols-3 gap-4">
-                    <Tile
+                    <StatTile
                         label="Failed jobs"
                         value={String(summary.total)}
                         tone={summary.total > 0 ? 'text-white' : 'text-emerald-300'}
                         sub={summary.total > 0 ? 'Waiting for a decision' : 'Nothing is stuck'}
                     />
-                    <Tile
+                    <StatTile
                         label="Failed in the last 24 hours"
                         value={String(summary.last_24h)}
                         tone={summary.last_24h > 0 ? 'text-rose-300' : 'text-emerald-300'}
                         sub={summary.last_24h > 0 ? 'Something is failing right now' : 'Quiet'}
                     />
-                    <Tile
+                    <StatTile
                         label="Oldest failure"
                         value={ago(summary.oldest_at)}
                         tone="text-white"
@@ -300,16 +301,6 @@ export default function FailedJobsIndex({ filters, jobs, summary }: Props) {
             />
             <ConfirmActionModal pending={pending} busy={busy} onCancel={() => setPending(null)} onConfirm={confirm} />
         </ZeusLayout>
-    );
-}
-
-function Tile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: string }) {
-    return (
-        <div className="rounded-2xl border border-slate-800/70 bg-[#0f1423] p-5">
-            <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
-            <p className={`mt-2 text-3xl font-black tracking-tight tabular-nums ${tone}`}>{value}</p>
-            <p className="mt-1 text-xs text-slate-500">{sub}</p>
-        </div>
     );
 }
 
