@@ -3,6 +3,7 @@
 namespace App\Jobs\Compliance;
 
 use App\Services\Compliance\ComplianceEngine;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,7 +23,9 @@ class EvaluateViolationsJob implements ShouldQueue
 
     public function __construct(
         public ?int $estateId = null
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(ComplianceEngine $engine): void
     {
