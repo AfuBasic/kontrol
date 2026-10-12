@@ -2,6 +2,7 @@
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
@@ -59,16 +60,16 @@ it('lists failed jobs newest first with readable names, errors and a summary', f
     ($this->failJob)(['class' => 'App\Jobs\Newest', 'failed_at' => now()->subMinute(), 'queue' => 'emails']);
     ($this->failJob)(['class' => 'App\Jobs\Middle', 'failed_at' => now()->subHours(30)]);
 
-    ($this->zeus)()->get(route('zeus.failed-jobs.index'))
+    ($this->zeus)()->get(route('zeus.failed-jobs.index', ['tab' => 'jobs']))
         ->assertInertia(fn ($page) => $page
             ->component('Zeus/FailedJobs/Index')
             ->where('jobs.data', fn ($rows) => collect($rows)->pluck('job')->all() === ['Newest', 'Middle', 'Older'])
             ->where('jobs.data.0.queue', 'emails')
             ->where('jobs.data.0.error', 'RuntimeException: Something broke in /app/app/Jobs/ProcessThing.php:42')
             ->where('jobs.data.0.exception_class', 'RuntimeException')
-            ->where('summary.total', 3)
-            ->where('summary.last_24h', 1)
-            ->where('summary.oldest_at', fn ($v) => $v !== null)
+            ->where('overview.summary.total', 3)
+            ->where('overview.summary.last_24h', 1)
+            ->where('overview.summary.oldest_at', fn ($v) => $v !== null)
         );
 });
 
@@ -80,7 +81,7 @@ it('names a queued notification by the notification inside it, and warns that re
     ]);
     ($this->failJob)(['class' => 'App\Jobs\RecalculateThing']);
 
-    ($this->zeus)()->get(route('zeus.failed-jobs.index'))
+    ($this->zeus)()->get(route('zeus.failed-jobs.index', ['tab' => 'jobs']))
         ->assertInertia(fn ($page) => $page
             ->where('jobs.data', function ($rows) {
                 $byName = collect($rows)->keyBy('job');
@@ -98,7 +99,7 @@ it('searches by job name or error, treating wildcards as plain text', function (
     ($this->failJob)(['class' => 'App\Jobs\Other', 'exception' => "LogicException: 100% broken\n#0"]);
     ($this->failJob)(['class' => 'App\Jobs\Third', 'exception' => "LogicException: fine\n#0"]);
 
-    $count = fn (string $search) => ($this->zeus)()->get(route('zeus.failed-jobs.index', ['search' => $search]))->viewData('page')['props']['jobs']['total'];
+    $count = fn (string $search) => ($this->zeus)()->get(route('zeus.failed-jobs.index', ['tab' => 'jobs', 'search' => $search]))->viewData('page')['props']['jobs']['total'];
 
     expect($count('SendInvoice'))->toBe(1)
         ->and($count('SMTP'))->toBe(1)
@@ -112,7 +113,7 @@ it('pages through many failed jobs without repeating one', function () {
         ($this->failJob)(['class' => "App\\Jobs\\Job{$i}", 'failed_at' => now()->subSeconds(60 - $i)]);
     }
 
-    $page = fn (int $n) => collect(($this->zeus)()->get(route('zeus.failed-jobs.index', ['page' => $n]))->viewData('page')['props']['jobs']['data'])->pluck('uuid');
+    $page = fn (int $n) => collect(($this->zeus)()->get(route('zeus.failed-jobs.index', ['tab' => 'jobs', 'page' => $n]))->viewData('page')['props']['jobs']['data'])->pluck('uuid');
 
     expect($page(1))->toHaveCount(25)
         ->and($page(2))->toHaveCount(5)
@@ -196,4 +197,137 @@ it('prunes old failed jobs on a schedule', function () {
     $events = collect(app(Schedule::class)->events())->pluck('command')->implode("\n");
 
     expect($events)->toContain('queue:prune-failed');
+});
+
+// ---------- The metrics ----------
+
+it('counts failures in the chosen range and the range before it, so a trend can be shown', function () {
+    ($this->failJob)(['failed_at' => now()->subHours(2)]);
+    ($this->failJob)(['failed_at' => now()->subHours(30)]);
+    ($this->failJob)(['failed_at' => now()->subDays(3)]);
+    ($this->failJob)(['failed_at' => now()->subDays(10)]);
+
+    $summary = fn (string $range) => ($this->zeus)()->get(route('zeus.failed-jobs.index', ['range' => $range]))->viewData('page')['props']['overview']['summary'];
+
+    expect($summary('24h'))->toMatchArray(['total' => 4, 'in_range' => 1, 'before_range' => 1])
+        ->and($summary('7d'))->toMatchArray(['in_range' => 3, 'before_range' => 1])
+        ->and($summary('30d')['in_range'])->toBe(4);
+
+    ($this->zeus)()->get(route('zeus.failed-jobs.index', ['range' => 'forever']))->assertSessionHasErrors('range');
+});
+
+it('charts failures per bar, empty bars included, oldest first', function () {
+    ($this->failJob)(['failed_at' => now()->subMinutes(5)]);
+    ($this->failJob)(['failed_at' => now()->subMinutes(6)]);
+    ($this->failJob)(['failed_at' => now()->subDays(2)]);
+
+    $series = fn (string $range) => ($this->zeus)()->get(route('zeus.failed-jobs.index', ['range' => $range]))->viewData('page')['props']['overview']['series'];
+
+    expect($series('24h'))->toHaveCount(24)
+        ->and(collect($series('24h'))->sum('failed'))->toBe(2)
+        ->and($series('7d'))->toHaveCount(7)
+        ->and(collect($series('7d'))->sum('failed'))->toBe(3)
+        ->and($series('30d'))->toHaveCount(30)
+        ->and(collect($series('7d'))->pluck('at')->all())->toBe(collect($series('7d'))->pluck('at')->sort()->values()->all());
+});
+
+it('groups failures by what broke, biggest first, and flags causes that message people', function () {
+    foreach (range(1, 3) as $i) {
+        ($this->failJob)(['class' => 'App\Jobs\ChargeThing', 'exception' => "GuzzleHttp\\Exception\\ConnectException: timed out {$i}\n#0 {main}"]);
+    }
+    ($this->failJob)(['class' => 'App\Jobs\ChargeThing', 'exception' => "RuntimeException: bad card\n#0 {main}"]);
+    ($this->failJob)(['class' => 'App\Jobs\SendSmsAlert', 'queue' => 'critical', 'exception' => "RuntimeException: sms down\n#0 {main}"]);
+
+    $overview = ($this->zeus)()->get(route('zeus.failed-jobs.index'))->viewData('page')['props']['overview'];
+    $causes = collect($overview['causes']);
+
+    expect($causes)->toHaveCount(3)
+        ->and($causes[0])->toMatchArray(['job' => 'ChargeThing', 'count' => 3, 'exception_class' => 'GuzzleHttp\Exception\ConnectException', 'repeats_messages' => false])
+        ->and($causes->firstWhere('job', 'SendSmsAlert'))->toMatchArray(['count' => 1, 'repeats_messages' => true, 'queues' => ['critical']])
+        ->and($overview['summary']['repeat_risk'])->toBe(1)
+        ->and(collect($overview['queues'])->pluck('count', 'name')->all())->toBe(['default' => 4, 'critical' => 1]);
+});
+
+it('names a queued notification by the notification inside it when grouping', function () {
+    ($this->failJob)([
+        'payload' => json_encode([
+            'uuid' => (string) Str::uuid(),
+            'displayName' => 'Illuminate\Notifications\SendQueuedNotifications',
+            'data' => ['command' => 'O:48:"Illuminate\Notifications\SendQueuedNotifications":1:{s:12:"notification";O:35:"App\Notifications\InvoicePaidNotice":0:{}}'],
+        ]),
+    ]);
+
+    expect(($this->zeus)()->get(route('zeus.failed-jobs.index'))->viewData('page')['props']['overview']['causes'][0]['job'])->toBe('InvoicePaidNotice');
+});
+
+it('says whether to worry: fine, waiting for a decision, failing now, or failing in a burst', function () {
+    $health = fn () => ($this->zeus)()->get(route('zeus.failed-jobs.index'))->viewData('page')['props']['overview']['health'];
+
+    expect($health()['level'])->toBe('ok');
+
+    ($this->failJob)(['failed_at' => now()->subDays(2)]);
+    expect($health()['level'])->toBe('attention')->and($health()['message'])->toContain('waiting for a decision');
+
+    ($this->failJob)(['failed_at' => now()->subMinutes(5)]);
+    expect($health()['level'])->toBe('attention')->and($health()['message'])->toContain('last hour');
+
+    foreach (range(1, 9) as $i) {
+        ($this->failJob)(['failed_at' => now()->subMinutes(10)]);
+    }
+    expect($health()['level'])->toBe('down');
+});
+
+it('filters the list by queue and pages by 25, 50 or 100', function () {
+    foreach (range(1, 60) as $i) {
+        ($this->failJob)(['queue' => $i <= 3 ? 'critical' : 'default', 'failed_at' => now()->subMinutes($i)]);
+    }
+
+    $jobs = fn (array $query) => ($this->zeus)()->get(route('zeus.failed-jobs.index', [...$query, 'tab' => 'jobs']))->viewData('page')['props']['jobs'];
+
+    expect($jobs(['queue' => 'critical'])['total'])->toBe(3)
+        ->and($jobs([])['data'])->toHaveCount(25)
+        ->and($jobs(['per_page' => 50])['data'])->toHaveCount(50)
+        ->and($jobs(['per_page' => 100])['data'])->toHaveCount(60);
+
+    ($this->zeus)()->get(route('zeus.failed-jobs.index', ['per_page' => 7]))->assertSessionHasErrors('per_page');
+});
+
+it('answers a live refresh of only the figures and the list', function () {
+    ($this->failJob)();
+    $version = ($this->zeus)()->get(route('zeus.failed-jobs.index'))->viewData('page')['version'];
+
+    ($this->zeus)()->withHeaders([
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => $version,
+        'X-Inertia-Partial-Component' => 'Zeus/FailedJobs/Index',
+        'X-Inertia-Partial-Data' => 'overview,jobs',
+    ])->get(route('zeus.failed-jobs.index', ['tab' => 'jobs']))
+        ->assertOk()
+        ->assertJsonPath('props.overview.summary.total', 1)
+        ->assertJsonMissingPath('props.limits');
+});
+
+it('shows a retry or forget in the figures straight away even when they are cached', function () {
+    config(['queue.history.overview_cache_seconds' => 60]);
+    Cache::flush();
+    $uuid = ($this->failJob)();
+
+    $total = fn () => ($this->zeus)()->get(route('zeus.failed-jobs.index'))->viewData('page')['props']['overview']['summary']['total'];
+    expect($total())->toBe(1);
+
+    ($this->zeus)()->post(route('zeus.failed-jobs.forget'), ['ids' => [$uuid]]);
+
+    expect($total())->toBe(0);
+});
+
+it('opens on the overview without reading the list, and reads it only on the jobs tab', function () {
+    ($this->failJob)();
+
+    $props = fn (array $query) => ($this->zeus)()->get(route('zeus.failed-jobs.index', $query))->viewData('page')['props'];
+
+    expect($props([])['jobs'] ?? null)->toBeNull()
+        ->and($props([])['filters']['tab'])->toBe('overview')
+        ->and($props(['tab' => 'jobs'])['jobs']['total'])->toBe(1);
+
+    ($this->zeus)()->get(route('zeus.failed-jobs.index', ['tab' => 'runs']))->assertSessionHasErrors('tab');
 });

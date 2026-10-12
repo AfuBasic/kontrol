@@ -5,7 +5,7 @@ import type { Range, SeriesPoint } from './types';
 
 type Props = { series: SeriesPoint[]; range: Range };
 
-const UNIT: Record<Range, string> = { '1h': 'Each bar is 5 minutes.', '24h': 'Each bar is one hour.', '7d': 'Each bar is one day.' };
+const UNIT: Record<Range, string> = { '1h': 'Each bar is one minute.', '24h': 'Each bar is one hour.', '7d': 'Each bar is one day.' };
 
 /** Jobs finished per bar, split into worked and failed, next to how long the ones that worked took. */
 export default function JobCharts({ series, range }: Props) {
@@ -39,9 +39,9 @@ export default function JobCharts({ series, range }: Props) {
                                     fill="#34d399"
                                     radius={[0, 0, 0, 0]}
                                     maxBarSize={26}
-                                    isAnimationActive={false}
+                                    isAnimationActive animationDuration={350}
                                 />
-                                <Bar dataKey="failed" stackId="runs" fill="#fb7185" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+                                <Bar dataKey="failed" stackId="runs" fill="#fb7185" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive animationDuration={350} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -85,7 +85,7 @@ export default function JobCharts({ series, range }: Props) {
                                     strokeWidth={2}
                                     fill="url(#jobTime)"
                                     connectNulls
-                                    isAnimationActive={false}
+                                    isAnimationActive animationDuration={350}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
