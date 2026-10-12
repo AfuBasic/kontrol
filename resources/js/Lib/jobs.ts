@@ -32,3 +32,20 @@ export const STATUS_STYLE: Record<RunStatus, { label: string; chip: string }> = 
     running: { label: 'Running', chip: 'bg-sky-500/15 text-sky-300' },
     lost: { label: 'Stopped midway', chip: 'bg-orange-500/15 text-orange-300' },
 };
+
+/** The label under one chart bar: a clock time for the hour and day views, a weekday and date for the week. */
+export function formatBucket(iso: string, range: '1h' | '24h' | '7d'): string {
+    const date = new Date(iso);
+
+    return range === '7d'
+        ? date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })
+        : date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** "just now", "12 s ago", "3 min ago": how old the live figures are. */
+export function formatAge(seconds: number): string {
+    if (seconds < 5) return 'just now';
+    if (seconds < 60) return `${Math.floor(seconds)} s ago`;
+
+    return `${Math.floor(seconds / 60)} min ago`;
+}
