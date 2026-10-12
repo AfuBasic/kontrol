@@ -5,12 +5,15 @@ namespace App\Listeners;
 use App\Events\Billing\InvoiceGenerated;
 use App\Mail\SendInvoiceMail;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 
 class SendInvoiceGeneratedEmail implements ShouldQueue
 {
+    public string $queue = Queues::MAIL;
+
     use InteractsWithQueue;
 
     /**
