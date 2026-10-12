@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\FailedJobIdsRequest;
+use App\Http\Requests\Zeus\FailedJobIndexRequest;
 use App\Services\Zeus\FailedJobService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,14 +15,15 @@ class FailedJobController extends Controller
 {
     public function __construct(private FailedJobService $failedJobs) {}
 
-    public function index(Request $request): Response
+    public function index(FailedJobIndexRequest $request): Response
     {
-        $search = trim($request->string('search')->toString());
+        $filters = $request->filters();
 
         return Inertia::render('Zeus/FailedJobs/Index', [
-            'filters' => ['search' => $search !== '' ? $search : null],
-            'jobs' => $this->failedJobs->paginate(['search' => $search !== '' ? $search : null]),
-            'summary' => $this->failedJobs->summary(),
+            'filters' => $filters,
+            // Closures, so the live refresh can ask for just these two without paying for the rest.
+            'jobs' => fn () => $this->failedJobs->paginate($filters, $filters['per_page']),
+            'overview' => fn () => $this->failedJobs->overview($filters['range']),
             'limits' => ['max_at_once' => FailedJobIdsRequest::MAX_AT_ONCE],
         ]);
     }
