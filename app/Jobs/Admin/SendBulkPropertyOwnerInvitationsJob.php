@@ -5,6 +5,7 @@ namespace App\Jobs\Admin;
 use App\Mail\Admin\PropertyOwnerInvitationMail;
 use App\Models\Estate;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,7 +28,9 @@ class SendBulkPropertyOwnerInvitationsJob implements ShouldQueue
     public function __construct(
         public array $userIds,
         public int $estateId,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {
