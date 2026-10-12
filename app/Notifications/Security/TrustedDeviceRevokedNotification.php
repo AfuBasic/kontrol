@@ -3,6 +3,7 @@
 namespace App\Notifications\Security;
 
 use App\Models\TrustedDevice;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -15,7 +16,10 @@ class TrustedDeviceRevokedNotification extends Notification implements ShouldQue
 
     public bool $deleteWhenMissingModels = true;
 
-    public function __construct(public TrustedDevice $device) {}
+    public function __construct(public TrustedDevice $device)
+    {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * @return array<int, string>
