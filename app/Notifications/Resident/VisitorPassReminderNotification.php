@@ -5,6 +5,7 @@ namespace App\Notifications\Resident;
 use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
 use App\Models\VisitorPassReminder;
+use App\Support\Queues;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,7 +24,9 @@ class VisitorPassReminderNotification extends Notification implements ShouldQueu
     public function __construct(
         public VisitorPassReminder $reminder,
         public AccessCode $accessCode
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * @return array<int, string>
