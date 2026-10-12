@@ -10,6 +10,7 @@ import {
     ChatBubbleBottomCenterTextIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
+    ClipboardDocumentListIcon,
     Cog6ToothIcon,
     CurrencyDollarIcon,
     InboxStackIcon,
@@ -60,6 +61,7 @@ const baseNavItems: NavItem[] = [
     { name: 'Feedback', href: '/zeus/feedback', icon: ChatBubbleBottomCenterTextIcon },
     { name: 'Error Logs', href: '/zeus/error-logs', icon: BugAntIcon },
     { name: 'Failed Jobs', href: '/zeus/failed-jobs', icon: QueueListIcon },
+    { name: 'Job History', href: '/zeus/job-history', icon: ClipboardDocumentListIcon },
     { name: 'Settings', href: '/zeus/settings', icon: Cog6ToothIcon },
 ];
 
