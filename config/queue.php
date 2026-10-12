@@ -147,6 +147,9 @@ return [
     'history' => [
         'enabled' => (bool) env('JOB_HISTORY_ENABLED', true),
         'retention_days' => (int) env('JOB_HISTORY_RETENTION_DAYS', 14),
+        // How long the Job History page's live figures are reused. The page polls every few seconds; this keeps
+        // several open tabs from each running the same queries. 0 turns it off.
+        'overview_cache_seconds' => (int) env('JOB_HISTORY_CACHE_SECONDS', 4),
     ],
 
     'failed' => [
