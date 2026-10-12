@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Actions\Organization\RenewOrganizationCredentialAction;
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
+use App\Support\Queues;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -19,6 +20,11 @@ class RenewExpiringOrganizationCredentials implements ShouldQueue
 
     /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
     public int $timeout = 600;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     /**
      * Execute the job.
