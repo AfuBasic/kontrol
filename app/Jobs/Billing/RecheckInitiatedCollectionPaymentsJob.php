@@ -5,6 +5,7 @@ namespace App\Jobs\Billing;
 use App\Models\Payment;
 use App\Services\Billing\CollectionPaymentSettler;
 use App\Services\PaystackService;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +33,11 @@ class RecheckInitiatedCollectionPaymentsJob implements ShouldQueue
     public int $tries = 1;
 
     public int $timeout = 600;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::PAYMENTS);
+    }
 
     public function handle(PaystackService $paystack, CollectionPaymentSettler $settler): void
     {
