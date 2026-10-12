@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Estate;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -21,7 +22,9 @@ class VerifyResidentEmail extends Notification implements ShouldQueue
 
     public function __construct(
         public Estate $estate
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * Get the notification's delivery channels.
