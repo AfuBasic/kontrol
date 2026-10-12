@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\EstateApplication;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -18,7 +19,10 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(private EstateApplication $application) {}
+    public function __construct(private EstateApplication $application)
+    {
+        $this->onQueue(Queues::MAIL);
+    }
 
     /**
      * Get the message envelope.
