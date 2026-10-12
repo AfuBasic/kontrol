@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Invoice;
+use App\Support\Queues;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +21,9 @@ class SendInvoiceMail extends Mailable implements ShouldQueue
 
     public function __construct(
         public Invoice $invoice,
-    ) {}
+    ) {
+        $this->onQueue(Queues::MAIL);
+    }
 
     public function envelope(): Envelope
     {
