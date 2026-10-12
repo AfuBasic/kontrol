@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Zeus\ClearJobHistoryRequest;
 use App\Http\Requests\Zeus\JobHistoryRequest;
 use App\Services\Zeus\JobHistoryService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,10 +20,25 @@ class JobHistoryController extends Controller
 
         return Inertia::render('Zeus/JobHistory/Index', [
             'filters' => $filters,
-            'runs' => $this->history->paginate($filters),
-            'summary' => $this->history->summary(),
+            // Closures, so the live refresh can ask for just these two without paying for the rest.
+            'runs' => fn () => $this->history->paginate($filters, $filters['per_page']),
+            'overview' => fn () => $this->history->overview($filters['range']),
             'retention_days' => (int) config('queue.history.retention_days'),
             'recording' => (bool) config('queue.history.enabled'),
         ]);
+    }
+
+    public function clear(ClearJobHistoryRequest $request): RedirectResponse
+    {
+        $scope = $request->scope();
+        $deleted = $this->history->clear($scope);
+
+        activity('zeus')
+            ->withProperties(['actor' => 'zeus', 'scope' => $scope, 'deleted' => $deleted])
+            ->log('Job history cleared');
+
+        return back()->with('success', $deleted === 0
+            ? 'There was nothing to clear.'
+            : 'Cleared '.number_format($deleted).($deleted === 1 ? ' run' : ' runs').' from the job history.');
     }
 }
