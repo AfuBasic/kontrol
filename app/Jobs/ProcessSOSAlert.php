@@ -6,6 +6,7 @@ use App\Auth\ContextManager;
 use App\Models\SosEvent;
 use App\Models\User;
 use App\Notifications\Admin\SosIntrusionNotification;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,10 @@ class ProcessSOSAlert implements ShouldQueue
 
     public int $backoff = 30;
 
-    public function __construct(public SosEvent $sosEvent) {}
+    public function __construct(public SosEvent $sosEvent)
+    {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     public function handle(): void
     {
