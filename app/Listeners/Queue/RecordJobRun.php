@@ -30,6 +30,7 @@ class RecordJobRun
                 'job_name' => Str::limit(class_basename($name['class']), 150, ''),
                 'queue' => $job->getQueue(),
                 'connection' => $event->connectionName,
+                'worker' => $this->worker(),
                 'attempt' => $job->attempts(),
                 'status' => JobRun::RUNNING,
                 'started_at' => now(),
@@ -77,6 +78,7 @@ class RecordJobRun
                     'job_class' => Str::limit($name['class'], 250, ''),
                     'job_name' => Str::limit(class_basename($name['class']), 150, ''),
                     'queue' => $job->getQueue(),
+                    'worker' => $this->worker(),
                     'attempt' => $job->attempts(),
                     'started_at' => now(),
                 ]);
@@ -90,6 +92,12 @@ class RecordJobRun
                 'error' => $exception ? Str::limit(Str::before($exception::class.': '.$exception->getMessage(), "\n"), 300, '') : null,
             ])->save();
         });
+    }
+
+    /** The supervisor name of this worker (worker-heavy_00), or host and process id where there is no supervisor. */
+    private function worker(): string
+    {
+        return Str::limit((string) (getenv('SUPERVISOR_PROCESS_NAME') ?: gethostname().':'.getmypid()), 100, '');
     }
 
     private function uuid(Job $job): ?string
