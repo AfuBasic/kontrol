@@ -26,14 +26,32 @@ class SendVisitorPassRemindersJob implements ShouldQueue
      */
     public function handle(VisitorPassReminderService $reminderService): void
     {
+        $startedAt = hrtime(true);
         $dueReminders = $reminderService->claimDueReminders(50);
 
-        foreach ($dueReminders as $reminder) {
-            $this->processReminder($reminder);
+        // Most minutes have nothing due, so say nothing then.
+        if ($dueReminders->isEmpty()) {
+            return;
         }
+
+        $outcomes = ['sent' => 0, 'cancelled' => 0, 'failed' => 0];
+
+        foreach ($dueReminders as $reminder) {
+            $outcomes[$this->processReminder($reminder)]++;
+        }
+
+        // Job History records how long a run took but not how much work it did; this line says what a slow run was doing.
+        Log::info('Visitor pass reminders processed', [
+            'claimed' => $dueReminders->count(),
+            ...$outcomes,
+            'duration_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
+        ]);
     }
 
-    private function processReminder(VisitorPassReminder $reminder): void
+    /**
+     * @return 'sent'|'cancelled'|'failed'
+     */
+    private function processReminder(VisitorPassReminder $reminder): string
     {
         $accessCode = $reminder->accessCode;
         $user = $reminder->user;
@@ -42,31 +60,33 @@ class SendVisitorPassRemindersJob implements ShouldQueue
         if (! $accessCode || ! $user) {
             $reminder->cancel();
 
-            return;
+            return 'cancelled';
         }
 
         if (! in_array($accessCode->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled], true)) {
             $reminder->cancel();
 
-            return;
+            return 'cancelled';
         }
 
         if ($accessCode->revoked_at !== null || $accessCode->used_at !== null || $accessCode->isExpired()) {
             $reminder->cancel();
 
-            return;
+            return 'cancelled';
         }
 
         // Verify that the pass validity start has not already arrived/passed
         if ($accessCode->starts_at && $accessCode->starts_at->isPast()) {
             $reminder->cancel();
 
-            return;
+            return 'cancelled';
         }
 
         try {
             $user->notify(new VisitorPassReminderNotification($reminder, $accessCode));
             $reminder->markAsSent();
+
+            return 'sent';
         } catch (Throwable $e) {
             Log::error('Failed to dispatch visitor pass reminder notification', [
                 'reminder_id' => $reminder->id,
@@ -76,6 +96,8 @@ class SendVisitorPassRemindersJob implements ShouldQueue
             ]);
 
             $reminder->markAsFailed();
+
+            return 'failed';
         }
     }
 
