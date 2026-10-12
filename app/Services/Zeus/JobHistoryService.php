@@ -24,7 +24,7 @@ class JobHistoryService
 
     /** Each range: how far back it looks, and how long one bar of the charts is. */
     public const RANGES = [
-        '1h' => ['seconds' => 3600, 'bucket' => 300],
+        '1h' => ['seconds' => 3600, 'bucket' => 60],
         '24h' => ['seconds' => 86_400, 'bucket' => 3600],
         '7d' => ['seconds' => 604_800, 'bucket' => 86_400],
     ];
