@@ -14,6 +14,7 @@ use App\Http\Controllers\Zeus\FailedJobController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\FeedbackController;
 use App\Http\Controllers\Zeus\ImpersonationController;
+use App\Http\Controllers\Zeus\JobHistoryController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
 use App\Http\Controllers\Zeus\NotificationController;
 use App\Http\Controllers\Zeus\PartnerController;
@@ -117,6 +118,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
             ->withTrashed()
             ->name('applications.destroy');
+
+        // Job history: every queue attempt, since Laravel deletes a job the moment it succeeds.
+        Route::get('/job-history', [JobHistoryController::class, 'index'])->name('job-history.index');
 
         // Failed queue jobs: review, retry (one or a few, never blindly all) or forget, without a shell.
         Route::get('/failed-jobs', [FailedJobController::class, 'index'])->name('failed-jobs.index');
