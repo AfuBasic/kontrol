@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInviteRecipient;
 use App\Services\Visitor\BulkInvitePdfService;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -31,6 +32,7 @@ class BulkVisitorPassMail extends Mailable
         public ?string $pdfContents = null,
         public ?OrganizationBulkInviteRecipient $recipient = null,
     ) {
+        $this->onQueue(Queues::MAIL);
         $this->passUrl = route('public.pass', ['uuid' => $this->accessCode->pass_uuid]);
     }
 
