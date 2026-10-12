@@ -6,6 +6,7 @@ use App\Mail\BulkVisitorPassMail;
 use App\Models\AccessCode;
 use App\Models\OrganizationBulkInviteRecipient;
 use App\Services\Visitor\BulkInvitePdfService;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,9 @@ class DeliverBulkVisitorPassJob implements ShouldQueue
     public function __construct(
         public int $accessCodeId,
         public ?int $recipientId = null,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     /**
      * Execute the job.
