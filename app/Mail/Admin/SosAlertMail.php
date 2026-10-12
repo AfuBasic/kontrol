@@ -3,6 +3,7 @@
 namespace App\Mail\Admin;
 
 use App\Models\SosEvent;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,7 +17,9 @@ class SosAlertMail extends Mailable implements ShouldQueue
 
     public function __construct(
         public SosEvent $sosEvent
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     public function envelope(): Envelope
     {
