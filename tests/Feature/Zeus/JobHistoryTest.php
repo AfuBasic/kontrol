@@ -6,9 +6,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
 
@@ -159,12 +161,12 @@ it('summarises the last 24 hours: counts, success rate and average time of the j
     ($this->zeus)()->get(route('zeus.job-history.index'))
         ->assertInertia(fn ($page) => $page
             ->component('Zeus/JobHistory/Index')
-            ->where('summary.ran', 4)
-            ->where('summary.succeeded', 2)
-            ->where('summary.failed', 1)
-            ->where('summary.retrying', 1)
-            ->where('summary.success_rate', 50)
-            ->where('summary.avg_duration_ms', 200)
+            ->where('overview.summary.ran', 4)
+            ->where('overview.summary.succeeded', 2)
+            ->where('overview.summary.failed', 1)
+            ->where('overview.summary.retrying', 1)
+            ->where('overview.summary.success_rate', 50)
+            ->where('overview.summary.avg_duration_ms', 200)
         );
 });
 
@@ -176,29 +178,29 @@ it('reports what is waiting in the queue right now, and flags a stalled worker',
 
     ($this->zeus)()->get(route('zeus.job-history.index'))
         ->assertInertia(fn ($page) => $page
-            ->where('summary.queue.waiting', 2)
-            ->where('summary.queue.scheduled', 1)
-            ->where('summary.queue.running', 1)
-            ->where('summary.queue.oldest_waiting_seconds', fn ($s) => $s >= 599 && $s <= 605)
-            ->where('summary.queue.stalled', true)
+            ->where('overview.summary.queue.waiting', 2)
+            ->where('overview.summary.queue.scheduled', 1)
+            ->where('overview.summary.queue.running', 1)
+            ->where('overview.summary.queue.oldest_waiting_seconds', fn ($s) => $s >= 599 && $s <= 605)
+            ->where('overview.summary.queue.stalled', true)
         );
 });
 
 it('does not call the queue stalled when the oldest waiting job is recent, or the queue is empty', function () {
     ($this->zeus)()->get(route('zeus.job-history.index'))
-        ->assertInertia(fn ($page) => $page->where('summary.queue.waiting', 0)->where('summary.queue.stalled', false)->where('summary.queue.oldest_waiting_seconds', fn ($s) => $s === null));
+        ->assertInertia(fn ($page) => $page->where('overview.summary.queue.waiting', 0)->where('overview.summary.queue.stalled', false)->where('overview.summary.queue.oldest_waiting_seconds', fn ($s) => $s === null));
 
     ($this->queueRow)(['available_at' => time() - 30]);
 
     ($this->zeus)()->get(route('zeus.job-history.index'))
-        ->assertInertia(fn ($page) => $page->where('summary.queue.waiting', 1)->where('summary.queue.stalled', false));
+        ->assertInertia(fn ($page) => $page->where('overview.summary.queue.waiting', 1)->where('overview.summary.queue.stalled', false));
 });
 
 it('has no queue figures when the queue is not the database one', function () {
     config(['queue.default' => 'sync']);
 
     ($this->zeus)()->get(route('zeus.job-history.index'))
-        ->assertInertia(fn ($page) => $page->where('summary.queue', fn ($q) => $q === null));
+        ->assertInertia(fn ($page) => $page->where('overview.summary.queue', fn ($q) => $q === null));
 });
 
 it('lists runs newest first and tells a job still running from one whose worker stopped', function () {
@@ -274,4 +276,253 @@ it('prunes job history on the daily schedule', function () {
     $events = collect(app(Schedule::class)->events())->map(fn ($e) => $e->command)->implode("\n");
 
     expect($events)->toContain('model:prune')->and($events)->toContain('JobRun');
+});
+
+// ---------- The operations view ----------
+
+it('records which worker ran an attempt', function () {
+    putenv('SUPERVISOR_PROCESS_NAME=worker-heavy_00');
+
+    dispatch(new JobHistoryOkJob);
+    ($this->work)();
+
+    putenv('SUPERVISOR_PROCESS_NAME');
+
+    expect(JobRun::query()->value('worker'))->toBe('worker-heavy_00');
+});
+
+it('charts the chosen range in bars, empty ones included, oldest first', function () {
+    ($this->run_)(['started_at' => now()->subMinutes(2), 'duration_ms' => 200]);
+    ($this->run_)(['started_at' => now()->subMinutes(3), 'duration_ms' => 400]);
+    ($this->run_)(['status' => 'failed', 'started_at' => now()->subMinutes(2)]);
+    ($this->run_)(['started_at' => now()->subHours(3)]);
+
+    $series = fn (string $range) => ($this->zeus)()->get(route('zeus.job-history.index', ['range' => $range]))->viewData('page')['props']['overview']['series'];
+
+    expect($series('1h'))->toHaveCount(12)
+        ->and(collect($series('1h'))->sum('succeeded'))->toBe(2)   // the 3-hour-old run is outside the hour
+        ->and(collect($series('1h'))->sum('failed'))->toBe(1)
+        ->and($series('24h'))->toHaveCount(24)
+        ->and(collect($series('24h'))->sum('succeeded'))->toBe(3)
+        ->and($series('7d'))->toHaveCount(7)
+        ->and(collect($series('24h'))->pluck('at')->all())->toBe(collect($series('24h'))->pluck('at')->sort()->values()->all());
+});
+
+it('adds the figures of a range, not always the last 24 hours', function () {
+    ($this->run_)(['started_at' => now()->subMinutes(10)]);
+    ($this->run_)(['started_at' => now()->subHours(5)]);
+    ($this->run_)(['started_at' => now()->subDays(3)]);
+
+    $ran = fn (string $range) => ($this->zeus)()->get(route('zeus.job-history.index', ['range' => $range]))->viewData('page')['props']['overview']['summary']['ran'];
+
+    expect($ran('1h'))->toBe(1)->and($ran('24h'))->toBe(2)->and($ran('7d'))->toBe(3);
+
+    ($this->zeus)()->get(route('zeus.job-history.index', ['range' => 'forever']))->assertSessionHasErrors('range');
+});
+
+it('splits the queue by queue name, including queues the app does not define', function () {
+    ($this->queueRow)(['queue' => 'critical', 'available_at' => time() - 10]);
+    ($this->queueRow)(['queue' => 'heavy', 'available_at' => time() - 20]);
+    ($this->queueRow)(['queue' => 'heavy', 'available_at' => time() + 600]);
+    ($this->queueRow)(['queue' => 'ghost', 'available_at' => time() - 10]);
+    ($this->run_)(['queue' => 'heavy', 'duration_ms' => 3000]);
+    ($this->run_)(['queue' => 'heavy', 'status' => 'failed']);
+
+    $queues = collect(($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['queues'])->keyBy('name');
+
+    expect($queues->keys()->all())->toContain('critical', 'payments', 'mail', 'heavy', 'default', 'ghost')
+        ->and($queues['critical']['waiting'])->toBe(1)
+        ->and($queues['heavy']['waiting'])->toBe(1)
+        ->and($queues['heavy']['scheduled'])->toBe(1)
+        ->and($queues['heavy']['ran'])->toBe(2)
+        ->and($queues['heavy']['failed'])->toBe(1)
+        ->and($queues['heavy']['avg_duration_ms'])->toBe(3000)
+        ->and($queues['mail']['waiting'])->toBe(0)
+        ->and($queues['ghost']['known'])->toBeFalse()
+        ->and($queues['heavy']['known'])->toBeTrue();
+});
+
+it('says whether to worry: fine, a queue nobody reads, a stuck queue, or too many failures', function () {
+    $health = fn () => ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['health'];
+
+    expect($health()['level'])->toBe('ok');
+
+    ($this->queueRow)(['queue' => 'ghost', 'available_at' => time() - 10]);
+    expect($health()['level'])->toBe('attention')->and($health()['message'])->toContain('ghost');
+
+    DB::table('jobs')->delete();
+    foreach (range(1, 2) as $i) {
+        ($this->run_)();
+    }
+    foreach (range(1, 2) as $i) {
+        ($this->run_)(['status' => 'failed']);
+    }
+    expect($health()['level'])->toBe('attention')->and($health()['message'])->toContain('failed');
+
+    ($this->queueRow)(['queue' => 'mail', 'available_at' => time() - 900]);
+    expect($health()['level'])->toBe('down')->and($health()['message'])->toContain('mail');
+});
+
+it('lists the workers seen, what they ran, and whether one is busy now', function () {
+    ($this->run_)(['worker' => 'worker-heavy_00', 'queue' => 'heavy']);
+    ($this->run_)(['worker' => 'worker-heavy_00', 'queue' => 'heavy', 'status' => 'failed']);
+    ($this->run_)(['worker' => 'worker-heavy_00', 'queue' => 'heavy', 'status' => 'running', 'finished_at' => null, 'duration_ms' => null]);
+    ($this->run_)(['worker' => 'worker-mail_00', 'queue' => 'mail', 'started_at' => now()->subHours(2)]);
+    ($this->run_)(['worker' => null]);
+
+    $workers = collect(($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['workers'])->keyBy('name');
+
+    expect($workers->keys()->all())->toBe(['worker-heavy_00', 'worker-mail_00'])
+        ->and($workers['worker-heavy_00']['runs'])->toBe(2)
+        ->and($workers['worker-heavy_00']['failed'])->toBe(1)
+        ->and($workers['worker-heavy_00']['busy'])->toBeTrue()
+        ->and($workers['worker-heavy_00']['queues'])->toBe(['heavy'])
+        ->and($workers['worker-mail_00']['busy'])->toBeFalse();
+});
+
+it('ranks the slowest jobs by average time, and the flakiest by how often they fail', function () {
+    ($this->run_)(['job_name' => 'Slow', 'duration_ms' => 9000]);
+    ($this->run_)(['job_name' => 'Slow', 'duration_ms' => 3000]);
+    ($this->run_)(['job_name' => 'Quick', 'duration_ms' => 20]);
+    ($this->run_)(['job_name' => 'Flaky']);
+    ($this->run_)(['job_name' => 'Flaky', 'status' => 'failed']);
+    ($this->run_)(['job_name' => 'Solid']);
+
+    $overview = ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview'];
+
+    expect(collect($overview['slowest'])->first())->toMatchArray(['job' => 'Slow', 'runs' => 2, 'avg_duration_ms' => 6000, 'max_duration_ms' => 9000])
+        ->and(collect($overview['flakiest'])->pluck('job')->all())->toBe(['Flaky'])
+        ->and($overview['flakiest'][0]['failure_rate'])->toBe(50.0);
+});
+
+it('filters runs by queue and pages by 25, 50 or 100', function () {
+    ($this->run_)(['job_name' => 'OnHeavy', 'queue' => 'heavy']);
+    ($this->run_)(['job_name' => 'OnMail', 'queue' => 'mail']);
+    foreach (range(1, 60) as $i) {
+        ($this->run_)(['started_at' => now()->subSeconds(500 + $i)]);
+    }
+
+    $runs = fn (array $query) => ($this->zeus)()->get(route('zeus.job-history.index', $query))->viewData('page')['props']['runs'];
+
+    expect(collect($runs(['queue' => 'heavy'])['data'])->pluck('job')->all())->toBe(['OnHeavy'])
+        ->and($runs([])['data'])->toHaveCount(25)
+        ->and($runs(['per_page' => 50])['data'])->toHaveCount(50)
+        ->and($runs(['per_page' => 100])['data'])->toHaveCount(62);
+
+    ($this->zeus)()->get(route('zeus.job-history.index', ['per_page' => 7]))->assertSessionHasErrors('per_page');
+});
+
+it('answers a live refresh of only the figures and the first page of runs', function () {
+    ($this->run_)();
+
+    $version = ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['version'];
+
+    ($this->zeus)()->withHeaders([
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => $version,
+        'X-Inertia-Partial-Component' => 'Zeus/JobHistory/Index',
+        'X-Inertia-Partial-Data' => 'overview,runs',
+    ])->get(route('zeus.job-history.index'))
+        ->assertOk()
+        ->assertJsonPath('props.overview.summary.ran', 1)
+        ->assertJsonMissingPath('props.recording');
+});
+
+it('reuses the figures for a few seconds when caching is on, and not otherwise', function () {
+    config(['queue.history.overview_cache_seconds' => 30]);
+    Cache::flush();
+    $ran = fn () => ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['summary']['ran'];
+
+    ($this->run_)();
+    expect($ran())->toBe(1);
+
+    ($this->run_)();
+    expect($ran())->toBe(1);
+
+    config(['queue.history.overview_cache_seconds' => 0]);
+    expect($ran())->toBe(2);
+});
+
+// ---------- Clearing ----------
+
+it('counts what each clear option would remove, never counting a run still going', function () {
+    ($this->run_)();
+    ($this->run_)();
+    ($this->run_)(['status' => 'failed']);
+    ($this->run_)(['started_at' => now()->subDays(9)]);
+    ($this->run_)(['status' => 'running', 'finished_at' => null, 'duration_ms' => null, 'started_at' => now()->subMinute()]);
+    ($this->run_)(['status' => 'running', 'finished_at' => null, 'duration_ms' => null, 'started_at' => now()->subHour()]); // lost: counts as history
+
+    $clearable = ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['clearable'];
+
+    expect($clearable)->toBe(['succeeded' => 3, 'older' => 1, 'all' => 5]);
+});
+
+it('clears only succeeded runs and leaves failures to investigate', function () {
+    ($this->run_)();
+    ($this->run_)();
+    $failed = ($this->run_)(['status' => 'failed']);
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'succeeded'])->assertRedirect()->assertSessionHas('success');
+
+    expect(JobRun::query()->pluck('id')->all())->toBe([$failed->id]);
+});
+
+it('clears runs older than a week, and nothing newer', function () {
+    $recent = ($this->run_)(['started_at' => now()->subDays(2)]);
+    ($this->run_)(['started_at' => now()->subDays(8)]);
+    ($this->run_)(['status' => 'failed', 'started_at' => now()->subDays(10)]);
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'older'])->assertRedirect();
+
+    expect(JobRun::query()->pluck('id')->all())->toBe([$recent->id]);
+});
+
+it('clears everything except a run that is still going, and leaves the queue and failed jobs alone', function () {
+    ($this->run_)();
+    ($this->run_)(['status' => 'failed']);
+    $running = ($this->run_)(['status' => 'running', 'finished_at' => null, 'duration_ms' => null, 'started_at' => now()->subSeconds(30)]);
+    ($this->queueRow)(['available_at' => time()]);
+    DB::table('failed_jobs')->insert(['uuid' => (string) Str::uuid(), 'connection' => 'database', 'queue' => 'default', 'payload' => '{}', 'exception' => 'x', 'failed_at' => now()]);
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'all'])->assertRedirect();
+
+    expect(JobRun::query()->pluck('id')->all())->toBe([$running->id])
+        ->and(DB::table('jobs')->count())->toBe(1)
+        ->and(DB::table('failed_jobs')->count())->toBe(1);
+});
+
+it('records who cleared what in the activity log, and refuses anything unknown', function () {
+    ($this->run_)();
+    ($this->run_)();
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'all']);
+
+    $entry = Activity::query()->where('description', 'Job history cleared')->latest('id')->first();
+    expect($entry->log_name)->toBe('zeus')
+        ->and($entry->properties->all())->toMatchArray(['actor' => 'zeus', 'scope' => 'all', 'deleted' => 2]);
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'everything'])->assertSessionHasErrors('scope');
+    ($this->zeus)()->post(route('zeus.job-history.clear'))->assertSessionHasErrors('scope');
+});
+
+it('keeps clearing behind the Zeus session', function () {
+    ($this->run_)();
+
+    $this->post(route('zeus.job-history.clear'), ['scope' => 'all'])->assertRedirect(route('zeus.login'));
+
+    expect(JobRun::query()->count())->toBe(1);
+});
+
+it('shows a cleared history straight away even when figures are cached', function () {
+    config(['queue.history.overview_cache_seconds' => 60]);
+    Cache::flush();
+    ($this->run_)();
+
+    $ran = fn () => ($this->zeus)()->get(route('zeus.job-history.index'))->viewData('page')['props']['overview']['summary']['ran'];
+    expect($ran())->toBe(1);
+
+    ($this->zeus)()->post(route('zeus.job-history.clear'), ['scope' => 'all']);
+
+    expect($ran())->toBe(0);
 });
