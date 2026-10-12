@@ -10,6 +10,7 @@ use App\Models\OrganizationBulkInviteRenewal;
 use App\Notifications\BulkInviteRenewalBlockedNotification;
 use App\Notifications\BulkInviteRenewedNotification;
 use App\Policies\Organization\OrganizationBulkInviteValidityPolicy;
+use App\Support\Queues;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,7 +32,9 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
      */
     public function __construct(
         public ?int $bulkInviteId = null,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     /**
      * Execute the job.
