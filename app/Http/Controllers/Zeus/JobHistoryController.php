@@ -20,8 +20,9 @@ class JobHistoryController extends Controller
 
         return Inertia::render('Zeus/JobHistory/Index', [
             'filters' => $filters,
-            // Closures, so the live refresh can ask for just these two without paying for the rest.
-            'runs' => fn () => $this->history->paginate($filters, $filters['per_page']),
+            // Closures, so the live refresh can ask for just these without paying for the rest. The list is only
+            // read on the tab that shows it.
+            'runs' => $filters['tab'] === 'runs' ? fn () => $this->history->paginate($filters, $filters['per_page']) : null,
             'overview' => fn () => $this->history->overview($filters['range']),
             'retention_days' => (int) config('queue.history.retention_days'),
             'recording' => (bool) config('queue.history.enabled'),
