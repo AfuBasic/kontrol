@@ -176,7 +176,11 @@ class VisitorPassReminderService
                 'status' => VisitorPassReminderStatus::Sending,
             ]);
 
-            return VisitorPassReminder::with(['accessCode.estate', 'user'])->whereIn('id', $ids)->get();
+            // The notification asks each user whether they have push subscriptions. Answering that for every user in the
+            // same query as the users saves one database round trip per reminder.
+            return VisitorPassReminder::with(['accessCode.estate', 'user' => fn ($q) => $q->withExists('pushSubscriptions')])
+                ->whereIn('id', $ids)
+                ->get();
         });
     }
 }

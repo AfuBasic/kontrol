@@ -32,7 +32,13 @@ class VisitorPassReminderNotification extends Notification implements ShouldQueu
     {
         $channels = ['database', 'broadcast'];
 
-        if (method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists()) {
+        // The reminder job preloads this for every user at once. Anywhere else, ask the database.
+        $preloaded = method_exists($notifiable, 'getAttributes') && array_key_exists('push_subscriptions_exists', $notifiable->getAttributes());
+        $hasPush = $preloaded
+            ? (bool) $notifiable->getAttribute('push_subscriptions_exists')
+            : method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists();
+
+        if ($hasPush) {
             $channels[] = WebPushChannel::class;
         }
 
