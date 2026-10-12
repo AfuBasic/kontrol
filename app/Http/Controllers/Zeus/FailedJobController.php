@@ -21,8 +21,9 @@ class FailedJobController extends Controller
 
         return Inertia::render('Zeus/FailedJobs/Index', [
             'filters' => $filters,
-            // Closures, so the live refresh can ask for just these two without paying for the rest.
-            'jobs' => fn () => $this->failedJobs->paginate($filters, $filters['per_page']),
+            // Closures, so the live refresh can ask for just these without paying for the rest. The list is only
+            // read on the tab that shows it.
+            'jobs' => $filters['tab'] === 'jobs' ? fn () => $this->failedJobs->paginate($filters, $filters['per_page']) : null,
             'overview' => fn () => $this->failedJobs->overview($filters['range']),
             'limits' => ['max_at_once' => FailedJobIdsRequest::MAX_AT_ONCE],
         ]);
