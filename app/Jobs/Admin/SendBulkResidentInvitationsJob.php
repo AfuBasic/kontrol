@@ -5,6 +5,7 @@ namespace App\Jobs\Admin;
 use App\Mail\Admin\ResidentInvitationMail;
 use App\Models\Estate;
 use App\Models\Invitation;
+use App\Support\Queues;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,7 +28,9 @@ class SendBulkResidentInvitationsJob implements ShouldQueue
     public function __construct(
         public array $invitationIds,
         public int $estateId,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {
