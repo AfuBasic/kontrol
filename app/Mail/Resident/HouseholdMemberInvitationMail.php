@@ -6,6 +6,7 @@ use App\Actions\Invitation\CreateInvitationAction;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -29,6 +30,7 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
         public ?Invitation $invitation = null,
         ?bool $isExistingUser = null,
     ) {
+        $this->onQueue(Queues::MAIL);
         $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser($this->estate);
 
         if ($this->isExistingUser) {
