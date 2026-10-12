@@ -4,6 +4,7 @@ namespace App\Jobs\Billing;
 
 use App\Actions\Billing\GenerateInvoiceAction;
 use App\Models\Estate;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,9 @@ class GenerateInvoiceJob implements ShouldQueue
     public function __construct(
         public int $estateId,
         public bool $isFirstInvoice = false,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(GenerateInvoiceAction $action): void
     {
