@@ -2,6 +2,7 @@
 
 namespace App\Services\Zeus;
 
+use App\Support\QueueJobName;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -16,19 +17,6 @@ use Illuminate\Support\Str;
  */
 class FailedJobService
 {
-    /**
-     * Jobs that send something to a person. Running one again sends it again, so they get a warning.
-     *
-     * @var array<int, string>
-     */
-    public const SENDS_MESSAGES = [
-        'Illuminate\Notifications\SendQueuedNotifications',
-        'Illuminate\Mail\SendQueuedMailable',
-        'App\Jobs\DeliverBulkVisitorPassJob',
-        'App\Jobs\NotifyBulkInviteDeliveryReportJob',
-        'App\Jobs\SendSmsAlert',
-    ];
-
     private const MAX_EXCEPTION_CHARS = 6000;
 
     /**
@@ -126,28 +114,11 @@ class FailedJobService
     }
 
     /**
-     * Work out what a failed job really is from its stored payload (read as data, never unserialized).
-     *
-     * @return array{display: string, class: string}
-     */
-    private function identify(string $payload): array
-    {
-        $data = json_decode($payload, true) ?: [];
-        $display = (string) ($data['displayName'] ?? 'Unknown job');
-        $command = (string) ($data['data']['command'] ?? '');
-
-        // A queued notification is always "SendQueuedNotifications"; the useful name is the notification inside it.
-        $inner = $display === 'Illuminate\Notifications\SendQueuedNotifications' && preg_match('/"notification";O:\d+:"([^"]+)"/', $command, $m) ? $m[1] : null;
-
-        return ['display' => $display, 'class' => $inner ?? $display];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function present(object $row): array
     {
-        ['display' => $display, 'class' => $class] = $this->identify((string) $row->payload);
+        ['display' => $display, 'class' => $class] = QueueJobName::identify((string) $row->payload);
         $firstLine = Str::before((string) $row->exception, "\n");
         $failedAt = Carbon::parse($row->failed_at);
 
@@ -162,7 +133,7 @@ class FailedJobService
             'exception_class' => Str::contains($firstLine, ':') ? Str::before($firstLine, ':') : null,
             'failed_at' => $failedAt->toIso8601String(),
             'failed_human' => $failedAt->diffForHumans(),
-            'repeats_messages' => in_array($display, self::SENDS_MESSAGES, true),
+            'repeats_messages' => QueueJobName::sendsMessages($display),
         ];
     }
 
@@ -178,7 +149,7 @@ class FailedJobService
         activity('zeus')
             ->withProperties([
                 'actor' => 'zeus',
-                'jobs' => $jobs->map(fn (object $job) => ['uuid' => $job->uuid, 'job' => $this->identify((string) $job->payload)['class']])->values()->all(),
+                'jobs' => $jobs->map(fn (object $job) => ['uuid' => $job->uuid, 'job' => QueueJobName::identify((string) $job->payload)['class']])->values()->all(),
             ])
             ->log($description);
     }

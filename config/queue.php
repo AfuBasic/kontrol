@@ -135,6 +135,21 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Job History
+    |--------------------------------------------------------------------------
+    |
+    | Laravel deletes a job from the queue table as soon as it succeeds, so Zeus keeps its own short history of
+    | attempts (names and timings only) to answer "did it run?". It can be switched off, and old rows are cleared.
+    |
+    */
+
+    'history' => [
+        'enabled' => (bool) env('JOB_HISTORY_ENABLED', true),
+        'retention_days' => (int) env('JOB_HISTORY_RETENTION_DAYS', 14),
+    ],
+
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'sqlite'),

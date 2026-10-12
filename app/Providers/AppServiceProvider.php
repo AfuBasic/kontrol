@@ -9,6 +9,7 @@ use App\Events\Billing\PaymentReceived;
 use App\Listeners\Billing\SendInvoiceEmail;
 use App\Listeners\Billing\SendInvoiceGeneratedNotification;
 use App\Listeners\Billing\SendPaymentReceivedNotification;
+use App\Listeners\Queue\RecordJobRun;
 use App\Listeners\StampDatabaseNotificationContext;
 use App\Listeners\WarmEstateSettings;
 use App\Models\AdministrativeAssignment;
@@ -36,6 +37,10 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -182,5 +187,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PaymentReceived::class, SendPaymentReceivedNotification::class);
         Event::listen(NotificationSent::class, StampDatabaseNotificationContext::class);
         Event::listen(Login::class, WarmEstateSettings::class);
+        // Zeus Job History: one row per queue attempt, since Laravel deletes a job the moment it succeeds.
+        Event::listen(JobProcessing::class, [RecordJobRun::class, 'processing']);
+        Event::listen(JobProcessed::class, [RecordJobRun::class, 'processed']);
+        Event::listen(JobExceptionOccurred::class, [RecordJobRun::class, 'exception']);
+        Event::listen(JobFailed::class, [RecordJobRun::class, 'failed']);
+
     }
 }

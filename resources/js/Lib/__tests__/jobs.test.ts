@@ -1,0 +1,33 @@
+import { describe, expect, it } from 'vitest';
+import { formatDuration, formatWaiting, STATUS_STYLE } from '../jobs';
+
+describe('formatDuration', () => {
+    it('reads naturally from milliseconds to minutes', () => {
+        expect(formatDuration(null)).toBe('—');
+        expect(formatDuration(0)).toBe('0 ms');
+        expect(formatDuration(850)).toBe('850 ms');
+        expect(formatDuration(1000)).toBe('1 s');
+        expect(formatDuration(4200)).toBe('4.2 s');
+        expect(formatDuration(60_000)).toBe('1 min');
+        expect(formatDuration(125_000)).toBe('2 min 5 s');
+    });
+});
+
+describe('formatWaiting', () => {
+    it('says what is waiting and for how long, with correct plurals', () => {
+        expect(formatWaiting(null)).toBe('Nothing waiting');
+        expect(formatWaiting(1)).toBe('1 second');
+        expect(formatWaiting(12)).toBe('12 seconds');
+        expect(formatWaiting(60)).toBe('1 minute');
+        expect(formatWaiting(600)).toBe('10 minutes');
+        expect(formatWaiting(7200)).toBe('2 hours');
+        expect(formatWaiting(172_800)).toBe('2 days');
+    });
+});
+
+describe('STATUS_STYLE', () => {
+    it('has a label for every status the server can send', () => {
+        expect(Object.keys(STATUS_STYLE).sort()).toEqual(['failed', 'lost', 'retrying', 'running', 'succeeded']);
+        expect(STATUS_STYLE.lost.label).toBe('Stopped midway');
+    });
+});
