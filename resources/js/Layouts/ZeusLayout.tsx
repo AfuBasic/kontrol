@@ -28,6 +28,7 @@ import { motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
 import Toast from '@/Components/Toast';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import useClippedPageOverflow from '@/Hooks/useClippedPageOverflow';
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
@@ -81,6 +82,9 @@ export default function ZeusLayout({ children, backUrl: _backUrl }: Props) {
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
     const currentPath = usePathFromUrl(url);
+
+    // Let the sidebar stick: html and body must not be scroll boxes (see the hook for why).
+    useClippedPageOverflow();
 
     // Force dark mode for Zeus administration module
     useEffect(() => {
