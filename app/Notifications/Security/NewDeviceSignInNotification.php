@@ -3,6 +3,7 @@
 namespace App\Notifications\Security;
 
 use App\Models\DeviceAuthorizationRequest;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -19,7 +20,9 @@ class NewDeviceSignInNotification extends Notification implements ShouldQueue
         public DeviceAuthorizationRequest $authorization,
         public string $approveUrl,
         public string $denyUrl,
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * @return array<int, string>
