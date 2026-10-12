@@ -17,7 +17,11 @@ use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
+use NotificationChannels\WebPush\WebPushChannel;
 
 uses(RefreshDatabase::class);
 
@@ -584,4 +588,93 @@ test('resident cannot view access code show page of another resident', function 
         ->withSession(['estate_id' => $estate->id])
         ->get(route('resident.visitors.show', $pass))
         ->assertNotFound();
+});
+
+// ---------- What a busy run costs, and what it says about itself ----------
+
+function dueReminderFor(Estate $estate, User $user, string $code, array $pass = []): VisitorPassReminder
+{
+    $accessCode = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => $code,
+        'type' => 'single_use',
+        'status' => AccessCodeStatus::Scheduled,
+        'starts_at' => now()->addHours(3),
+        'expires_at' => now()->addHours(5),
+        ...$pass,
+    ]);
+
+    return VisitorPassReminder::create([
+        'access_code_id' => $accessCode->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 60,
+        'scheduled_for' => now()->subMinute(),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+}
+
+test('a busy run asks about push subscriptions once for everyone, not once per reminder', function () {
+    Queue::fake();
+    $estate = Estate::factory()->create();
+
+    foreach (range(1, 5) as $i) {
+        dueReminderFor($estate, createTestResident($estate), "BUSY{$i}");
+    }
+
+    DB::enableQueryLog();
+    (new SendVisitorPassRemindersJob)->handle(app(VisitorPassReminderService::class));
+    $pushQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'push_subscriptions'))->count();
+    DB::disableQueryLog();
+
+    // One query loads the users together with their answer. Before this, it was that query plus one more per reminder.
+    expect($pushQueries)->toBe(1)
+        ->and(VisitorPassReminder::where('status', VisitorPassReminderStatus::Sent)->count())->toBe(5);
+});
+
+test('the reminder still goes out on push when a user has a subscription, and not when they do not', function () {
+    $estate = Estate::factory()->create();
+    $subscribed = createTestResident($estate);
+    $subscribed->updatePushSubscription('https://push.example.test/endpoint', 'public-key', 'auth-token');
+    $plain = createTestResident($estate);
+    $reminder = dueReminderFor($estate, $plain, 'PLAIN1');
+
+    $notification = new VisitorPassReminderNotification($reminder, $reminder->accessCode);
+
+    // A user loaded the way the job loads them carries the answer with them...
+    $preloaded = fn (User $user) => User::query()->withExists('pushSubscriptions')->find($user->id);
+    expect($notification->via($preloaded($subscribed)))->toContain(WebPushChannel::class)
+        ->and($notification->via($preloaded($plain)))->not->toContain(WebPushChannel::class)
+        // ...and a user loaded any other way is still asked directly.
+        ->and($notification->via($subscribed->fresh()))->toContain(WebPushChannel::class)
+        ->and($notification->via($plain->fresh()))->not->toContain(WebPushChannel::class);
+});
+
+test('a run that sent reminders says how many it handled and how long it took', function () {
+    Queue::fake();
+    Log::spy();
+    $estate = Estate::factory()->create();
+
+    dueReminderFor($estate, createTestResident($estate), 'SAYS01');
+    dueReminderFor($estate, createTestResident($estate), 'SAYS02');
+    dueReminderFor($estate, createTestResident($estate), 'SAYS03', ['status' => AccessCodeStatus::Revoked]);
+
+    (new SendVisitorPassRemindersJob)->handle(app(VisitorPassReminderService::class));
+
+    Log::shouldHaveReceived('info')->once()->withArgs(fn ($message, $context) => $message === 'Visitor pass reminders processed'
+        && $context['claimed'] === 3
+        && $context['sent'] === 2
+        && $context['cancelled'] === 1
+        && $context['failed'] === 0
+        && is_int($context['duration_ms'])
+        && $context['duration_ms'] >= 0);
+});
+
+test('a minute with nothing due writes no log line', function () {
+    Log::spy();
+
+    (new SendVisitorPassRemindersJob)->handle(app(VisitorPassReminderService::class));
+
+    Log::shouldNotHaveReceived('info');
 });
