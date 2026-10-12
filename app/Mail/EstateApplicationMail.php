@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\EstateApplication;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -20,6 +21,7 @@ class EstateApplicationMail extends Mailable implements ShouldQueue
      */
     public function __construct(public EstateApplication $application)
     {
+        $this->onQueue(Queues::MAIL);
         //
     }
 
