@@ -4,6 +4,7 @@ namespace App\Jobs\Admin;
 
 use App\Models\CollectionAssignment;
 use App\Services\Compliance\ComplianceEngine;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,6 +21,11 @@ class SendCollectionRemindersJob implements ShouldQueue
 
     /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
     public int $timeout = 600;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(?ComplianceEngine $engine = null): void
     {

@@ -4,6 +4,7 @@ namespace App\Mail\Zeus;
 
 use App\Models\Affiliate;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -22,6 +23,7 @@ class AffiliateMemberInvitationMail extends Mailable implements ShouldQueue
         public User $user,
         public Affiliate $affiliate,
     ) {
+        $this->onQueue(Queues::MAIL);
         // Generate signed URL on app domain that expires in 72 hours
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';

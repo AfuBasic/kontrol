@@ -4,6 +4,7 @@ namespace App\Events\EstateBoard;
 
 use App\Enums\EstateBoardPostAudience;
 use App\Models\EstateBoardPost;
+use App\Support\Queues;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -17,6 +18,11 @@ class NewPostBroadcast implements ShouldBroadcast
     public function __construct(
         public EstateBoardPost $post
     ) {}
+
+    public function broadcastQueue(): string
+    {
+        return Queues::CRITICAL;
+    }
 
     /**
      * Broadcast to audience-specific channels within the estate.

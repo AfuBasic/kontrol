@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -19,7 +20,9 @@ class CommandExecutedMail extends Mailable implements ShouldQueue
     public function __construct(
         public string $subjectText,
         public string $bodyText
-    ) {}
+    ) {
+        $this->onQueue(Queues::MAIL);
+    }
 
     /**
      * Get the message envelope.

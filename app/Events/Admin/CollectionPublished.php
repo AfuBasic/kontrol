@@ -3,6 +3,7 @@
 namespace App\Events\Admin;
 
 use App\Models\Collection;
+use App\Support\Queues;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -17,6 +18,11 @@ class CollectionPublished implements ShouldBroadcast
         public Collection $collection,
         public int $targetCount
     ) {}
+
+    public function broadcastQueue(): string
+    {
+        return Queues::CRITICAL;
+    }
 
     public function broadcastOn(): array
     {

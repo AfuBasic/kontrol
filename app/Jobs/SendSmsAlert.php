@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\SMS\SmsService;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -28,7 +29,9 @@ class SendSmsAlert implements ShouldQueue
     public function __construct(
         public string $phone,
         public string $message
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * Execute the job.

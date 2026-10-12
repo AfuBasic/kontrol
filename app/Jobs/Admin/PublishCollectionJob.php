@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\Admin\CollectionPublishedNotification;
 use App\Notifications\Resident\NewCollectionNotification;
 use App\Services\Admin\CollectionService;
+use App\Support\Queues;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,7 +28,10 @@ class PublishCollectionJob implements ShouldQueue
     /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
     public int $timeout = 300;
 
-    public function __construct(public int $collectionId) {}
+    public function __construct(public int $collectionId)
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {

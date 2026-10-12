@@ -5,6 +5,7 @@ namespace App\Jobs\Billing;
 use App\Actions\Billing\RecordPaymentAction;
 use App\Models\PaymentTransaction;
 use App\Services\PaystackService;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +35,11 @@ class RecheckPendingInvoicePaymentsJob implements ShouldQueue
     public int $tries = 1;
 
     public int $timeout = 600;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::PAYMENTS);
+    }
 
     public function handle(PaystackService $paystack, RecordPaymentAction $recordPayment): void
     {

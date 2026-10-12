@@ -6,6 +6,7 @@ use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -26,6 +27,7 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
         public User $user,
         public ?Invitation $invitation = null,
     ) {
+        $this->onQueue(Queues::MAIL);
         $invitation = $this->invitation ?? Invitation::withoutGlobalScope(ZoneScope::class)
             ->where('estate_id', $estate->id)
             ->where('email', strtolower($user->email))

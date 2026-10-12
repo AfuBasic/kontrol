@@ -3,6 +3,7 @@
 namespace App\Mail\Auth;
 
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -17,7 +18,9 @@ class PasswordResetMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public string $resetUrl,
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     public function envelope(): Envelope
     {

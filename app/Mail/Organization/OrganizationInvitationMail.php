@@ -5,6 +5,7 @@ namespace App\Mail\Organization;
 use App\Actions\Auth\GenerateMagicLoginUrlAction;
 use App\Models\EstateOrganization;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -27,6 +28,7 @@ class OrganizationInvitationMail extends Mailable implements ShouldQueue
         public string $role = 'member',
         ?bool $isExistingUser = null,
     ) {
+        $this->onQueue(Queues::MAIL);
         // In an OTP-based system there are no passwords. The signal for "can this user
         // log in on their own" is whether their email has previously been verified.
         // Verified → they can receive an OTP and log in normally (send "role added" email).

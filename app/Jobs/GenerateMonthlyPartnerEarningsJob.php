@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\CommissionableRevenue;
 use App\Models\PartnerEarning;
+use App\Support\Queues;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -34,7 +35,9 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
     public function __construct(
         public readonly ?CarbonImmutable $forMonth = null,
         public readonly string $mode = self::MODE_CLOSE,
-    ) {}
+    ) {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {

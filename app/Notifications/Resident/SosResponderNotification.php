@@ -3,6 +3,7 @@
 namespace App\Notifications\Resident;
 
 use App\Models\SosEvent;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -16,7 +17,10 @@ class SosResponderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public SosEvent $sosEvent) {}
+    public function __construct(public SosEvent $sosEvent)
+    {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     public function via(object $notifiable): array
     {

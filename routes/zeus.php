@@ -121,6 +121,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
 
         // Job history: every queue attempt, since Laravel deletes a job the moment it succeeds.
         Route::get('/job-history', [JobHistoryController::class, 'index'])->name('job-history.index');
+        Route::post('/job-history/clear', [JobHistoryController::class, 'clear'])->name('job-history.clear');
 
         // Failed queue jobs: review, retry (one or a few, never blindly all) or forget, without a shell.
         Route::get('/failed-jobs', [FailedJobController::class, 'index'])->name('failed-jobs.index');

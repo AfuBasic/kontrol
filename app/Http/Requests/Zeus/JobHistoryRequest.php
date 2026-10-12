@@ -23,11 +23,14 @@ class JobHistoryRequest extends FormRequest
         return [
             'status' => ['nullable', 'string', Rule::in(JobHistoryService::STATUSES)],
             'search' => ['nullable', 'string', 'max:100'],
+            'queue' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9_.:-]+$/'],
+            'range' => ['nullable', 'string', Rule::in(array_keys(JobHistoryService::RANGES))],
+            'per_page' => ['nullable', 'integer', Rule::in(JobHistoryService::PER_PAGE)],
         ];
     }
 
     /**
-     * @return array{status: string|null, search: string|null}
+     * @return array{status: string|null, search: string|null, queue: string|null, range: string, per_page: int}
      */
     public function filters(): array
     {
@@ -36,6 +39,9 @@ class JobHistoryRequest extends FormRequest
         return [
             'status' => $data['status'] ?? null,
             'search' => filled($data['search'] ?? null) ? trim($data['search']) : null,
+            'queue' => $data['queue'] ?? null,
+            'range' => $data['range'] ?? '24h',
+            'per_page' => (int) ($data['per_page'] ?? JobHistoryService::PER_PAGE[0]),
         ];
     }
 }

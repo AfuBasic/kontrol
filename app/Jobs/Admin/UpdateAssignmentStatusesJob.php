@@ -3,6 +3,7 @@
 namespace App\Jobs\Admin;
 
 use App\Models\CollectionAssignment;
+use App\Support\Queues;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,6 +24,11 @@ class UpdateAssignmentStatusesJob implements ShouldQueue
 
     /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
     public int $timeout = 300;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {

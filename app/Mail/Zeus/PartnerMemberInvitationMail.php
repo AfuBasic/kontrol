@@ -4,6 +4,7 @@ namespace App\Mail\Zeus;
 
 use App\Models\Partner;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -22,6 +23,7 @@ class PartnerMemberInvitationMail extends Mailable implements ShouldQueue
         public User $user,
         public Partner $partner,
     ) {
+        $this->onQueue(Queues::MAIL);
         $appDomain = config('domains.app');
         $scheme = request()->getScheme();
 

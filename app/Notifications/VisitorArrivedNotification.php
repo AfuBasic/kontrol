@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
 use App\Models\Scopes\ZoneScope;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -21,7 +22,9 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
 
     public function __construct(
         public AccessCode $accessCode
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * @return array<int, string>

@@ -7,12 +7,15 @@ use App\Events\Admin\ResidentCreated;
 use App\Mail\Admin\PropertyOwnerInvitationMail;
 use App\Mail\Admin\ResidentInvitationMail;
 use App\Models\Zone;
+use App\Support\Queues;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class SendResidentInvitationEmail implements ShouldQueue
 {
+    public string $queue = Queues::MAIL;
+
     public function handle(ResidentCreated $event): void
     {
         app(ContextManager::class)->setSystemContext($event->estate->id);

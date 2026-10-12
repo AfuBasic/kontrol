@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -21,7 +22,9 @@ class ContactInquiryMail extends Mailable implements ShouldQueue
         public string $email,
         public string $subjectText,
         public string $messageText
-    ) {}
+    ) {
+        $this->onQueue(Queues::MAIL);
+    }
 
     /**
      * Get the message envelope.

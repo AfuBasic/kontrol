@@ -20,13 +20,12 @@ return [
     | Sign-in Code Queue
     |--------------------------------------------------------------------------
     |
-    | Queue that carries sign-in code emails. Leave as "default" until the worker is started with a
-    | dedicated queue listed first (e.g. --queue=auth,default,mail,payments), then set OTP_QUEUE=auth so
-    | a sign-in code never waits behind pass deliveries or PDF jobs.
+    | Queue that carries sign-in code emails. It is the critical queue, which has its own worker, so a
+    | sign-in code never waits behind pass deliveries or PDF jobs. See App\Support\Queues.
     |
     */
 
-    'otp_queue' => env('OTP_QUEUE', 'default'),
+    'otp_queue' => env('OTP_QUEUE', 'critical'),
 
     /*
     |--------------------------------------------------------------------------
@@ -148,6 +147,9 @@ return [
     'history' => [
         'enabled' => (bool) env('JOB_HISTORY_ENABLED', true),
         'retention_days' => (int) env('JOB_HISTORY_RETENTION_DAYS', 14),
+        // How long the Job History page's live figures are reused. The page polls every few seconds; this keeps
+        // several open tabs from each running the same queries. 0 turns it off.
+        'overview_cache_seconds' => (int) env('JOB_HISTORY_CACHE_SECONDS', 4),
     ],
 
     'failed' => [

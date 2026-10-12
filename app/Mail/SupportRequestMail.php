@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -19,6 +20,7 @@ class SupportRequestMail extends Mailable implements ShouldQueue
      */
     public function __construct(public array $data)
     {
+        $this->onQueue(Queues::MAIL);
         //
     }
 

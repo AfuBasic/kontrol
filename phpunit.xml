@@ -27,6 +27,7 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="FILESYSTEM_DISK" value="local"/>
         <env name="JOB_HISTORY_ENABLED" value="false"/>
+        <env name="JOB_HISTORY_CACHE_SECONDS" value="0"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>

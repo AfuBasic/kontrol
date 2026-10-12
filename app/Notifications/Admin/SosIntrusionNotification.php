@@ -5,6 +5,7 @@ namespace App\Notifications\Admin;
 use App\Channels\TelegramChannel;
 use App\Mail\Admin\SosAlertMail;
 use App\Models\SosEvent;
+use App\Support\Queues;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,7 +23,9 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
 
     public function __construct(
         public SosEvent $sosEvent
-    ) {}
+    ) {
+        $this->onQueue(Queues::CRITICAL);
+    }
 
     /**
      * Get the notification's delivery channels.

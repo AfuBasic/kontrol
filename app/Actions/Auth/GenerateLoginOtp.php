@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Mail\Auth\LoginOtpMail;
 use App\Models\LoginOtp;
 use App\Models\User;
+use App\Support\Queues;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +31,6 @@ class GenerateLoginOtp
             'created_at' => now(),
         ]);
 
-        Mail::to($user->email)->queue((new LoginOtpMail($user, $code))->onQueue(config('queue.otp_queue', 'default')));
+        Mail::to($user->email)->queue((new LoginOtpMail($user, $code))->onQueue(config('queue.otp_queue', Queues::CRITICAL)));
     }
 }

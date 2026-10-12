@@ -21,13 +21,13 @@ it('shows the masked email on the code screen in the same style as the device sc
         );
 });
 
-it('sends the sign-in code on the default queue unless one is configured', function () {
+it('sends the sign-in code on the critical queue unless one is configured', function () {
     Mail::fake();
     $user = User::factory()->create();
 
     app(GenerateLoginOtp::class)->execute($user, Request::create('/login', 'POST'));
 
-    Mail::assertQueued(LoginOtpMail::class, fn (LoginOtpMail $mail) => $mail->queue === 'default');
+    Mail::assertQueued(LoginOtpMail::class, fn (LoginOtpMail $mail) => $mail->queue === 'critical');
 });
 
 it('sends the sign-in code on the dedicated queue when OTP_QUEUE is set', function () {
