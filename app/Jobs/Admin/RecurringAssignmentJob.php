@@ -10,6 +10,7 @@ use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
 use App\Services\ZoneAudienceResolver;
+use App\Support\Queues;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
@@ -29,6 +30,11 @@ class RecurringAssignmentJob implements ShouldQueue
 
     /** Seconds before the worker gives up on a run. Must stay below the queue's retry_after. */
     public int $timeout = 600;
+
+    public function __construct()
+    {
+        $this->onQueue(Queues::HEAVY);
+    }
 
     public function handle(): void
     {
