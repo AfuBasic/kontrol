@@ -5,6 +5,7 @@ use App\Http\Middleware\RecordClientPlatform;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserClient;
+use App\Models\UserClientDay;
 use App\Services\Zeus\ImpersonationService;
 use App\Support\ClientPlatform;
 use Illuminate\Console\Scheduling\Schedule;
@@ -243,4 +244,43 @@ it('deletes a person\'s clients along with the person', function () {
     $user->delete();
 
     expect(UserClient::query()->count())->toBe(0);
+});
+
+// ---------- The daily record ----------
+
+it('leaves one mark per client per day, and a new one the next day', function () {
+    $user = ($this->resident)();
+    $this->travelTo(now()->setTime(10, 0));
+
+    ($this->visit)($user, MAC_CHROME_UA);
+    $this->travel(20)->minutes();
+    ($this->visit)($user, MAC_CHROME_UA);
+
+    expect(UserClientDay::query()->count())->toBe(1);
+
+    $this->travel(1)->day();
+    ($this->visit)($user, MAC_CHROME_UA);
+
+    expect(UserClientDay::query()->orderBy('day')->pluck('day')->map->toDateString()->all())
+        ->toBe([now()->subDay()->toDateString(), now()->toDateString()]);
+});
+
+it('marks each kind of client separately on the same day', function () {
+    $user = ($this->resident)();
+
+    ($this->visit)($user, IPHONE_APP_UA, ['X-App-Platform' => 'ios']);
+    ($this->visit)($user, MAC_CHROME_UA);
+
+    expect(UserClientDay::query()->orderBy('platform')->pluck('platform')->all())->toBe(['desktop_web', 'native']);
+});
+
+it('removes daily marks older than 400 days, and keeps the rest', function () {
+    $user = ($this->resident)();
+    $make = fn (int $daysAgo) => UserClientDay::create(['user_id' => $user->id, 'platform' => 'native', 'os' => 'ios', 'day' => now()->subDays($daysAgo)->toDateString()]);
+    $make(401);
+    $recent = $make(30);
+
+    $this->artisan('model:prune', ['--model' => [UserClientDay::class]])->assertSuccessful();
+
+    expect(UserClientDay::query()->pluck('id')->all())->toBe([$recent->id]);
 });
