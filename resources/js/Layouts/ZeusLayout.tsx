@@ -132,13 +132,24 @@ export default function ZeusLayout({ children, backUrl: _backUrl }: Props) {
                     <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/2 to-transparent" />
 
                     {/* Sidebar Header */}
-                    <div className="relative z-10 flex h-20 items-center justify-between border-b border-white/5 px-6">
-                        {!isCollapsed && (
-                            <Link href="/zeus/dashboard" className="flex items-center gap-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 shadow-lg shadow-blue-900/20">
-                                    <span className="text-lg font-bold text-white">Z</span>
-                                </div>
-                                <span className="text-sm font-bold tracking-tight text-white uppercase">Zeus Admin</span>
+                    <div
+                        className={`relative z-10 flex h-20 items-center border-b border-white/5 ${isCollapsed ? 'flex-col justify-center gap-1.5 px-2' : 'justify-between px-6'}`}
+                    >
+                        {isCollapsed ? (
+                            <Link href="/zeus/dashboard" aria-label="Kontrol Zeus Admin" className="flex justify-center">
+                                {/* The shield has a wide margin in its file, so it is cropped to fill the space. */}
+                                <span className="block h-9 w-9 overflow-hidden">
+                                    <img src="/assets/images/kontrol-transparent.png" alt="Kontrol" className="-m-3.5 h-16 w-16 max-w-none" />
+                                </span>
+                            </Link>
+                        ) : (
+                            <Link href="/zeus/dashboard" aria-label="Kontrol Zeus Admin" className="flex min-w-0 flex-col">
+                                <img
+                                    src="/assets/images/kontrol-white-logo-new.png"
+                                    alt="Kontrol"
+                                    className="h-7 w-auto max-w-[140px] object-contain object-left"
+                                />
+                                <span className="mt-1 text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Zeus Admin</span>
                             </Link>
                         )}
                         <button
