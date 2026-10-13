@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { shouldSendMetaCsrfToken } from '@/Lib/csrf';
+import { loadAppVersion, nativeHeaders } from '@/Lib/nativeClient';
 
 declare global {
     interface Window {
@@ -17,7 +18,10 @@ window.axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 window.axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
 
 if (Capacitor.isNativePlatform()) {
-    window.axios.defaults.headers.common['X-Capacitor-App'] = 'true';
+    Object.assign(window.axios.defaults.headers.common, nativeHeaders());
+
+    // The version arrives a moment later; from then on every request carries it.
+    void loadAppVersion().then(() => Object.assign(window.axios.defaults.headers.common, nativeHeaders()));
 }
 
 // Attach the meta CSRF token only as a fallback: when the XSRF cookie exists it is always current,
