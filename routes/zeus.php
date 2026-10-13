@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Zeus\ApplicationController;
+use App\Http\Controllers\Zeus\AudienceController;
 use App\Http\Controllers\Zeus\AuthController;
 use App\Http\Controllers\Zeus\CollectionOversightController;
 use App\Http\Controllers\Zeus\CouponController;
@@ -118,6 +119,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
             ->withTrashed()
             ->name('applications.destroy');
+
+        // Audience: who uses Kontrol and on what (Android, iOS, web), from the client record.
+        Route::get('/audience', [AudienceController::class, 'index'])->name('audience.index');
 
         // Job history: every queue attempt, since Laravel deletes a job the moment it succeeds.
         Route::get('/job-history', [JobHistoryController::class, 'index'])->name('job-history.index');
