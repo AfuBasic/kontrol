@@ -20,6 +20,7 @@ import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
 import SecurityLayout from './Layouts/SecurityLayout';
 import useNativeViewport from './Hooks/useNativeViewport';
+import { nativeHeaders } from './Lib/nativeClient';
 import { initErrorReporter } from './Utils/errorReporter';
 import { initMobileFormValidation } from './Utils/mobileFormValidation';
 
@@ -156,7 +157,7 @@ createInertiaApp({
 
             // Add global header to all Inertia visits
             router.on('before', (event) => {
-                event.detail.visit.headers['X-Capacitor-App'] = 'true';
+                Object.assign(event.detail.visit.headers, nativeHeaders());
             });
 
             (async () => {

@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureOrganizationMembership;
 use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RecordClientPlatform;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
@@ -116,6 +117,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ResolveImpersonationContext::class,
                 BlockSensitiveDuringImpersonation::class,
                 ResolveContext::class,
+                RecordClientPlatform::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
             ],

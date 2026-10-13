@@ -13,6 +13,7 @@ import {
     ClipboardDocumentListIcon,
     Cog6ToothIcon,
     CurrencyDollarIcon,
+    DevicePhoneMobileIcon,
     InboxStackIcon,
     QueueListIcon,
     ReceiptPercentIcon,
@@ -47,6 +48,7 @@ type NavItem = {
 const baseNavItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
     { name: 'Estates', href: '/zeus/estates', icon: BuildingOfficeIcon },
+    { name: 'Audience', href: '/zeus/audience', icon: DevicePhoneMobileIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Partners', href: '/zeus/partners', icon: UserGroupIcon },
     { name: 'Settlements', href: '/zeus/settlements', icon: ScaleIcon },

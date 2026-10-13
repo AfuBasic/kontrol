@@ -12,6 +12,8 @@ use App\Jobs\RenewExpiringOrganizationCredentials;
 use App\Jobs\Resident\SendVisitorPassRemindersJob;
 use App\Models\DeviceAuthorizationRequest;
 use App\Models\JobRun;
+use App\Models\UserClient;
+use App\Models\UserClientDay;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -23,7 +25,7 @@ Artisan::command('inspire', function () {
 Schedule::command('kontrol:check-resident-subscriptions')->daily();
 
 Schedule::command('model:prune', [
-    '--model' => [DeviceAuthorizationRequest::class, JobRun::class],
+    '--model' => [DeviceAuthorizationRequest::class, JobRun::class, UserClient::class, UserClientDay::class],
 ])->daily();
 
 // Failed queue jobs older than 30 days are history; keep the table from growing forever.
