@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\User;
+use App\Services\Auth\WorkspaceService;
 use App\Services\Security\CheckpointClaimService;
 use Exception;
 
@@ -30,7 +31,9 @@ class ActivateContext
                     return url('/');
                 }
 
-                if ($assignments->count() === 1) {
+                // An organization the person also belongs to is a workspace too: with it, even one estate role means
+                // there is a choice to make, so they are asked instead of being sent into the estate.
+                if ($assignments->count() === 1 && app(WorkspaceService::class)->organizationCount($user) === 0) {
                     $assignment = $assignments->first();
                 } else {
                     return route('context.select');
