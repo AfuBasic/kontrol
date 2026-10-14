@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import { openCheckout } from '@/Lib/paystack';
 
 /** Partial payments are only offered when remaining balance is at least this share of the original bill. */
 const _MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
@@ -34,7 +35,6 @@ type Assignment = {
 
 type Props = {
     assignment: Assignment;
-    paystackKey: string;
     feeBreakdown: {
         kontrol_fee: number;
         paystack_fee: number;
@@ -47,15 +47,8 @@ type Props = {
     minPartialPercentage?: number;
 };
 
-declare global {
-    interface Window {
-        PaystackPop: any;
-    }
-}
-
 export default function PayCollection({
     assignment,
-    paystackKey,
 
     hasSubscription,
     allowPartialPayments = true,
@@ -138,18 +131,6 @@ export default function PayCollection({
                 return;
             }
 
-            if (!paystackKey) {
-                setErrorMessage('Payment gateway is not configured. Please contact support.');
-                setIsProcessing(false);
-                return;
-            }
-
-            if (!window.PaystackPop) {
-                setErrorMessage('Payment gateway is not ready. Please refresh the page.');
-                setIsProcessing(false);
-                return;
-            }
-
             if (!data.access_code) {
                 setErrorMessage('Payment gateway initialization failed. Missing access code.');
                 setIsProcessing(false);
@@ -158,20 +139,15 @@ export default function PayCollection({
 
             const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
 
-            const setupOptions: Record<string, unknown> = {
-                key: paystackKey,
-                access_code: data.access_code,
-                onClose: () => {
-                    setIsProcessing(false);
+            await openCheckout({
+                accessCode: data.access_code,
+                authorizationUrl: data.authorization_url,
+                // Redirect to receipt/status page - it syncs with Paystack and shows full/partial outcome
+                onSuccess: (reference) => {
+                    window.location.href = statusUrlFor(reference || data.reference);
                 },
-                callback: (paystackResponse: { reference: string }) => {
-                    // Redirect to receipt/status page - it syncs with Paystack and shows full/partial outcome
-                    window.location.href = statusUrlFor(paystackResponse.reference || data.reference);
-                },
-            };
-
-            const handler = window.PaystackPop.setup(setupOptions);
-            handler.openIframe();
+                onClose: () => setIsProcessing(false),
+            });
         } catch (error) {
             console.error('Payment initiation failed', error);
             setErrorMessage('Payment initiation failed. Please try again.');
