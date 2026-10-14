@@ -92,3 +92,19 @@ it('records the amount it asked Paystack to collect when a payment is started', 
 
     expect($payment->raw_payload['expected_kobo'])->toBe($response->json('amount_kobo'));
 });
+
+it('gives the page the access code to open the payment with, a page to fall back to, and sends Paystack the payer\'s email', function () {
+    EstateSettings::forEstate($this->estate->id)->update(['paystack_subaccount_code' => 'ACCT_ESTATE_123']);
+    Http::fake([
+        'api.paystack.co/transaction/initialize' => Http::response(['status' => true, 'message' => 'ok', 'data' => ['authorization_url' => 'https://checkout.paystack.com/x', 'access_code' => 'ac_42', 'reference' => 'r']]),
+        'api.paystack.co/*' => Http::response(['status' => false, 'message' => 'not found'], 404),
+    ]);
+
+    $this->postJson(route('web.billing.collection.initiate', ['assignment' => $this->assignment->ulid]))
+        ->assertSuccessful()
+        ->assertJsonPath('access_code', 'ac_42')
+        ->assertJsonPath('authorization_url', 'https://checkout.paystack.com/x')
+        ->assertJsonPath('email', $this->resident->email);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/transaction/initialize') && ($request['email'] ?? null) === $this->resident->email);
+});
