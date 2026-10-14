@@ -1,12 +1,16 @@
 import { Head, router } from '@inertiajs/react';
-import { Building, Shield, Home, Briefcase, ArrowRight, Loader2, LogOut } from 'lucide-react';
+import { Building, Building2, Shield, Home, Briefcase, ArrowRight, Loader2, LogOut } from 'lucide-react';
 import { type FormEventHandler, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { switchMethod } from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { Capacitor } from '@capacitor/core';
 
 interface ContextData {
-    id: number;
+    /** An estate role, or an organization the person belongs to. */
+    type: 'estate' | 'organization';
+    id: number | null;
+    organization_id: number | null;
+    /** The estate's name, or for an organization, its own name. */
     estate_name: string;
     role_name: string;
     scope_type: string;
@@ -19,13 +23,13 @@ interface Props {
     availableContexts: ContextData[];
 }
 
-export default function ContextPicker({ availableContexts }: Props) {
-    const defaultContextId =
-        availableContexts.find((c) => c.is_current)?.id ??
-        availableContexts.find((c) => c.is_primary)?.id ??
-        (availableContexts.length > 0 ? availableContexts[0].id : null);
+/** One id space for both kinds, so an estate role and an organization can never be mistaken for each other. */
+const keyOf = (context: ContextData) => (context.type === 'organization' ? `organization:${context.organization_id}` : `assignment:${context.id}`);
 
-    const [selectedContext, setSelectedContext] = useState<number | null>(defaultContextId);
+export default function ContextPicker({ availableContexts }: Props) {
+    const defaultContext = availableContexts.find((c) => c.is_current) ?? availableContexts.find((c) => c.is_primary) ?? availableContexts[0];
+
+    const [selectedContext, setSelectedContext] = useState<string | null>(defaultContext ? keyOf(defaultContext) : null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -46,13 +50,13 @@ export default function ContextPicker({ availableContexts }: Props) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        if (selectedContext && !isSubmitting) {
+        const chosen = availableContexts.find((c) => keyOf(c) === selectedContext);
+
+        if (chosen && !isSubmitting) {
             setIsSubmitting(true);
             router.post(
                 switchMethod.url(),
-                {
-                    assignment_id: selectedContext,
-                },
+                chosen.type === 'organization' ? { organization_id: chosen.organization_id } : { assignment_id: chosen.id },
                 {
                     onError: () => setIsSubmitting(false),
                 },
@@ -75,8 +79,9 @@ export default function ContextPicker({ availableContexts }: Props) {
         }
     };
 
-    const getRoleIcon = (roleName: string) => {
-        const role = roleName.toLowerCase();
+    const getRoleIcon = (context: ContextData) => {
+        if (context.type === 'organization') return <Building2 className="h-5 w-5 text-sky-400" />;
+        const role = context.role_name.toLowerCase();
         if (role.includes('admin')) return <Briefcase className="h-5 w-5 text-purple-400" />;
         if (role.includes('security')) return <Shield className="h-5 w-5 text-blue-400" />;
         if (role.includes('resident') || role.includes('household')) return <Home className="h-5 w-5 text-emerald-400" />;
@@ -105,12 +110,12 @@ export default function ContextPicker({ availableContexts }: Props) {
                 <form onSubmit={submit} noValidate>
                     <div className="custom-scrollbar mb-8 max-h-[50vh] space-y-3 overflow-y-auto pr-1 sm:max-h-[400px]">
                         {availableContexts.map((context) => {
-                            const isSelected = selectedContext === context.id;
+                            const isSelected = selectedContext === keyOf(context);
                             return (
                                 <button
-                                    key={context.id}
+                                    key={keyOf(context)}
                                     type="button"
-                                    onClick={() => setSelectedContext(context.id)}
+                                    onClick={() => setSelectedContext(keyOf(context))}
                                     className={clsx(
                                         'flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all duration-200',
                                         isSelected
@@ -125,7 +130,7 @@ export default function ContextPicker({ availableContexts }: Props) {
                                                 isSelected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400',
                                             )}
                                         >
-                                            {getRoleIcon(context.role_name)}
+                                            {getRoleIcon(context)}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <h3 className="truncate font-semibold text-white">{context.estate_name}</h3>
@@ -135,7 +140,11 @@ export default function ContextPicker({ availableContexts }: Props) {
                                                 </span>
                                                 <span className="text-xs text-gray-600">•</span>
                                                 <span className="text-xs text-gray-400 capitalize">
-                                                    {context.zone_name ? `Zone: ${context.zone_name}` : 'Estate-wide'}
+                                                    {context.type === 'organization'
+                                                        ? 'Organization'
+                                                        : context.zone_name
+                                                          ? `Zone: ${context.zone_name}`
+                                                          : 'Estate-wide'}
                                                 </span>
                                             </div>
                                         </div>

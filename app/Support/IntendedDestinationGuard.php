@@ -41,6 +41,21 @@ class IntendedDestinationGuard
     }
 
     /**
+     * Whether the link points into the organization area. Someone who followed a link there (an organization invitation,
+     * say) meant to go there, so they are not asked which workspace to enter.
+     */
+    public function isOrganizationDestination(?string $destination): bool
+    {
+        if (! is_string($destination) || $destination === '') {
+            return false;
+        }
+
+        $path = parse_url($destination, PHP_URL_PATH);
+
+        return is_string($path) && ($path === '/org' || str_starts_with($path, '/org/'));
+    }
+
+    /**
      * Find a valid assignment for the user that matches the intended destination URL.
      */
     public function matchAssignment(User $user, ?string $destination): ?AdministrativeAssignment

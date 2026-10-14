@@ -10,6 +10,7 @@ use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\SosEvent;
 use App\Models\ZeusNotification;
+use App\Services\Auth\WorkspaceService;
 use App\Services\Notifications\NotificationContextService;
 use App\Services\OrganizationContextService;
 use App\Services\Platform\AndroidMigrationService;
@@ -162,6 +163,21 @@ class HandleInertiaRequests extends Middleware
                 ->all();
         }
 
+        // Organizations are workspaces too, so the switcher can offer them beside the estate roles.
+        $organizationContexts = $user
+            ? app(WorkspaceService::class)->organizationMemberships($user)
+                ->map(fn ($membership) => [
+                    'organization_id' => $membership->organization_id,
+                    'name' => $membership->organization->name,
+                    'role' => $membership->role,
+                ])->values()->all()
+            : [];
+        $workspaceCount = $user
+            ? ($availableContexts !== []
+                ? count($availableContexts)
+                : AdministrativeAssignment::where('user_id', $user->id)->where('is_active', true)->count()) + count($organizationContexts)
+            : 0;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -182,6 +198,8 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $roles,
                     'context' => $contextData,
                     'available_contexts' => $availableContexts,
+                    'organization_contexts' => $organizationContexts,
+                    'workspace_count' => $workspaceCount,
                     'current_estate_id' => $estate?->id,
                     'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,

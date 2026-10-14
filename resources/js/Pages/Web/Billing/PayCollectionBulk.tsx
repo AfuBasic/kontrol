@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { openCheckout } from '@/Lib/paystack';
 
 type Collection = {
     name: string;
@@ -29,7 +30,6 @@ type Assignment = {
 
 type Props = {
     assignments: Assignment[];
-    paystackKey: string;
     totalAmount: number;
     feeBreakdown: {
         kontrol_fee: number;
@@ -40,13 +40,7 @@ type Props = {
     hasSubscription: boolean;
 };
 
-declare global {
-    interface Window {
-        PaystackPop: any;
-    }
-}
-
-export default function PayCollectionBulk({ assignments, paystackKey, totalAmount, feeBreakdown, hasSubscription }: Props) {
+export default function PayCollectionBulk({ assignments, totalAmount, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -99,18 +93,6 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 return;
             }
 
-            if (!paystackKey) {
-                setErrorMessage('Payment gateway is not configured. Please contact support.');
-                setIsProcessing(false);
-                return;
-            }
-
-            if (!window.PaystackPop) {
-                setErrorMessage('Payment gateway is not ready. Please refresh the page.');
-                setIsProcessing(false);
-                return;
-            }
-
             if (!data.access_code) {
                 setErrorMessage('Payment gateway initialization failed. Missing access code.');
                 setIsProcessing(false);
@@ -119,19 +101,15 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
 
             const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
 
-            const setupOptions: Record<string, unknown> = {
-                key: paystackKey,
-                access_code: data.access_code,
-                onClose: () => {
-                    setIsProcessing(false);
+            await openCheckout({
+                accessCode: data.access_code,
+                authorizationUrl: data.authorization_url,
+                // Redirect to receipt/status page - it syncs with Paystack and shows full/partial outcome
+                onSuccess: (reference) => {
+                    window.location.href = statusUrlFor(reference || data.reference);
                 },
-                callback: (paystackResponse: { reference: string }) => {
-                    window.location.href = statusUrlFor(paystackResponse.reference || data.reference);
-                },
-            };
-
-            const handler = window.PaystackPop.setup(setupOptions);
-            handler.openIframe();
+                onClose: () => setIsProcessing(false),
+            });
         } catch (error) {
             console.error('Payment initiation failed', error);
             setErrorMessage('Payment initiation failed. Please try again.');

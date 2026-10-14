@@ -14,6 +14,21 @@ interface ContextData {
     zone_name: string | null;
 }
 
+interface OrganizationContext {
+    organization_id: number;
+    name: string;
+    role: string;
+}
+
+interface Option {
+    key: string;
+    title: string;
+    subtitle: string;
+    roleName: string;
+    selected: boolean;
+    onSelect: () => void;
+}
+
 interface Props {
     variant?: 'light' | 'dark';
     align?: 'left' | 'right';
@@ -23,6 +38,7 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
     const { auth } = usePage().props as any;
     const currentContext = auth.user?.context as ContextData | null;
     const availableContexts = (auth.user?.available_contexts || []) as ContextData[];
+    const organizationContexts = (auth.user?.organization_contexts || []) as OrganizationContext[];
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +66,8 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
     const { support_mode } = (usePage().props as any) || {};
     const isImpersonating = Boolean(support_mode?.active);
 
-    if (isImpersonating || !currentContext || availableContexts.length <= 1) {
+    // An organization the person belongs to is a workspace too, so it is offered here beside the estate roles.
+    if (isImpersonating || !currentContext || availableContexts.length + organizationContexts.length <= 1) {
         return null;
     }
 
@@ -66,6 +83,30 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
             },
         );
     };
+
+    const switchOrganization = (organizationId: number) => {
+        setIsOpen(false);
+        router.post(ContextController.switchMethod.url(), { organization_id: organizationId }, { preserveState: false });
+    };
+
+    const options: Option[] = [
+        ...availableContexts.map((ctx) => ({
+            key: `estate-${ctx.id}`,
+            title: ctx.estate_name,
+            subtitle: `${ctx.role_name.replace(/_/g, ' ')}${ctx.zone_name ? ` • ${ctx.zone_name}` : ''}`,
+            roleName: ctx.role_name,
+            selected: currentContext.id === ctx.id,
+            onSelect: () => switchContext(ctx.id),
+        })),
+        ...organizationContexts.map((organization) => ({
+            key: `organization-${organization.organization_id}`,
+            title: organization.name,
+            subtitle: organization.role === 'admin' ? 'Organization admin' : 'Organization staff',
+            roleName: 'organization',
+            selected: false,
+            onSelect: () => switchOrganization(organization.organization_id),
+        })),
+    ];
 
     const getRoleIcon = (roleName: string, className = 'w-4 h-4') => {
         const role = roleName.toLowerCase();
@@ -151,13 +192,13 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
                         </p>
                     </div>
                     <div className="max-h-[60vh] space-y-1 overflow-y-auto p-1.5">
-                        {availableContexts.map((ctx) => {
-                            const isSelected = currentContext.id === ctx.id;
+                        {options.map((option) => {
+                            const isSelected = option.selected;
                             return (
                                 <button
-                                    key={ctx.id}
+                                    key={option.key}
                                     type="button"
-                                    onClick={() => switchContext(ctx.id)}
+                                    onClick={option.onSelect}
                                     className={clsx(
                                         'group flex w-full items-center justify-between rounded-xl p-2.5 text-left transition-all',
                                         isSelected
@@ -182,10 +223,10 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
                                                       : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200',
                                             )}
                                         >
-                                            {getRoleIcon(ctx.role_name, 'w-4 h-4')}
+                                            {getRoleIcon(option.roleName, 'w-4 h-4')}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm leading-tight font-semibold">{ctx.estate_name}</p>
+                                            <p className="truncate text-sm leading-tight font-semibold">{option.title}</p>
                                             <p
                                                 className={clsx(
                                                     'mt-0.5 truncate text-xs leading-tight capitalize',
@@ -198,8 +239,7 @@ export default function ContextSwitcher({ variant = 'dark', align }: Props) {
                                                           : 'text-slate-500',
                                                 )}
                                             >
-                                                {ctx.role_name.replace(/_/g, ' ')}
-                                                {ctx.zone_name ? ` • ${ctx.zone_name}` : ''}
+                                                {option.subtitle}
                                             </p>
                                         </div>
                                     </div>

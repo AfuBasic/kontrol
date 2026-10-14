@@ -37,6 +37,8 @@ export default function OrganizationLayout({
 
     const auth = props.auth || {};
     const user = auth.user || {};
+    // Someone who also has a role in an estate can go back to it; an organization alone has nowhere else to switch to.
+    const hasEstateWorkspace = (user.workspace_count ?? 0) - (user.organization_contexts?.length ?? 0) > 0;
 
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -184,6 +186,15 @@ export default function OrganizationLayout({
                                             >
                                                 Profile & Team
                                             </Link>
+                                            {hasEstateWorkspace && (
+                                                <Link
+                                                    href="/context/select"
+                                                    onClick={() => setUserDropdownOpen(false)}
+                                                    className="block rounded-2xl px-3 py-2.5 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                                >
+                                                    Switch workspace
+                                                </Link>
+                                            )}
                                             <Link
                                                 href="/logout"
                                                 method="post"

@@ -223,6 +223,8 @@ class CollectionPaymentController extends Controller
                 'already_paid' => false,
                 'reference' => $payment->reference,
                 'access_code' => $paystackInit['access_code'],
+                // The popup needs the access code; this is the page to send the payer to if the popup cannot load.
+                'authorization_url' => $paystackInit['authorization_url'],
                 'email' => $payerEmail,
                 'amount' => $fees['total_amount'], // Total charged in NGN
                 'amount_kobo' => $amountKobo,
@@ -646,6 +648,8 @@ class CollectionPaymentController extends Controller
                 'already_paid' => false,
                 'reference' => $payment->reference,
                 'access_code' => $paystackInit['access_code'],
+                // The popup needs the access code; this is the page to send the payer to if the popup cannot load.
+                'authorization_url' => $paystackInit['authorization_url'],
                 'email' => $payerEmail,
                 'amount' => $fees['total_amount'],
                 'amount_kobo' => $amountKobo,
