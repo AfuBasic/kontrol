@@ -5,6 +5,8 @@ namespace App\Actions\Auth;
 use App\Events\ForceLogout;
 use App\Models\TrustedDevice;
 use App\Models\User;
+use App\Services\Auth\WorkspaceService;
+use App\Services\OrganizationContextService;
 use App\Services\Security\DeviceTrustCookie;
 use App\Support\IntendedDestinationGuard;
 use Illuminate\Http\RedirectResponse;
@@ -81,6 +83,17 @@ class CompleteAuthenticatedLogin
                     $this->activateContext->execute($user, $matchedAssignment);
 
                     return $intended;
+                }
+
+                // A link into the organization area (such as an organization invitation) goes straight there.
+                if ($this->intendedDestinationGuard->isOrganizationDestination($intended)) {
+                    $organizations = app(WorkspaceService::class)->organizationMemberships($user);
+
+                    if ($organizations->isNotEmpty()) {
+                        app(OrganizationContextService::class)->switchOrganization($organizations->first()->organization_id);
+
+                        return $intended;
+                    }
                 }
 
                 $request->session()->put('url.intended', $intended);
